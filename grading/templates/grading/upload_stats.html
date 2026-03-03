@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}İstatistikler - {{ session.original_filename }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ back_url|default:'/panel/' }}">Panel</a></li>
+                <li class="breadcrumb-item"><a href="
+                    {% url 'upload_detail' session.pk %}">{{ session.original_filename }}</a></li>
+                <li class="breadcrumb-item active">İstatistikler</li>
+            </ol>
+        </nav>
+        <h2 class="mt-2"><i class="bi bi-graph-up me-2"></i>Sınav İstatistikleri</h2>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'upload_stats' session.pk %}" class="btn btn-outline-primary"
+            title="İstatistikleri yeniden hesapla">
+            <i class="bi bi-arrow-clockwise me-2"></i>Yeniden Hesapla
+        </a>
+        <a href="{% url 'upload_kr20' session.pk %}" class="btn btn-outline-info" title="KR-20 Güvenirlik Analizi">
+            <i class="bi bi-shield-check me-2"></i>KR20
+        </a>
+        <a href="{% url 'upload_alpha' session.pk %}" class="btn btn-outline-warning" title="Cronbach's Alpha Analizi">
+            <i class="bi bi-graph-up-arrow me-2"></i>Alpha
+        </a>
+        <a href="{% url 'download_excel' session.pk %}" class="btn btn-outline-success">
+            <i class="bi bi-download me-2"></i>Excel İndir
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Stat Cards -->
+    <div class="col-md-3">
+        <div class="card stat-card border-primary h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Aritmetik Ortalama</h6>
+                <h2 class="display-6 mb-0 text-primary">{{ mean }}</h2>
+                <small class="text-muted">Sınıfın genel başarı seviyesi</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-info h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Medyan (Ortanca)</h6>
+                <h2 class="display-6 mb-0 text-info">{{ median }}</h2>
+                <small class="text-muted">Tam ortadaki öğrenci puanı</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-warning h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Standart Sapma</h6>
+                <h2 class="display-6 mb-0 text-warning">{{ std_dev }}</h2>
+                <small class="text-muted">Puanların dağılım genişliği</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-secondary h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Öğrenci Sayısı</h6>
+                <h2 class="display-6 mb-0 text-secondary">{{ student_count }}</h2>
+                <small class="text-muted">Değerlendirilen toplam optik</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Histogram -->
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header bg-white text-dark d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bar-chart me-2 text-primary"></i>Puan Dağılım Grafiği (Histogram)</span>
+            </div>
+            <div class="card-body">
+                <canvas id="scoreHistogram"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedagogic Interpretation -->
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-{{ interpretation_type }}">
+            <div class="card-header bg-{{ interpretation_type }} text-white font-weight-bold">
+                <i class="bi bi-journal-check me-2"></i>Ölçme ve Değerlendirme Analizi
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6 class="text-muted fw-bold small text-uppercase mb-2">Dağılım Analizi</h6>
+                    <p class="mb-0">{{ dist_interpretation }}</p>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-muted fw-bold small text-uppercase mb-2">Grup Yapısı</h6>
+                    <p class="mb-0">{{ group_structure }}</p>
+                </div>
+
+                <div class="alert alert-light border small mt-4">
+                    <i class="bi bi-info-circle me-2 text-primary"></i>
+                    Aritmetik ortalamanın medyana yakın olması, puanların merkez çevresinde dengeli bir dağılım
+                    gösterdiğine işaret eder.
+                </div>
+
+                <hr class="my-4">
+
+                <div class="bg-light p-3 rounded" style="font-size: 0.85rem; line-height: 1.4;">
+                    <p class="text-secondary mb-0">
+                        <i class="bi bi-shield-exclamation me-1 text-warning"></i>
+                        <strong>Not:</strong> Belirtilen analizler sistem algoritmaları tarafından veri setine
+                        dayalı olarak otomatik üretilmektedir. Yazılımımız henüz geliştirme ve test (beta) aşamasında
+                        olduğundan, sunulan yorumlarda istatistiksel sapmalar veya değerlendirme eksiklikleri
+                        bulunabilir. En sağlıklı sonuçlar için süzgeçten geçirilmesi tavsiye olunur.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4 mb-5">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0"><i class="bi bi-list-check me-2 text-primary"></i>Madde Analizi (Soru Bazlı Detaylar)
+                </h5>
+                <span class="badge bg-light text-dark border">Toplam {{ session.question_count }} Soru</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width: 60px;">#</th>
+                                <th class="text-center" style="width: 80px;">D.C.</th>
+                                <th>Madde Güçlüğü (p)</th>
+                                <th>Ayırt Edicilik (r)</th>
+                                <th>Çeldirici Dağılımı (%)</th>
+                                <th class="text-end pe-4">Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in item_analysis %}
+                            <tr {% if item.is_problematic %}class="table-warning border-start border-warning border-4"
+                                {% endif %}>
+                                <td class="text-center fw-bold">{{ item.index }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ item.correct_answer }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 fw-bold" style="width: 40px;">
+                                            {{ item.p|floatformat:2 }}</span>
+                                        <div class="progress flex-grow-1" style="height: 6px; max-width: 100px;">
+                                            <div class="progress-bar bg-info"
+                                                style="width: {% widthratio item.p 1 100 %}%"></div>
+                                        </div>
+                                        <small class="ms-2 text-muted">{{ item.p_comment }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 fw-bold" style="width: 40px;">
+                                            {{ item.r|floatformat:2 }}</span>
+                                        <small
+                                            class="ms-1 {% if item.r < 0.2 %}text-danger{% elif item.r > 0.4 %}text-success{% else %}text-primary{% endif %}">
+                                            {{ item.r_comment }}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1" style="font-size: 0.75rem;">
+                                        {% for opt, count in item.distractors.items %}
+                                        <div class="px-2 py-1 rounded {% if opt == item.correct_answer %}bg-success-subtle border border-success-subtle text-success{% else %}bg-light border{% endif %}"
+                                            title="{{ opt }}: {{ count }} Öğrenci">
+                                            <strong>{{ opt }}:</strong> {{ count }}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if item.is_problematic %}
+                                    <span class="badge bg-danger" title="Düşük ayırt edicilik veya uç güçlük düzeyi">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>İnceleme Gerekli
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i>Uygun
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('scoreHistogram').getContext('2d');
+    const chartData = {{ histogram_data| safe }};
+    const chartLabels = {{ histogram_labels| safe }};
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Öğrenci Sayısı',
+                data: chartData,
+                backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    },
+                    title: {
+                        display: true,
+                        text: 'Öğrenci Sayısı'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Doğru Soru Sayısı'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

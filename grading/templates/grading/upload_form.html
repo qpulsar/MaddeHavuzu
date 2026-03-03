@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Yeni Okuma - OptikForm{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-upload me-2"></i>Yeni Okuma</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label for="file" class="form-label">TXT Dosyası <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control form-control-lg" id="file" name="file" accept=".txt"
+                            required>
+                        <div class="form-text">
+                            Optik okuyucudan alınan .txt dosyasını seçin. Maksimum 20MB.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="format" class="form-label">Dosya Formatı</label>
+                        <select class="form-select" id="format" name="format">
+                            {% for f in formats %}
+                            <option value="{{ f.pk }}" {% if f == default_format %} selected {% endif %}>
+                                {{ f.name }}
+                                {% if f.is_default %} (Varsayılan){% endif %}
+                            </option>
+                            {% empty %}
+                            <option value="">Format tanımlı değil</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Admin tarafından tanımlanan dosya formatlarından birini seçin.
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="penalty_ratio" class="form-label">Yanlış-Doğru Oranı (Net Hesaplama)</label>
+                            <input type="number" class="form-control" id="penalty_ratio" name="penalty_ratio" min="0"
+                                max="10" placeholder="Örn: 4">
+                            <div class="form-text">
+                                Kaç yanlış bir doğruyu götürür?
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="points_per_question" class="form-label">Soru Başına Puan</label>
+                            <input type="number" step="0.01" class="form-control" id="points_per_question"
+                                name="points_per_question" value="1.00" min="0">
+                            <div class="form-text">
+                                Her bir netin puan değeri (Örn: 1.0 veya 2.5)
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if not formats %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Dosya formatı tanımlı değil. Lütfen admin panelinden bir format ekleyin.
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" {% if not formats %}disabled{% endif %}>
+                            <i class="bi bi-cloud-upload me-2"></i>Yükle ve Değerlendir
+                        </button>
+                        <a href="{{ back_url|default:'/panel/' }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>İptal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card mt-4 mb-5">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="bi bi-question-circle me-2"></i>Yardım ve Örnek Veri Yapısı</h6>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <ul class="mb-3">
+                            <li>Dosya içerisinde <strong>ANAHTAR</strong> veya <strong>CEVAP</strong> satırı
+                                bulunmalıdır.</li>
+                            <li>Anahtar satırı, diğer öğrencilerin cevaplarıyla karşılaştırılacaktır.</li>
+                            <li>Her satır bir öğrenciyi temsil eder.</li>
+                            <li>Dosya formatı (sütun aralıkları) ayarlardan değiştirilebilir.</li>
+                        </ul>
+                        <div class="alert alert-info py-2">
+                            <small><i class="bi bi-info-circle me-1"></i> Örnekte görüldüğü gibi, ilk satırda cevap
+                                anahtarı tanımlanabilir.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="text-center p-2 border rounded bg-white shadow-sm">
+                            <img src="{% static 'grading/images/example_data.jpg' %}" alt="Örnek Veri Yapısı"
+                                class="img-fluid rounded">
+                            <div class="mt-2 small text-muted">Örnek TXT İçeriği</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

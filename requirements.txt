@@ -1,0 +1,22 @@
+# Core
+Django>=4.2,<5.0
+psycopg2-binary>=2.9
+python-dotenv>=1.0
+
+# API
+djangorestframework>=3.14
+django-filter>=23.0
+
+# File handling
+openpyxl>=3.1
+python-docx>=1.0
+
+# AI (Gemini)
+google-genai>=1.0
+
+# Testing
+pytest>=7.0
+pytest-django>=4.5
+
+# HTMX (served via CDN, no pip package needed)
+# jQuery (served via CDN, no pip package needed)

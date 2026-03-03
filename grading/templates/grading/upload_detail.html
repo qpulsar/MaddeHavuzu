@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ session.original_filename }} - OptikForm{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-file-earmark-text me-2"></i>{{ session.original_filename }}</h2>
+        <p class="text-muted mb-0">
+            Yüklenme: {{ session.created_at|date:"d.m.Y H:i" }} |
+            Format: {{ session.file_format.name|default:"Bilinmiyor" }} |
+            Net Hesabı: {% if session.wrong_to_correct_ratio %}{{ session.wrong_to_correct_ratio }} Yanlış 1 Doğruyu
+            Götürür{% else %}Yanlış Doğruyu Götürmez{% endif %} |
+            Soru Puanı: {{ session.points_per_question }}
+            <button type="button" class="btn btn-sm btn-link p-0 ms-2" data-bs-toggle="modal"
+                data-bs-target="#updatePenaltyModal">
+                <i class="bi bi-pencil-square"></i> Düzenle
+            </button>
+        </p>
+    </div>
+    <div>
+        {% if session.is_processed %}
+        <a href="{% url 'cheating_analysis' session.pk %}" class="btn btn-warning btn-lg me-2">
+            <i class="bi bi-shield-exclamation me-2"></i>Kopya Analizi
+        </a>
+        <a href="{% url 'download_excel' session.pk %}" class="btn btn-success btn-lg">
+            <i class="bi bi-file-earmark-excel me-2"></i>Excel İndir
+        </a>
+        {% endif %}
+        <a href="{{ back_url|default:'/panel/' }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Geri
+        </a>
+    </div>
+</div>
+
+<!-- Status Alert -->
+{% if session.is_failed %}
+<div class="alert alert-danger">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>İşlem Başarısız:</strong> {{ session.error_summary }}
+</div>
+{% endif %}
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card correct">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Öğrenci Sayısı</h6>
+                        <h3 class="mb-0">{{ session.student_count|default:"-" }}</h3>
+                    </div>
+                    <div class="display-6 text-success opacity-50">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card blank">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Soru Sayısı</h6>
+                        <h3 class="mb-0">{{ session.question_count|default:"-" }}</h3>
+                    </div>
+                    <div class="display-6 text-warning opacity-50">
+                        <i class="bi bi-question-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card wrong">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Hata Sayısı</h6>
+                        <h3 class="mb-0">{{ session.error_count }}</h3>
+                    </div>
+                    <div class="display-6 text-danger opacity-50">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card invalid">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Durum</h6>
+                        <h5 class="mb-0">
+                            {% if session.processing_status == 'PROCESSED' %}
+                            <span class="badge bg-success">İşlendi</span>
+                            {% elif session.processing_status == 'FAILED' %}
+                            <span class="badge bg-danger">Başarısız</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ session.get_processing_status_display }}</span>
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="display-6 text-secondary opacity-50">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Table -->
+{% if results %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-table me-2"></i>Sonuçlar</span>
+        <span class="badge bg-primary">{{ results.paginator.count }} öğrenci</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Öğrenci No</th>
+                    <th>Ad Soyad</th>
+                    <th>Kitapçık</th>
+                    <th class="text-center text-success">Doğru</th>
+                    <th class="text-center text-danger">Yanlış</th>
+                    <th class="text-center text-warning">Boş</th>
+                    <th class="text-center text-secondary">Geçersiz</th>
+                    <th class="text-center text-primary">Net</th>
+                    <th class="text-center">Puan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td class="text-muted">{{ result.row_number_in_file }}</td>
+                    <td>{{ result.student_no|default:"-" }}</td>
+                    <td>{{ result.student_name }}</td>
+                    <td>{{ result.booklet|default:"-" }}</td>
+                    <td class="text-center"><span class="badge bg-success">{{ result.correct_count }}</span></td>
+                    <td class="text-center"><span class="badge bg-danger">{{ result.wrong_count }}</span></td>
+                    <td class="text-center"><span class="badge bg-warning text-dark">{{ result.blank_count }}</span>
+                    </td>
+                    <td class="text-center"><span class="badge bg-secondary">{{ result.invalid_count }}</span></td>
+                    <td class="text-center text-primary fw-bold">{{ result.net|floatformat:2 }}</td>
+                    <td class="text-center fw-bold">{{ result.score|floatformat:1 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if results.has_other_pages %}
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if results.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ results.previous_page_number }}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+
+        {% for num in results.paginator.page_range %}
+        {% if results.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > results.number|add:'-3' and num < results.number|add:'3' %} <li class="page-item"><a
+                class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if results.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ results.next_page_number }}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endif %}
+
+<!-- Parsing Errors -->
+{% if errors %}
+<div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+        <i class="bi bi-exclamation-triangle me-2"></i>Ayrıştırma Hataları ({{ errors|length }})
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Satır</th>
+                    <th>Hata</th>
+                    <th>Ham Veri</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for error in errors %}
+                <tr>
+                    <td>{{ error.row_number }}</td>
+                    <td class="text-danger">{{ error.message }}</td>
+                    <td><code class="text-muted small">{{ error.raw_line|truncatechars:50 }}</code></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Update Penalty Modal -->
+<div class="modal fade" id="updatePenaltyModal" tabindex="-1" aria-labelledby="updatePenaltyModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updatePenaltyModalLabel">Net Hesaplama Oranını Güncelle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'update_penalty' session.pk %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="penalty_ratio" class="form-label">Yanlış-Doğru Oranı</label>
+                        <input type="number" class="form-control" id="penalty_ratio" name="penalty_ratio"
+                            value="{{ session.wrong_to_correct_ratio|default:'' }}" min="0" max="10"
+                            placeholder="Örn: 4">
+                        <div class="form-text">
+                            Kaç yanlışın bir doğruyu götüreceğini girin.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="points_per_question" class="form-label">Soru Başına Puan</label>
+                        <input type="number" step="0.01" class="form-control" id="points_per_question"
+                            name="points_per_question" value="{{ session.points_per_question|stringformat:'.2f' }}"
+                            min="0">
+                        <div class="form-text">
+                            Her bir netin kaç puan değerinde olduğunu girin.
+                        </div>
+                    </div>
+                    <div class="alert alert-info py-2 small">
+                        <i class="bi bi-info-circle me-1"></i> Oranı değiştirdiğinizde tüm öğrenci puanları otomatik
+                        olarak yeniden hesaplanacaktır.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">Güncelle ve Yeniden Hesapla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

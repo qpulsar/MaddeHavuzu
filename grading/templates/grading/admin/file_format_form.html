@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Format Düzenle{% else %}Yeni Format{% endif %} - OptikForm{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Yönetim</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'admin_formats' %}">Dosya Formatları</a></li>
+            <li class="breadcrumb-item active">{% if object %}{{ object.name }}{% else %}Yeni Format{% endif %}</li>
+        </ol>
+    </nav>
+    <h2 class="mt-2">
+        <i class="bi bi-file-earmark-code me-2"></i>
+        {% if object %}Format Düzenle{% else %}Yeni Format Ekle{% endif %}
+    </h2>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>Genel Bilgiler</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Format Adı <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" value="{{ form.name.value|default:'' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Format Tipi</label>
+                    <select name="format_type" class="form-select">
+                        <option value="FIXED_WIDTH" {% if form.format_type.value == 'FIXED_WIDTH' %}selected{% endif %}>Sabit Genişlik</option>
+                        <option value="DELIMITED" {% if form.format_type.value == 'DELIMITED' %}selected{% endif %}>Ayraçlı</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Açıklama</label>
+                    <textarea name="description" class="form-control" rows="2">{{ form.description.value|default:'' }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Ayraç (Ayraçlı format için)</label>
+                    <input type="text" name="delimiter" class="form-control" placeholder="; veya , veya \t" value="{{ form.delimiter.value|default:'' }}">
+                </div>
+            </div>
+            <hr>
+            <h5 class="mb-3"><i class="bi bi-rulers me-2"></i>Alan Pozisyonları (Sabit Genişlik)</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label">Öğrenci No Başlangıç</label>
+                    <input type="number" name="student_no_start" class="form-control" value="{{ form.student_no_start.value|default:0 }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Öğrenci No Bitiş</label>
+                    <input type="number" name="student_no_end" class="form-control" value="{{ form.student_no_end.value|default:12 }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ad Soyad Başlangıç</label>
+                    <input type="number" name="student_name_start" class="form-control" value="{{ form.student_name_start.value|default:15 }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ad Soyad Bitiş</label>
+                    <input type="number" name="student_name_end" class="form-control" value="{{ form.student_name_end.value|default:38 }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Cevaplar Başlangıç</label>
+                    <input type="number" name="answers_start" class="form-control" value="{{ form.answers_start.value|default:38 }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Cevaplar Bitiş (opsiyonel)</label>
+                    <input type="number" name="answers_end" class="form-control" value="{{ form.answers_end.value|default:'' }}">
+                </div>
+            </div>
+            <hr>
+            <h5 class="mb-3"><i class="bi bi-bookmark me-2"></i>Kitapçık Alanı</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input type="checkbox" name="has_booklet_field" class="form-check-input" id="has_booklet" {% if form.has_booklet_field.value %}checked{% endif %}>
+                        <label class="form-check-label" for="has_booklet">Kitapçık alanı var</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Kitapçık Başlangıç</label>
+                    <input type="number" name="booklet_start" class="form-control" value="{{ form.booklet_start.value|default:'' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Kitapçık Bitiş</label>
+                    <input type="number" name="booklet_end" class="form-control" value="{{ form.booklet_end.value|default:'' }}">
+                </div>
+            </div>
+            <hr>
+            <h5 class="mb-3"><i class="bi bi-key me-2"></i>Anahtar ve Değerlendirme</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label">Anahtar Tanımlayıcı</label>
+                    <input type="text" name="key_identifier" class="form-control" value="{{ form.key_identifier.value|default:'ANAHTAR' }}">
+                    <small class="text-muted">Örn: ANAHTAR, CEVAP</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Aranacak Alan</label>
+                    <select name="key_identifier_field" class="form-select">
+                        <option value="student_name" {% if form.key_identifier_field.value == 'student_name' %}selected{% endif %}>Ad Soyad</option>
+                        <option value="student_no" {% if form.key_identifier_field.value == 'student_no' %}selected{% endif %}>Öğrenci No</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Geçerli Şıklar</label>
+                    <input type="text" name="valid_options" class="form-control" value="{{ form.valid_options.value|default:'ABCDE' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Boş İşaretleri</label>
+                    <input type="text" name="blank_markers" class="form-control" value="{{ form.blank_markers.value|default:'-* .' }}">
+                </div>
+            </div>
+            <hr>
+            <h5 class="mb-3"><i class="bi bi-toggles me-2"></i>Durum</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input" id="is_active" {% if form.is_active.value != False %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active">Aktif</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_default" class="form-check-input" id="is_default" {% if form.is_default.value %}checked{% endif %}>
+                        <label class="form-check-label" for="is_default">Varsayılan format olarak ayarla</label>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-2"></i>Kaydet</button>
+                <a href="{% url 'admin_formats' %}" class="btn btn-secondary"><i class="bi bi-x-lg me-2"></i>İptal</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

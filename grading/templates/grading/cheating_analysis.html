@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="/panel/">Panel</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'upload_detail' session.pk %}">{{
+                            session.original_filename }}</a></li>
+                    <li class="breadcrumb-item active">Kopya Analizi</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0 text-gray-800">Kopya Analizi Raporu</h1>
+        </div>
+        <a href="{{ back_url }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Geri Dön
+        </a>
+    </div>
+
+    <!-- Ethical Warning -->
+    <div class="alert alert-warning border-left-warning shadow-sm mb-4" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Önemli Uyarı</h4>
+        <p class="mb-0">
+            Bu analiz raporu, öğrenci cevapları arasındaki istatistiksel benzerlikleri gösterir.
+            <strong>Yüksek benzerlik oranı kesinlikle kopya çekildiği anlamına gelmez.</strong>
+            Benzer yanlış cevaplar; öğretim eksiklikleri, yaygın kavram yanılgıları veya sınav ortamı gibi faktörlerden
+            de kaynaklanabilir.
+            Bu rapor sadece bir <strong>ön inceleme aracıdır</strong> ve nihai karar öğretmenin pedagojik kanaatine
+            bağlıdır.
+        </p>
+    </div>
+
+    <!-- Analysis Options -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Analiz Ayarları</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row align-items-end">
+                <div class="col-md-3 mb-3">
+                    <label for="exclude_top" class="form-label">Üst Grup Hariç Tut (%)</label>
+                    <input type="number" class="form-control" id="exclude_top" name="exclude_top"
+                        value="{{ params.exclude_top_percent }}" min="0" max="50">
+                    <small class="text-muted">En başarılı öğrencileri analiz dışı bırakır.</small>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="same_wrong_weight" class="form-label">Aynı Yanlış Ağırlığı</label>
+                    <input type="number" class="form-control" id="same_wrong_weight" name="same_wrong_weight"
+                        value="{{ params.same_wrong_weight }}" step="0.1" min="1.0">
+                    <small class="text-muted">Aynı yanlış cevapların puan çarpanı.</small>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="disc_weight" class="form-label">Ayırt Edicilik Etkisi</label>
+                    <input type="number" class="form-control" id="disc_weight" name="disc_weight"
+                        value="{{ params.discrimination_weight_factor }}" step="0.1" min="0.0">
+                    <small class="text-muted">Ayırt edici sorulardaki eşleşme ağırlığı.</small>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-sync-alt"></i> Analizi Güncelle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Statistics Summary -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">İstatistikler</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            İncelenen Çift Sayısı
+                            <span class="badge bg-secondary rounded-pill">{{ stats.pair_count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Ortalama Benzerlik Skoru
+                            <span class="badge bg-secondary rounded-pill">{{ stats.mean|floatformat:2 }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Standart Sapma
+                            <span class="badge bg-secondary rounded-pill">{{ stats.stdev|floatformat:2 }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Matrix / Top Risky Pairs -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">Risk Raporu ve Matris</h6>
+                </div>
+                <div class="card-body">
+                    {% if risky_pairs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered" id="riskTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Öğrenci 1</th>
+                                    <th>Öğrenci 2</th>
+                                    <th>Benzerlik Skoru</th>
+                                    <th>Z-Skoru</th>
+                                    <th>Risk Seviyesi</th>
+                                    <th>Detaylar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pair in risky_pairs %}
+                                <tr
+                                    class="{% if pair.risk_level == 'Yüksek' %}table-danger{% elif pair.risk_level == 'Orta' %}table-warning{% endif %}">
+                                    <td>
+                                        <strong>{{ pair.s1.student_name }}</strong><br>
+                                        <small class="text-muted">{{ pair.s1.student_no }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ pair.s2.student_name }}</strong><br>
+                                        <small class="text-muted">{{ pair.s2.student_no }}</small>
+                                    </td>
+                                    <td class="text-center fw-bold">{{ pair.score|floatformat:2 }}</td>
+                                    <td class="text-center">{{ pair.z_score|floatformat:2 }}</td>
+                                    <td class="text-center">
+                                        {% if pair.risk_level == 'Yüksek' %}
+                                        <span class="badge bg-danger">Yüksek</span>
+                                        {% elif pair.risk_level == 'Orta' %}
+                                        <span class="badge bg-warning text-dark">Orta</span>
+                                        {% else %}
+                                        <span class="badge bg-info">Düşük</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small">
+                                        <div>Eşleşme: {{ pair.details.matches }}/{{ pair.details.total_q }}</div>
+                                        <div>Aynı Yanlış: <strong>{{ pair.details.same_wrongs }}</strong></div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="lead">Yüksek riskli eşleşme bulunamadı.</p>
+                        <p class="text-muted small">Mevcut kriterlere göre belirgin bir kopya şüphesi görülmemektedir.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

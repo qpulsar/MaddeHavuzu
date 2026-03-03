@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}KR-20 Güvenirlik Analizi - {{ session.original_filename }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ back_url|default:'/panel/' }}">Panel</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'upload_detail' session.pk %}">
+                        {{ session.original_filename }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'upload_stats' session.pk %}">İstatistikler</a></li>
+                <li class="breadcrumb-item active">KR-20</li>
+            </ol>
+        </nav>
+        <h2 class="mt-2"><i class="bi bi-shield-check me-2"></i>KR-20 Güvenirlik Analizi</h2>
+    </div>
+    <div>
+        <a href="{% url 'upload_stats' session.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>İstatistiklere Dön
+        </a>
+    </div>
+</div>
+
+<!-- KR-20 Ana Kart -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-{{ interpretation_type }} h-100">
+            <div class="card-header bg-{{ interpretation_type }} text-white">
+                <i class="bi bi-speedometer2 me-2"></i>KR-20 Güvenirlik Katsayısı
+            </div>
+            <div class="card-body text-center">
+                <h1 class="display-3 fw-bold text-{{ interpretation_type }}">{{ kr20 }}</h1>
+                <p class="text-muted mb-0">Kuder-Richardson 20</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card h-100 border-{{ interpretation_type }}">
+            <div class="card-header bg-white">
+                <i class="bi bi-info-circle me-2 text-{{ interpretation_type }}"></i>Güvenirlik Yorumu
+            </div>
+            <div class="card-body">
+                <div class="alert alert-{{ interpretation_type }} mb-4">
+                    <i class="bi bi-lightbulb me-2"></i>{{ interpretation }}
+                </div>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h5 class="text-muted mb-1">Madde Sayısı (k)</h5>
+                        <h3 class="text-primary">{{ k }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-muted mb-1">Öğrenci Sayısı (n)</h5>
+                        <h3 class="text-info">{{ n }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-muted mb-1">Toplam Σpq</h5>
+                        <h3 class="text-warning">{{ sum_pq }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-muted mb-1">Varyans (σ²)</h5>
+                        <h3 class="text-secondary">{{ variance }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KR-20 Formül Kartı -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <i class="bi bi-calculator me-2"></i>KR-20 Formülü
+            </div>
+            <div class="card-body">
+                <div class="text-center py-3">
+                    <div class="bg-light p-4 rounded d-inline-block" style="font-size: 1.3rem;">
+                        <strong>KR-20 = </strong>
+                        <span class="text-primary">(k / (k-1))</span>
+                        ×
+                        <span class="text-success">(1 - Σpq / σ²)</span>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="border-start border-primary border-3 ps-3">
+                            <strong>k</strong> = Madde (soru) sayısı<br>
+                            <span class="text-muted small">Testdeki toplam soru sayısı</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-start border-info border-3 ps-3">
+                            <strong>p</strong> = Doğru cevap oranı<br>
+                            <span class="text-muted small">Her madde için doğru cevaplanma oranı</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-start border-warning border-3 ps-3">
+                            <strong>q</strong> = Yanlış cevap oranı<br>
+                            <span class="text-muted small">q = 1 - p</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-start border-success border-3 ps-3">
+                            <strong>σ²</strong> = Varyans<br>
+                            <span class="text-muted small">Toplam puanların varyansı</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Madde Bazlı Analiz -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0"><i class="bi bi-table me-2 text-primary"></i>Madde Bazlı Güvenirlik Katkısı</h5>
+                <span class="badge bg-light text-dark border">Toplam {{ k }} Madde</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width: 60px;">Madde</th>
+                                <th class="text-center">Doğru Sayısı</th>
+                                <th class="text-center">p (Güçlük)</th>
+                                <th class="text-center">q (1-p)</th>
+                                <th class="text-center">p×q</th>
+                                <th>Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in item_stats %}
+                            <tr>
+                                <td class="text-center fw-bold">{{ item.item_number }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ item.correct_count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <span class="me-2">{{ item.p }}</span>
+                                        <div class="progress" style="height: 6px; width: 60px;">
+                                            <div class="progress-bar bg-info"
+                                                style="width: {% widthratio item.p 1 100 %}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">{{ item.q }}</td>
+                                <td class="text-center">
+                                    <span
+                                        class="badge {% if item.pq > 0.2 %}bg-success{% elif item.pq > 0.1 %}bg-info{% else %}bg-secondary{% endif %}">
+                                        {{ item.pq }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if item.p > 0.9 or item.p < 0.1 %} <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Uç Değer
+                                        </span>
+                                        {% elif item.pq < 0.1 %} <span class="badge bg-secondary">
+                                            <i class="bi bi-dash-circle me-1"></i>Düşük Katkı
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>Uygun
+                                            </span>
+                                            {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bilgilendirme Kutusu -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-light border">
+            <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>KR-20 Hakkında</h6>
+            <hr>
+            <p class="mb-2">
+                <strong>KR-20 (Kuder-Richardson 20)</strong>, doğru-yanlış (0/1) olarak puanlanan test maddelerinin
+                iç tutarlılık güvenirliğini ölçen bir katsayıdır. Cronbach Alpha'nın özel bir durumudur.
+            </p>
+            <ul class="mb-0">
+                <li><strong>0.90 ve üzeri:</strong> Mükemmel güvenirlik</li>
+                <li><strong>0.80 - 0.89:</strong> İyi güvenirlik</li>
+                <li><strong>0.70 - 0.79:</strong> Kabul edilebilir güvenirlik</li>
+                <li><strong>0.60 - 0.69:</strong> Düşük güvenirlik</li>
+                <li><strong>0.60 altı:</strong> Zayıf güvenirlik</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

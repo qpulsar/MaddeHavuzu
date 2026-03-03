@@ -1,0 +1,70 @@
+000000000000   CEVAP                  CBBBEAADEDCEEABADCCDECCDBAABDECEDBBAD                                                               
+202510207005   SERHAT �ET�N           BEDBAAECECCEEABADCEBDCEDABABDECEDBBAD                                                               
+202510213043   ALKAN UMUT             CBABAAA EACEEDBADCEDECAEEBD BCCEDBBAD                                                               
+202510211523   DEM�RC� CANER          CBDBAAEDDACBDBBADCEEBCCBBCAAAECEDBBAE                                                               
+202510211014   DEVEC� MEL�HKAAN       DBABEAEDEDCEEABADCECECCDBDABDECEDBBAD                                                               
+202510213019   N�MET �ZBAY            BEDAECDACDDAEABADCEEECEEBAADAECEDBBAB                                                               
+2025102140391  PEKMEZ BATUHAN         BBCBEAADEDCEEABADCCE CEDBEADDECEDBBAD                                                               
+202510207014   BUR��N KAPLAN          CBDBEDBADECEDECADDEBACCDBBAADECEDBBAE                                                               
+202510207013   EZG� KUR�              BBBAECEBCCCEBBBEACAEDCCCBCADACCEDBBAA                                                               
+202510211037   KESK�N G�K�E           CECDEAEBECCEDABADCABDCCDBBABDECEDBBAA                                                               
+202510211020   NA�I� MESUDE H�LAL     EEADEAABBECECABADCCEECCDBBAADECEDBBAD                                                               
+202510213027   �ZT�RK B��RA           CBAACAAABCCDCDACACCBECACBABDBBCEDBBAB                                                               
+202510207006   AYDIN UTKU             DBABBAECEACEEBDADCEECBCBBBABDBCEDBAAD                                                               
+202510207015   AKAR SAHRA             CEADEAEAEAAEBABADCEDECCCBCADDECEDBEAD                                                               
+202510207018   SEVDANUR ALA�AM        BBABAAAABCCEEBBADCDDECECBBAABECEDBBAD                                                               
+202510211027   BEYZA NUR VURAL        BECBBACABACEEBDCACEEECCDBEABDECEDBBAB                                                               
+202510211034   �REM DUMAN             CBABBAEBDCCAEABADCCEEDCDDBABDECEDBBAD                                                               
+202510211006   �TEK ASLI NUR          CBABECAAEDCEEABADCEDACCCBBABDECEDBBAD                                                               
+202510211022   MEHMET UNCU            CBEBEAEDADCDEBDADCADACCBBCABBCCEDBBAD                                                               
+202510211009   ZENG�N FATMA ZEHRA     CBCBEACBDACEEABADCABCBCDBAADDECEDBBAD                                                               
+202510211015   KAR�U BEYZA            DAABEAEAECCE ABADCCBACCDBAABBECEDBBAD                                                               
+2025102110261  �ELD�R KA�AN EGE       ABABEAEDEDCDEABADCEEECCCBAABBECEDBBAB                                                               
+202510207009   �O�KUN AYDO�AN         DECBECAADDCEEABADCABACCDBBADBBCEDBBAB                                                               
+202510211025   KARACA �EYMA           CBADEAAECDCEEABADCABACCDBBAADECEDBBAD                                                               
+202510211012   G�R CEYL�N             EECBEADDDBBEADCADCCCACCDBDABDECEDBBAA                                                               
+202510211036   YILDIZ SENA PARLAR     CCABBAEABEDBEABADCBDABCBEEABDECEDBACD                                                               
+202510211004   AY�Z HA��M             CBABECAAEBCEEABADCCDACCDBAABDECEDBBAE                                                               
+2024102110211  �ZENEL �EVVAL          CBABEAADECCEEABACCCDECCDBAADDECEDBBAD                                                               
+2025102110171  D�NDAR D�LA            CBDBEAEAEDCEEBCABCCBACCCBEABDECEDBBCB                                                               
+202510211016   KURTTEK�N ENES         BBADEAADEDCEEABADCCEACCDBCAADBAEDBBAD                                                               
+202410211036   �OBAN AYFER            BBABEAEDEBCAADAADCEDACBBADAADECEDBBAD                                                               
+202510211001   TANK�T AY�E ECR�N      BBDBEAEDDDCEEBCADCECDCECBEABDECEDBBAA                                                               
+202510211029   ��M�EK ESMA            EEEBEAEADECECABADCAEECCDBDADBECEDBBAD                                                               
+202510211030   REMZ�YE MELEK G�NG�R   CECBEACBEBDBEBEADCEEECCDBDADBECEDBBAD                                                               
+202510213041   KARAKU� DEN�Z          BBDBACAABDCEEABDDCDCECBCEBDDBDCEDBBAB                                                               
+202410207010   AYDO�DU YUSUF ENES     CBABEDAAEDCEEABADCEDECCDBDAABECEDBBAD                                                               
+202510207008   KO� ��NAY              DECDECAAEDBEEDBADCEABCCCCEAAEECEDBAAB                                                               
+2025102155181  DO�RU �EYMA            CEABCAABDDCEEBCEBCEBBCCCBBADDECEDBBAD                                                               
+2025102155231  AKMANG�L ALPTUNA       EBDDAAEAECCEEABADCEDACCCBBADDECEDBBAD                                                               
+202510213016   �LTER�� AYDEM�R        CBBAECAAEECBEBBDBCEDACBDBBAADECEDBAAD                                                               
+202510207012   CO�KUN KEREM           CBCBAAEABDDBEBCACCEDBCCDACADDDCEDBBAD                                                               
+202510211031   ZEYNEP �ZEL            CCABEAADCDCEEABADCCEDBCDBEABDECEDBBAD                                                               
+202510211041   AVCI BUKET             CCCDBAACEDCEEABADCEDBCCDBBADDECEDBBAD                                                               
+202510211005   EL�F MEL�KE KURUPINAR  CBAACAEABABEEBCBDCEDACCDBBABDECEDBBAD                                                               
+202510214512   ZAUYTBEK AYAULYM       CEBCACABEACEEDBADCAD CCCCEABDECEDBBAD                                                               
+202510207007   TANIR RAMAZAN EGE      CCCBAAEACCCDAABADCCDECEDDBABAECEDBBAA                                                               
+202510211021   NURSANEM UYAR          CBCAEAADDECAEBAABCEBBCCBAEABDECEDBBAE                                                               
+202510211038   TARAKLI ESMA CANDAN    CBEBDCEDBCCAABDAACAEACADBEAADECEDBBAB                                                               
+202410207017   �MER TEKDAL            CBDDECDBEDCAEABADCABECCBBBAADECEDBBAD                                                               
+202510207017   ESLEM NAS �ENG�L       DEEBDEECEBCADBCACCEEEDCDCCAD ECEDBBAA                                                               
+202510211013   �AKIR AY�EG�L          CBCBEAAACECEEABAACCDECCDBBABDECEDBBAD                                                               
+202510211003   U�AR BEYZA             BEDBEAEDCCBEEBDADBCDACCDBBABDECEDBBAD                                                               
+202510211023   YILMAZ SEVG�           CEABACABBCCEEABDCCEBECCDBEADDECEDBBAD                                                               
+202510213026   EMRE B�Y�KAKG�L        EEBDDABACEBCABBADCEEECEBDBAADECEDBBAD                                                               
+202510213038   FATMA G�LD�REN         EEBABCEBECCBEABADECDACCDEBABACCEDBBCD                                                               
+202510211032   KILIN�ARSLAN MUSA      CBCBECABCDCDEBDADCCEECCDDAADBECEDBBAD                                                               
+202510211024   CO�KUNER ALPER         CBEBEADAECCEEABADCCCACCCBBADDECEDBBAD                                                               
+202510207021   EZG� EKER�             CEDBEBEBECCEEBBADBADBCEDABAADBCEDBBAD                                                               
+202510207010   ONUR CO�KUN G�NG�R     CBABEAAABBCDAABADCCDECCDEBAADECEDBBAD                                                               
+202510207003   �ZKILI� FATMA �REM     CBABBCACBBCEBABADCEDCCCDBBAADECEDBBAD                                                               
+202510207002   �NCE ZEYNEP            CEDADAEAECCEAACADCCCAACDBCABDBCEDBBAD                                                               
+202510207020   ATALGIN HAT�CE         BACDECADEACEEBCADCEDECECBEADBECEDBBAD                                                               
+202510211028   �AKMAK MEL�H FURKAN    DBDBEAECEDDBEBBADCEDABCCBBADDECEDBAAB                                                               
+2025102110111  YAKIN ARDA             CBAAEAEDEDCEEABADCCDDCCDBAADDECEDBBAD                                                               
+202510211019   O�UZ AY�ENAZ           CBABEAEBEDCEEABADCCEECCDBBABDECEDBBAD                                                               
+2025102110401  �INAR CEYL�N           BBDAEADEDCEAEBCEACCBACCDBCAABECEDBBAD                                                               
+202510211008   TA�DEM�R KER�M         CBABEAADEDCEEABADCCCECCDBAABBECEDBBAD                                                               
+202310207011   BOZDA� TU��E           CBEBACAAEBCEEAEADCDDEDCDBCADBECEDBB                                                                 
+202510214549   CEYHUN T�REN           BBABEAABBDCEECBADCCEACCDB AAAECEDBBAD                                                               
+202210215541   YAZICI H�RA            CCDDEACBEEDEEBDADCABACCDBBABDECEDBBAE

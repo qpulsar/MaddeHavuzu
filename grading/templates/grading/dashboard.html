@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel - OptikForm{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2 me-2"></i>Panel</h2>
+    <a href="{% url 'new_upload' %}" class="btn btn-primary">
+        <i class="bi bi-upload me-2"></i>Yeni Okuma
+    </a>
+</div>
+
+{% if sessions %}
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-clock-history me-2"></i>Yükleme Geçmişi
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Dosya Adı</th>
+                    <th>Tarih</th>
+                    <th>Durum</th>
+                    <th>Soru</th>
+                    <th>Öğrenci</th>
+                    <th>Hata</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                <tr>
+                    <td>
+                        <a href="{% url 'upload_detail' session.pk %}" class="text-decoration-none">
+                            <i class="bi bi-file-earmark-text me-2"></i>{{ session.original_filename }}
+                        </a>
+                    </td>
+                    <td>{{ session.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        {% if session.processing_status == 'PROCESSED' %}
+                        <span class="badge bg-success">İşlendi</span>
+                        {% elif session.processing_status == 'FAILED' %}
+                        <span class="badge bg-danger">Başarısız</span>
+                        {% elif session.processing_status == 'PROCESSING' %}
+                        <span class="badge bg-warning text-dark">İşleniyor</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Kuyrukta</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ session.question_count|default:"-" }}</td>
+                    <td>{{ session.student_count|default:"-" }}</td>
+                    <td>
+                        {% if session.error_count > 0 %}
+                        <span class="text-danger">{{ session.error_count }}</span>
+                        {% else %}
+                        <span class="text-muted">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'upload_detail' session.pk %}" class="btn btn-sm btn-outline-primary"
+                            title="Görüntüle">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{% url 'upload_stats' session.pk %}"
+                            class="btn btn-sm {% if session.is_processed %}btn-outline-info{% else %}btn-outline-secondary disabled{% endif %}"
+                            title="İstatistikler">
+                            <i class="bi bi-graph-up"></i>
+                        </a>
+                        {% if session.is_processed %}
+                        <a href="{% url 'download_excel' session.pk %}" class="btn btn-sm btn-outline-success"
+                            title="Excel İndir">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        {% endif %}
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                            data-bs-target="#deleteModal{{ session.pk }}" title="Sil">
+                            <i class="bi bi-trash"></i>
+                        </button>
+
+                        <!-- Delete Confirmation Modal -->
+                        <div class="modal fade" id="deleteModal{{ session.pk }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog text-start">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Sınavı Sil</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <strong>{{ session.original_filename }}</strong> başlıklı sınavı ve tüm
+                                        sonuçlarını
+                                        silmek istediğinize emin misiniz?
+                                        <p class="text-danger mb-0 mt-2"><small><i
+                                                    class="bi bi-exclamation-triangle me-1"></i> Bu işlem geri
+                                                alınamaz.</small></p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">İptal</button>
+                                        <form action="{% url 'upload_delete' session.pk %}" method="post"
+                                            class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger">Evet, Sil</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if sessions.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if sessions.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ sessions.previous_page_number }}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+
+        {% for num in sessions.paginator.page_range %}
+        {% if sessions.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > sessions.number|add:'-3' and num < sessions.number|add:'3' %} <li class="page-item"><a
+                class="page-link" href="?page={{ num }}"> {{ num }} </a></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if sessions.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ sessions.next_page_number }}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <div class="display-1 text-muted mb-4">
+            <i class="bi bi-inbox"></i>
+        </div>
+        <h4>Henüz yükleme yapılmamış</h4>
+        <p class="text-muted mb-4">İlk okumanızı yapmak için aşağıdaki butona tıklayın.</p>
+        <a href="{% url 'new_upload' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-upload me-2"></i>Yeni Okuma
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

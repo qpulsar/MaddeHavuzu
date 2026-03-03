@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Yönetim Paneli - OptikForm{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-shield-lock me-2"></i>Yönetim Paneli</h2>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card h-100" style="border-left-color: #667eea;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Toplam Kullanıcı</h6>
+                        <h2 class="mb-0">{{ total_users }}</h2>
+                    </div>
+                    <div class="display-6 text-muted">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100" style="border-left-color: #f59e0b;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Onay Bekleyen</h6>
+                        <h2 class="mb-0">{{ pending_users }}</h2>
+                    </div>
+                    <div class="display-6 text-warning">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+            </div>
+            {% if pending_users > 0 %}
+            <div class="card-footer bg-warning bg-opacity-10 border-0">
+                <a href="{% url 'admin_users' %}?status=PENDING" class="text-warning text-decoration-none small">
+                    <i class="bi bi-arrow-right me-1"></i>Onay bekleyenleri gör
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100" style="border-left-color: #10b981;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Toplam Yükleme</h6>
+                        <h2 class="mb-0">{{ total_uploads }}</h2>
+                    </div>
+                    <div class="display-6 text-success">
+                        <i class="bi bi-file-earmark-arrow-up"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100" style="border-left-color: #764ba2;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Toplam Öğrenci</h6>
+                        <h2 class="mb-0">{{ total_students }}</h2>
+                    </div>
+                    <div class="display-6 text-primary">
+                        <i class="bi bi-mortarboard"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <a href="{% url 'admin_users' %}" class="card text-decoration-none h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="display-4 text-primary mb-3"><i class="bi bi-people-fill"></i></div>
+                <h5>Kullanıcı Yönetimi</h5>
+                <p class="text-muted mb-0 small">Kullanıcıları görüntüle, onayla veya askıya al</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'admin_formats' %}" class="card text-decoration-none h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="display-4 text-success mb-3"><i class="bi bi-file-earmark-code"></i></div>
+                <h5>Dosya Formatları</h5>
+                <p class="text-muted mb-0 small">{{ total_formats }} aktif format tanımlı</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'admin_uploads' %}" class="card text-decoration-none h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="display-4 text-info mb-3"><i class="bi bi-cloud-upload"></i></div>
+                <h5>Tüm Yüklemeler</h5>
+                <p class="text-muted mb-0 small">Tüm kullanıcıların yüklemelerini görüntüle</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Pending Users -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-person-plus me-2"></i>Onay Bekleyen Kullanıcılar</span>
+                {% if pending_users > 5 %}
+                <a href="{% url 'admin_users' %}?status=PENDING" class="btn btn-sm btn-light">Tümü</a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if recent_pending %}
+                <ul class="list-group list-group-flush">
+                    {% for profile in recent_pending %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ profile.user.get_full_name|default:profile.user.username }}</strong>
+                            <br><small class="text-muted">{{ profile.user.email }}</small>
+                        </div>
+                        <div>
+                            <form method="post" action="{% url 'admin_user_approve' profile.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success" title="Onayla">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'admin_user_reject' profile.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger" title="Reddet">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-check-circle display-4"></i>
+                    <p class="mt-2 mb-0">Onay bekleyen kullanıcı yok</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Uploads -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2"></i>Son Yüklemeler</span>
+                <a href="{% url 'admin_uploads' %}" class="btn btn-sm btn-light">Tümü</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_uploads %}
+                <ul class="list-group list-group-flush">
+                    {% for upload in recent_uploads %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ upload.original_filename|truncatechars:30 }}</strong>
+                                <br><small class="text-muted">{{ upload.owner.username }} - {{ upload.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <div>
+                                {% if upload.processing_status == 'PROCESSED' %}
+                                <span class="badge bg-success">İşlendi</span>
+                                {% elif upload.processing_status == 'FAILED' %}
+                                <span class="badge bg-danger">Başarısız</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ upload.get_processing_status_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox display-4"></i>
+                    <p class="mt-2 mb-0">Henüz yükleme yapılmamış</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Cronbach's Alpha Analizi - {{ session.original_filename }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ back_url|default:'/panel/' }}">Panel</a></li>
+                <li class="breadcrumb-item"><a href="
+                    {% url 'upload_detail' session.pk %}">{{ session.original_filename }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'upload_stats' session.pk %}">İstatistikler</a></li>
+                <li class="breadcrumb-item active">Cronbach's Alpha</li>
+            </ol>
+        </nav>
+        <h2 class="mt-2"><i class="bi bi-graph-up-arrow me-2"></i>Cronbach's Alpha (α) Analizi</h2>
+    </div>
+    <div>
+        <a href="{% url 'upload_stats' session.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>İstatistiklere Dön
+        </a>
+    </div>
+</div>
+
+<!-- Alpha Ana Kart -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-{{ interpretation_type }} h-100">
+            <div class="card-header bg-{{ interpretation_type }} text-white">
+                <i class="bi bi-graph-up-arrow me-2"></i>Cronbach's Alpha (α)
+            </div>
+            <div class="card-body text-center">
+                <h1 class="display-3 fw-bold text-{{ interpretation_type }}">{{ alpha }}</h1>
+                <p class="text-muted mb-0">İç Tutarlılık Katsayısı</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card h-100 border-{{ interpretation_type }}">
+            <div class="card-header bg-white">
+                <i class="bi bi-info-circle me-2 text-{{ interpretation_type }}"></i>İç Tutarlılık Yorumu
+            </div>
+            <div class="card-body">
+                <div class="alert alert-{{ interpretation_type }} mb-4">
+                    <i class="bi bi-lightbulb me-2"></i>{{ interpretation }}
+                </div>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h5 class="text-muted mb-1">Madde Sayısı (k)</h5>
+                        <h3 class="text-primary">{{ k }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-muted mb-1">Öğrenci Sayısı (n)</h5>
+                        <h3 class="text-info">{{ n }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-muted mb-1">Σσ²ᵢ</h5>
+                        <h3 class="text-warning">{{ sum_item_variance }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h5 class="text-muted mb-1">σ²ₜ (Toplam)</h5>
+                        <h3 class="text-secondary">{{ total_variance }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formül Kartı -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <i class="bi bi-calculator me-2"></i>Cronbach's Alpha Formülü
+            </div>
+            <div class="card-body">
+                <div class="text-center py-3">
+                    <div class="bg-light p-4 rounded d-inline-block" style="font-size: 1.3rem;">
+                        <strong>α = </strong>
+                        <span class="text-primary">(k / (k-1))</span>
+                        ×
+                        <span class="text-success">(1 - Σσ²ᵢ / σ²ₜ)</span>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="border-start border-primary border-3 ps-3">
+                            <strong>k</strong> = Madde sayısı<br>
+                            <span class="text-muted small">Testdeki toplam soru sayısı</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-start border-info border-3 ps-3">
+                            <strong>σ²ᵢ</strong> = Madde varyansı<br>
+                            <span class="text-muted small">Her maddenin ayrı varyansı</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-start border-warning border-3 ps-3">
+                            <strong>Σσ²ᵢ</strong> = Varyans toplamı<br>
+                            <span class="text-muted small">Tüm madde varyanslarının toplamı</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border-start border-success border-3 ps-3">
+                            <strong>σ²ₜ</strong> = Toplam varyans<br>
+                            <span class="text-muted small">Toplam puanların varyansı</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Madde Bazlı Analiz -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0"><i class="bi bi-table me-2 text-primary"></i>Madde Bazlı Varyans Analizi</h5>
+                <span class="badge bg-light text-dark border">Toplam {{ k }} Madde</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width: 60px;">Madde</th>
+                                <th class="text-center">Doğru Sayısı</th>
+                                <th class="text-center">Ortalama</th>
+                                <th class="text-center">p (Güçlük)</th>
+                                <th class="text-center">σ² (Varyans)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in item_stats %}
+                            <tr>
+                                <td class="text-center fw-bold">{{ item.item_number }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ item.correct_count }}</span>
+                                </td>
+                                <td class="text-center">{{ item.mean }}</td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <span class="me-2">{{ item.p }}</span>
+                                        <div class="progress" style="height: 6px; width: 60px;">
+                                            <div class="progress-bar bg-info"
+                                                style="width: {% widthratio item.p 1 100 %}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span
+                                        class="badge {% if item.variance > 0.2 %}bg-success{% elif item.variance > 0.1 %}bg-info{% else %}bg-secondary{% endif %}">
+                                        {{ item.variance }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bilgilendirme Kutusu -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-light border">
+            <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Cronbach's Alpha Hakkında</h6>
+            <hr>
+            <p class="mb-2">
+                <strong>Cronbach's Alpha (α)</strong>, test maddelerinin iç tutarlılığını ölçen en yaygın kullanılan
+                güvenirlik katsayısıdır. KR-20'nin daha genel halidir ve 0/1 puanlı maddeler için KR-20 ile
+                neredeyse aynı sonucu verir.
+            </p>
+            <ul class="mb-0">
+                <li><strong>0.90 ve üzeri:</strong> Mükemmel iç tutarlılık</li>
+                <li><strong>0.80 - 0.89:</strong> İyi iç tutarlılık</li>
+                <li><strong>0.70 - 0.79:</strong> Kabul edilebilir iç tutarlılık</li>
+                <li><strong>0.60 - 0.69:</strong> Düşük iç tutarlılık</li>
+                <li><strong>0.60 altı:</strong> Zayıf iç tutarlılık</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
