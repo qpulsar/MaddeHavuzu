@@ -3,6 +3,17 @@
 
 {% block title %}Yeni Okuma - OptikForm{% endblock %}
 
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Panel</a></li>
+            <li class="breadcrumb-item active">Yeni Okuma</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">

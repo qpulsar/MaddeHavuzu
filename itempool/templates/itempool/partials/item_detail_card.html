@@ -1,0 +1,60 @@
+{% if section == 'stem' %}
+<div class="card shadow-sm mb-4" id="stem-card">
+    <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-question-circle text-primary"></i> Madde Kökü</span>
+        <div>
+            <span class="badge bg-light text-dark me-2">Sürüm {{ instance.item.version }}</span>
+            <button class="btn btn-sm btn-outline-primary py-0" 
+                    hx-get="{% url 'itempool:item_detail_edit' instance.id 'stem' %}" 
+                    hx-target="#stem-card" hx-swap="outerHTML">
+                <i class="bi bi-pencil"></i> Düzenle
+            </button>
+        </div>
+    </div>
+    <div class="card-body fs-5 py-4">
+        {{ instance.item.stem|linebreaks }}
+    </div>
+</div>
+
+{% elif section == 'meta' %}
+<div class="card shadow-sm mb-4" id="meta-card">
+    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+        <span>Meta Veriler</span>
+        <button class="btn btn-sm btn-outline-primary py-0" 
+                hx-get="{% url 'itempool:item_detail_edit' instance.id 'meta' %}" 
+                hx-target="#meta-card" hx-swap="outerHTML">
+            <i class="bi bi-pencil"></i> Düzenle
+        </button>
+    </div>
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item"><strong>Tip:</strong> <span class="float-end">{{ instance.item.get_item_type_display }}</span></li>
+        <li class="list-group-item"><strong>Hedef Zorluk:</strong> <span class="float-end badge bg-info text-dark">{{ instance.item.get_difficulty_intended_display }}</span></li>
+        <li class="list-group-item"><strong>Durum:</strong> <span class="float-end">{{ instance.item.get_status_display }}</span></li>
+        <li class="list-group-item"><strong>Ekleyen:</strong> <span class="float-end">{{ instance.added_by.username }}</span></li>
+        <li class="list-group-item"><strong>Eklenme Tarihi:</strong> <span class="float-end small text-muted">{{ instance.added_at|date:"d.m.Y H:i" }}</span></li>
+    </ul>
+</div>
+
+{% elif section == 'outcomes' %}
+<div class="card shadow-sm mb-4 border-primary" id="outcomes-card">
+    <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+        <span>İlişkili Öğrenme Çıktıları</span>
+        <button class="btn btn-sm btn-light py-0" 
+                hx-get="{% url 'itempool:item_detail_edit' instance.id 'outcomes' %}" 
+                hx-target="#outcomes-card" hx-swap="outerHTML">
+            <i class="bi bi-pencil"></i> Düzenle
+        </button>
+    </div>
+    <div class="list-group list-group-flush">
+        {% for outcome in instance.learning_outcomes.all %}
+        <div class="list-group-item">
+            <h6 class="mb-1 fw-bold">{{ outcome.code }}</h6>
+            <p class="mb-1 small">{{ outcome.description }}</p>
+            <span class="badge bg-light text-primary border">{{ outcome.get_level_display }}</span>
+        </div>
+        {% empty %}
+        <div class="list-group-item text-muted small">Öğrenme çıktısı atanmadı.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

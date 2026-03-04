@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Toplu Madde Yükle (Word) - {{ pool.name }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_detail' pool.id %}">{{ pool.name }}</a></li>
+            <li class="breadcrumb-item active">Toplu Yükle</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center pt-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-word"></i> Yeni Madde Yükleme (Docx)</h5>
+            </div>
+            <div class="card-body py-4">
+                <div class="alert alert-info border-info shadow-sm">
+                    <h6><i class="bi bi-info-circle-fill"></i> Dosya Formatı İpuçları</h6>
+                    <ul class="mb-0 small">
+                        <li>Sorular numara ile başlamalıdır (Örn: <strong>1.</strong> Soru kökü...).</li>
+                        <li><strong>Otomatik Numaralandırma</strong> veya <strong>Madde İmi</strong> desteği mevcuttur.</li>
+                        <li>Şıklar alfabetik olmalıdır (Örn: <strong>A)</strong> Seçenek...).</li>
+                        <li>Doğru cevap <strong>Cevap: A</strong> şeklinde belirtilmelidir.</li>
+                        <li>Dosya uzantısı <strong>.docx</strong> olmalıdır.</li>
+                    </ul>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Word Dosyası Seçin</label>
+                        <input type="file" name="docx_file" class="form-control form-control-lg" accept=".docx" required>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                        <a href="{% url 'itempool:pool_detail' pool.id %}" class="btn btn-outline-secondary">İptal</a>
+                        <button type="submit" class="btn btn-primary px-5">
+                            <i class="bi bi-cloud-upload"></i> Yükle ve Analiz Et
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

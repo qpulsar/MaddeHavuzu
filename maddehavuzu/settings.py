@@ -47,12 +47,13 @@ INSTALLED_APPS = [
     'django_filters',
     # Project apps
     'grading',
-    # 'itempool',  # Yeni app — Faz 1'de aktif edilecek
+    'itempool',  # Yeni app — Faz 1
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # i18n için eklendi
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -121,10 +122,24 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-LANGUAGE_CODE = 'tr-tr'
+# https://docs.djangoproject.com/en/4.2/topics/i18n/
+from django.utils.translation import gettext_lazy as _
+
+LANGUAGE_CODE = 'tr'
+
+LANGUAGES = (
+    ('tr', _('Türkçe')),
+    ('en', _('English')),
+)
+
 TIME_ZONE = 'Europe/Istanbul'
+
 USE_I18N = True
 USE_TZ = True
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 
 # Static files (CSS, JavaScript, Images)
@@ -166,6 +181,14 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day'
+    }
 }
 
 

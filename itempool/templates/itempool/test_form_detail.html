@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{{ form.name }} - Detay{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_detail' form.pool.id %}">{{ form.pool.name }}</a></li>
+            <li class="breadcrumb-item active">{{ form.name }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col-md-9">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Form Soruları</h5>
+                <a href="{% url 'itempool:test_form_edit_items' form.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Maddeleri Düzenle
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for item in items %}
+                    <div class="list-group-item p-4">
+                        <div class="d-flex align-items-start">
+                            <div class="me-4 text-center">
+                                <span class="h4 d-block mb-1 text-primary">{{ item.order }}</span>
+                                <span class="badge bg-light text-dark border small">{{ item.points }} Puan</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="mb-3 ps-3 border-start border-3 border-light py-1">{{ item.item_instance.item.stem|linebreaksbr }}</div>
+                                
+                                <div class="row row-cols-md-2 g-2 ps-3">
+                                    {% for choice in item.item_instance.item.choices.all %}
+                                    <div class="col small">
+                                        <span class="fw-bold {% if choice.is_correct %}text-success{% endif %}">{{ choice.label }})</span> 
+                                        {{ choice.text }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-5 text-center text-muted">Bu formda henüz hiç soru bulunmuyor.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">Form Bilgileri</div>
+            <div class="card-body">
+                <h6 class="text-primary">{{ form.name }}</h6>
+                <p class="small text-muted mb-3">{{ form.description|default:"Açıklama yok." }}</p>
+                
+                <hr>
+                
+                <div class="mb-2 d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">Durum:</span>
+                    <span class="badge {% if form.status == 'ACTIVE' %}bg-success{% elif form.status == 'DRAFT' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                        {{ form.get_status_display }}
+                    </span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">Soru Sayısı:</span>
+                    <span class="fw-bold">{{ items.count }}</span>
+                </div>
+                <div class="mb-2 d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">Oluşturan:</span>
+                    <span class="small">{{ form.created_by.username }}</span>
+                </div>
+                <div class="mb-0 d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">Tarih:</span>
+                    <span class="small">{{ form.created_at|date:"d.m.Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">İşlemler</div>
+            <div class="card-body">
+                <button class="btn btn-outline-secondary w-100 mb-2 btn-sm">
+                    <i class="bi bi-printer"></i> Yazdır (PDF)
+                </button>
+                <button class="btn btn-outline-secondary w-100 mb-2 btn-sm">
+                    <i class="bi bi-download"></i> Dışa Aktar (XLSX)
+                </button>
+                {% if form.status == 'DRAFT' %}
+                <button class="btn btn-success w-100 btn-sm">
+                    <i class="bi bi-check-circle"></i> Onayla & Yayınla
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

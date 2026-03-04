@@ -1,0 +1,63 @@
+<form hx-post="{% url 'itempool:item_detail_save' instance.id section %}" hx-swap="outerHTML" hx-target="this">
+    {% csrf_token %}
+    {% if section == 'stem' %}
+    <div class="card shadow-sm mb-4 border-warning" id="stem-card">
+        <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-pencil-square"></i> Düzenle: Madde Kökü</span>
+            <div>
+                <button type="submit" class="btn btn-sm btn-success py-0 me-1">Kaydet</button>
+                <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail' instance.id %}" hx-target="body">İptal</button>
+            </div>
+        </div>
+        <div class="card-body">
+            {{ form.stem }}
+            <div style="display:none">{{ form.difficulty_intended }}{{ form.status }}</div>
+        </div>
+    </div>
+
+    {% elif section == 'meta' %}
+    <div class="card shadow-sm mb-4 border-warning" id="meta-card">
+        <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-pencil-square"></i> Düzenle: Meta Veriler</span>
+            <div>
+                <button type="submit" class="btn btn-sm btn-success py-0 me-1">Kaydet</button>
+                <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail' instance.id %}" hx-target="body">İptal</button>
+            </div>
+        </div>
+        <div class="card-body py-1">
+            <ul class="list-group list-group-flush border-0">
+                <li class="list-group-item border-0">
+                    <label class="small fw-bold">Zorluk Seviyesi</label>
+                    {{ form.difficulty_intended }}
+                </li>
+                <li class="list-group-item border-0">
+                    <label class="small fw-bold">Durum</label>
+                    {{ form.status }}
+                </li>
+            </ul>
+            <div style="display:none">{{ form.stem }}</div>
+        </div>
+    </div>
+
+    {% elif section == 'outcomes' %}
+    <div class="card shadow-sm mb-4 border-warning" id="outcomes-card">
+        <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-pencil-square"></i> Düzenle: Öğrenme Çıktıları</span>
+            <div>
+                <button type="submit" class="btn btn-sm btn-success py-0 me-1">Kaydet</button>
+                <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail' instance.id %}" hx-target="body">İptal</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <select name="outcomes" class="form-select" multiple size="8">
+                {% for outcome in outcomes %}
+                <option value="{{ outcome.id }}" {% if outcome in instance.learning_outcomes.all %}selected{% endif %}>
+                    {{ outcome.code }}: {{ outcome.description|truncatechars:100 }}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="form-text small">Çoklu seçim için Ctrl/Cmd tuşunu kullanın.</div>
+        </div>
+    </div>
+    {% endif %}
+</form>

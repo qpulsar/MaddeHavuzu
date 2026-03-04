@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Havuz: {{ pool.name }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item active">{{ pool.name }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-folder2-open text-primary"></i> {{ pool.name }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'itempool:pool_update' pool.id %}" class="btn btn-sm btn-outline-primary me-2">
+            <i class="bi bi-pencil"></i> Düzenle
+        </a>
+        <a href="{% url 'itempool:pool_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Geri
+        </a>
+    </div>
+</div>
+
+
+
+<div class="row mb-4">
+    <!-- Havuz Özeti -->
+    <div class="col-md-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light fw-bold">
+                <i class="bi bi-info-circle"></i> Havuz Bilgileri
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Ders:</strong> <span class="float-end">{{ pool.course }}</span></li>
+                <li class="list-group-item"><strong>Dönem:</strong> <span class="float-end badge bg-secondary">{{ pool.semester }}</span></li>
+                <li class="list-group-item"><strong>Seviye:</strong> <span class="float-end">{{ pool.level }}</span></li>
+                <li class="list-group-item"><strong>Durum:</strong> 
+                    <span class="float-end badge {% if pool.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ pool.get_status_display }}
+                    </span>
+                </li>
+                <li class="list-group-item"><strong>Sahibi:</strong> <span class="float-end">{{ pool.owner.get_full_name|default:pool.owner.username }}</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Sekmeler -->
+    <div class="col-md-9">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="poolTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items-pane" type="button" role="tab" aria-controls="items-pane" aria-selected="true">
+                            <i class="bi bi-list-ol"></i> Maddeler <span class="badge bg-secondary ms-1">{{ items.paginator.count }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="outcomes-tab" data-bs-toggle="tab" data-bs-target="#outcomes-pane" type="button" role="tab" aria-controls="outcomes-pane" aria-selected="false">
+                            <i class="bi bi-bullseye"></i> Öğrenme Çıktıları <span class="badge bg-secondary ms-1">{{ outcomes.count }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms-pane" type="button" role="tab" aria-controls="forms-pane" aria-selected="false">
+                            <i class="bi bi-file-earmark-text"></i> Test Formları <span class="badge bg-secondary ms-1">{{ test_forms.count }}</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card-body">
+                <div class="tab-content" id="poolTabsContent">
+                    
+                    <!-- Maddeler Sekmesi -->
+                    <div class="tab-pane fade show active" id="items-pane" role="tabpanel" aria-labelledby="items-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Havuzdaki Maddeler</h5>
+                            <div>
+                                <a href="{% url 'itempool:pool_bulk_suggest_outcomes' pool.id %}" class="btn btn-sm btn-outline-info me-2" onclick="return confirm('Öğrenme çıktısı atanmamış tüm maddeler için AI önerisi toplanacak. Emin misiniz?')">
+                                    <i class="bi bi-robot"></i> Toplu AI Önerisi Al
+                                </a>
+                                <a href="{% url 'itempool:import_upload' pool.id %}" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="bi bi-file-earmark-word"></i> Toplu Yükle (Word)
+                                </a>
+                                <a href="{% url 'itempool:item_create' pool.id %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-plus"></i> Madde Ekle
+                                </a>
+                            </div>
+                        </div>
+                        
+                        {% if items %}
+                        <div class="list-group">
+                            {% for inst in items %}
+                            <a href="{% url 'itempool:item_detail' inst.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ inst.item.stem|truncatechars:150 }}</h6>
+                                    <small class="text-muted">{{ inst.item.get_item_type_display }}</small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <p class="mb-0 small text-muted">
+                                        Zorluk: <span class="badge bg-light text-dark">{{ inst.item.get_difficulty_intended_display }}</span>
+                                        {% if inst.learning_outcomes.exists %}
+                                        | Çıktı: 
+                                        {% for oc in inst.learning_outcomes.all %}
+                                            <span class="badge bg-info text-dark">{{ oc.code }}</span>
+                                        {% endfor %}
+                                        {% endif %}
+                                        {% with latest_analysis=inst.analysis_results.first %}
+                                            {% if latest_analysis %}
+                                            | Risk: <span class="badge bg-{{ latest_analysis.risk_color }}">{{ latest_analysis.risk_score }}</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </p>
+                                    <small class="text-muted">{{ inst.added_by.username }} | {{ inst.added_at|date:"d.m.Y" }}</small>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Pagination for Items -->
+                        {% if items.has_other_pages %}
+                        <nav class="mt-3">
+                            <ul class="pagination pagination-sm justify-content-center">
+                                {% if items.has_previous %}
+                                <li class="page-item"><a class="page-link" href="?page={{ items.previous_page_number }}#items-pane">&laquo;</a></li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                {% endif %}
+                                
+                                {% for i in items.paginator.page_range %}
+                                    {% if items.number == i %}
+                                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                    {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ i }}#items-pane">{{ i }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if items.has_next %}
+                                <li class="page-item"><a class="page-link" href="?page={{ items.next_page_number }}#items-pane">&raquo;</a></li>
+                                {% else %}
+                                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                        {% else %}
+                        <div class="text-center py-5 text-muted bg-light rounded border">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2">Bu havuzda henüz hiç madde yok.</p>
+                            <a href="{% url 'itempool:item_create' pool.id %}" class="btn btn-sm btn-outline-primary">
+                                İlk Maddeyi Ekle
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Çıktılar Sekmesi -->
+                    <div class="tab-pane fade" id="outcomes-pane" role="tabpanel" aria-labelledby="outcomes-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Öğrenme Çıktıları</h5>
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#addOutcomeForm" aria-expanded="false" aria-controls="addOutcomeForm">
+                                <i class="bi bi-plus"></i> Çıktı Ekle
+                            </button>
+                        </div>
+
+                        <!-- Çıktı Ekleme Formu -->
+                        <div class="collapse mb-4" id="addOutcomeForm">
+                            <div class="card card-body bg-light">
+                                <form hx-post="{% url 'itempool:outcome_add' pool.id %}" 
+                                      hx-target="#outcomes-tbody" 
+                                      hx-swap="beforeend"
+                                      hx-on::after-request="if(event.detail.successful) { this.reset(); bootstrap.Collapse.getInstance(document.getElementById('addOutcomeForm')).hide(); }">
+                                    {% csrf_token %}
+                                    <div class="row g-2">
+                                        <div class="col-md-2">
+                                            {{ outcome_form.code }}
+                                        </div>
+                                        <div class="col-md-5">
+                                            {{ outcome_form.description }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            {{ outcome_form.level }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            {{ outcome_form.weight }}
+                                        </div>
+                                        <div class="col-md-1">
+                                            {{ outcome_form.order }}
+                                        </div>
+                                        <div class="col-12 text-end mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#addOutcomeForm">İptal</button>
+                                            <button type="submit" class="btn btn-sm btn-success">Kaydet</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Çıktılar Tablosu -->
+                        {% if outcomes %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 5%">#</th>
+                                        <th style="width: 10%">Kod</th>
+                                        <th style="width: 50%">Açıklama</th>
+                                        <th style="width: 15%">Düzey (Bloom)</th>
+                                        <th style="width: 10%">Ağırlık</th>
+                                        <th style="width: 10%">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="outcomes-tbody">
+                                    {% for oc in outcomes %}
+                                        {% include 'itempool/partials/outcome_row.html' %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4 text-muted bg-light rounded border">
+                            <i class="bi bi-bullseye fs-3 d-block mb-1"></i>
+                            <p class="mb-0">Henüz öğrenme çıktısı tanımlanmamış.</p>
+                        </div>
+                        {% endif %}
+                        
+                    </div>
+
+                    <!-- Test Formları Sekmesi -->
+                    <div class="tab-pane fade" id="forms-pane" role="tabpanel" aria-labelledby="forms-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Sınav Formları</h5>
+                            <a href="{% url 'itempool:test_form_create' pool.id %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus"></i> Yeni Form Oluştur
+                            </a>
+                        </div>
+                        
+                        {% if test_forms %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Form Adı</th>
+                                        <th>Durum</th>
+                                        <th>Soru Sayısı</th>
+                                        <th>Tarih</th>
+                                        <th class="text-end">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for form in test_forms %}
+                                    <tr>
+                                        <td><strong>{{ form.name }}</strong></td>
+                                        <td>
+                                            <span class="badge {% if form.status == 'ACTIVE' %}bg-success{% elif form.status == 'DRAFT' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                                {{ form.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ form.form_items.count }}</td>
+                                        <td>{{ form.created_at|date:"d.m.Y" }}</td>
+                                        <td class="text-end">
+                                            <a href="{% url 'itempool:test_form_detail' form.id %}" class="btn btn-sm btn-outline-primary" title="Detay">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4 text-muted bg-light rounded border mb-4">
+                            <i class="bi bi-file-earmark-text fs-3 d-block mb-1"></i>
+                            <p class="mb-0">Henüz hiç test formu oluşturulmamış.</p>
+                        </div>
+                        {% endif %}
+
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">Blueprintler ve Belirtke Tabloları</h6>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="list-group mb-3">
+                                    <div class="list-group-item bg-light fw-bold small">Blueprints</div>
+                                    {% for bp in blueprints %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center small">
+                                        {{ bp.name }}
+                                        <span class="badge bg-secondary rounded-pill">{{ bp.total_items }} Soru</span>
+                                    </div>
+                                    {% empty %}
+                                    <div class="list-group-item text-muted small">Tanımlı blueprint yok.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="list-group mb-3">
+                                    <div class="list-group-item bg-light fw-bold small">Belirtke Tabloları</div>
+                                    {% for st in spec_tables %}
+                                    <div class="list-group-item small">
+                                        {{ st.name }}
+                                    </div>
+                                    {% empty %}
+                                    <div class="list-group-item text-muted small">Tanımlı belirtke tablosu yok.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

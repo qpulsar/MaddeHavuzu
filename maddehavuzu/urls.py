@@ -9,8 +9,10 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('grading.urls')),
-    # itempool URLs will be added here
-    # path('havuz/', include('itempool.urls')),
+    # i18n url
+    path('i18n/', include('django.conf.urls.i18n')),
+    # itempool URLs
+    path('havuz/', include('itempool.urls')),
 ]
 
 # Serve media files in development

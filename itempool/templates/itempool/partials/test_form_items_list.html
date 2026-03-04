@@ -1,0 +1,29 @@
+<div class="list-group list-group-flush">
+    {% for item in current_items %}
+    <div class="list-group-item p-3 border-start border-4 border-primary">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <div class="fw-bold small mb-1">Soru {{ item.order }}</div>
+                <div class="small text-truncate-2" style="max-height: 3rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2;">
+                    {{ item.item_instance.item.stem }}
+                </div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger p-0 ms-2"
+                    hx-post="{% url 'itempool:test_form_remove_item' form.id item.id %}"
+                    hx-target="#selected-items-container"
+                    hx-confirm="Bu soruyu formdan çıkarmak istediğinize emin misiniz?">
+                <i class="bi bi-x-circle fs-5"></i>
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="p-4 text-center text-muted">
+        <i class="bi bi-arrow-left d-block fs-3 mb-2"></i>
+        Henüz soru eklenmedi.<br>Soldan seçebilirsiniz.
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card-footer bg-white text-end border-top-0">
+    <div class="small text-muted mb-0">Toplam Soru: <span class="fw-bold">{{ current_items.count }}</span></div>
+</div>

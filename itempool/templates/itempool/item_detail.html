@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Madde Detayı - #{{ instance.item.id }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_detail' instance.pool.id %}">{{ instance.pool.name }}</a></li>
+            <li class="breadcrumb-item active">Madde #{{ instance.item.id }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        {% with section='stem' %}
+            {% include "itempool/partials/item_detail_card.html" %}
+        {% endwith %}
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-bold">
+                <i class="bi bi-list-check text-success"></i> Seçenekler
+            </div>
+            <div class="list-group list-group-flush">
+                {% for choice in instance.item.choices.all %}
+                <div class="list-group-item d-flex align-items-center {% if choice.is_correct %}list-group-item-success{% endif %}">
+                    <span class="badge {% if choice.is_correct %}bg-success{% else %}bg-secondary{% endif %} me-3">{{ choice.label }}</span>
+                    <div class="flex-grow-1">{{ choice.text }}</div>
+                    {% if choice.is_correct %}
+                    <i class="bi bi-check-circle-fill text-success ms-2" title="Doğru Cevap"></i>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        {% with section='meta' %}
+            {% include "itempool/partials/item_detail_card.html" %}
+        {% endwith %}
+
+        {% with section='outcomes' %}
+            {% include "itempool/partials/item_detail_card.html" %}
+        {% endwith %}
+
+        {% if analysis %}
+        <div class="card shadow-sm mb-4 border-{{ analysis.risk_color }}">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="bi bi-graph-up text-primary"></i> Madde Analizi (Son)</span>
+                <span class="badge bg-{{ analysis.risk_color }}">
+                    Risk Skoru: {{ analysis.risk_score }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-0">
+                    <div class="col-4">
+                        <div class="small text-muted" title="Zorluk İndeksi">Zorluk (p)</div>
+                        <div class="h5 mb-0">{{ analysis.difficulty_p|floatformat:2 }}</div>
+                        <div style="font-size: 0.75rem;">{{ analysis.p_comment }}</div>
+                    </div>
+                    <div class="col-4 border-start border-end">
+                        <div class="small text-muted" title="Ayırt Edicilik İndeksi">Ayırt Ed. (r)</div>
+                        <div class="h5 mb-0">{{ analysis.discrimination_r|floatformat:2 }}</div>
+                        <div style="font-size: 0.75rem;">{{ analysis.r_comment }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-muted" title="Çeldirici Verimliliği">Çeldirici</div>
+                        <div class="h5 mb-0">{{ analysis.distractor_efficiency|floatformat:0 }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <i class="bi bi-clock-history"></i> Analiz Geçmişi
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-3">Sınav / Tarih</th>
+                            <th>p</th>
+                            <th>r</th>
+                            <th class="text-end pe-3">Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for res in instance.analysis_results.all %}
+                        <tr>
+                            <td class="ps-3">
+                                <div class="fw-bold">{{ res.test_form.name|default:"Genel Uygulama" }}</div>
+                                <div class="x-small text-muted">{{ res.created_at|date:"d.m.Y" }}</div>
+                            </td>
+                            <td>{{ res.difficulty_p|floatformat:2 }}</td>
+                            <td>{{ res.discrimination_r|floatformat:2 }}</td>
+                            <td class="text-end pe-3">
+                                <span class="badge bg-{{ res.risk_color }}">{{ res.risk_score }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white fw-bold">Aksiyonlar</div>
+            <div class="card-body">
+                <a href="{% url 'itempool:item_delete' instance.id %}" class="btn btn-outline-danger w-100 mb-2" onclick="return confirm('Bu maddeyi havuzdan kaldırmak istediğinize emin misiniz?')">
+                    <i class="bi bi-trash"></i> Havuzdan Kaldır
+                </a>
+                <p class="text-muted x-small mb-0">Not: Madde sistemden tamamen silinmez, sadece bu havuz ile bağlantısı kesilir.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

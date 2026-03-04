@@ -10,6 +10,14 @@ class UserStatus(models.TextChoices):
     SUSPENDED = 'SUSPENDED', 'Askıya Alındı'
 
 
+class UserRole(models.TextChoices):
+    """User roles for the application."""
+    INSTRUCTOR = 'INSTRUCTOR', 'Öğretim Elemanı'
+    COORDINATOR = 'COORDINATOR', 'Koordinatör'
+    ASSISTANT = 'ASSISTANT', 'Araştırma Görevlisi / Asistan'
+    ADMIN = 'ADMIN', 'Yönetici'
+
+
 class UserProfile(models.Model):
     """
     Extended user profile for approval workflow.
@@ -26,6 +34,12 @@ class UserProfile(models.Model):
         choices=UserStatus.choices,
         default=UserStatus.PENDING,
         verbose_name='Durum'
+    )
+    role = models.CharField(
+        max_length=20,
+        choices=UserRole.choices,
+        default=UserRole.INSTRUCTOR,
+        verbose_name='Rol'
     )
     approved_by = models.ForeignKey(
         User,

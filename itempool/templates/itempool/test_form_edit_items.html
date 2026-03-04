@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Madde Seçimi - {{ form.name }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_detail' form.pool.id %}">{{ form.pool.name }}</a></li>
+            <li class="breadcrumb-item active">{{ form.name }} - Madde Seçimi</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <!-- Sol Kolon: Havuzdaki Maddeler -->
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Havuzdaki Maddeler</h5>
+                <span class="badge bg-secondary">{{ available_items.count }} Müsait</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="available-items">
+                    {% for inst in available_items %}
+                    <div class="list-group-item p-3 item-row" id="inst-{{ inst.id }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="small text-muted mb-1">
+                                    Madde #{{ inst.item.id }} | 
+                                    <span class="badge bg-light text-dark border">{{ inst.item.get_difficulty_intended_display }}</span>
+                                </div>
+                                <div class="fw-normal mb-2">{{ inst.item.stem|truncatewords:20 }}</div>
+                                <div>
+                                    {% for oc in inst.learning_outcomes.all %}
+                                    <span class="badge bg-info text-dark x-small">{{ oc.code }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-success ms-3" 
+                                    hx-post="{% url 'itempool:test_form_add_item' form.id inst.id %}"
+                                    hx-target="#selected-items-container"
+                                    hx-swap="innerHTML"
+                                    hx-on::after-request="document.getElementById('inst-{{ inst.id }}').remove()">
+                                <i class="bi bi-plus-lg"></i> Ekle
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted">Eklenecek yeni madde kalmadı.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sağ Kolon: Form İçeriği -->
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+            <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Form İçeriği</h5>
+                <a href="{% url 'itempool:test_form_detail' form.id %}" class="btn btn-sm btn-success">
+                    <i class="bi bi-check-lg"></i> Tamamla
+                </a>
+            </div>
+            <div class="card-body p-0" id="selected-items-container">
+                {% include "itempool/partials/test_form_items_list.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .item-row:hover {
+        background-color: #f8f9fa;
+    }
+    .x-small {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

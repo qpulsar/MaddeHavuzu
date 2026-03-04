@@ -1,10 +1,19 @@
+{% load i18n %}
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="{{ LANGUAGE_CODE|default:'tr' }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}OptikForm{% endblock %}</title>
+    <title>{% block title %}Madde Havuzum{% endblock %}</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,185 +22,387 @@
 
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --bs-body-font-family: 'Inter', sans-serif;
+            --mh-primary: #1e5cff;
+            --mh-primary-hover: #1646cc;
+            --mh-sidebar-bg: #ffffff;
+            --mh-bg: #f5f7f9;
+            --mh-text-main: #1f2937;
+            --mh-text-muted: #6b7280;
+            --mh-border: #e5e7eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --card-border-radius: 12px;
         }
 
         body {
-            background-color: #f8fafc;
+            background-color: var(--mh-bg);
+            color: var(--mh-text-main);
+            font-family: var(--bs-body-font-family);
             min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
         }
 
-        .navbar {
-            background: var(--primary-gradient) !important;
-            box-shadow: var(--card-shadow);
+        /* Sidebar Styling */
+        #sidebar {
+            min-width: 260px;
+            max-width: 260px;
+            background-color: var(--mh-sidebar-bg);
+            min-height: 100vh;
+            border-right: 1px solid var(--mh-border);
+            position: sticky;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
         }
 
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.4rem;
+        .sidebar-brand {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--mh-border);
+            margin-bottom: 1rem;
         }
 
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .card-header {
-            background: var(--primary-gradient);
+        .sidebar-brand .logo-box {
+            background: var(--mh-primary);
             color: white;
-            border-radius: 12px 12px 0 0 !important;
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-right: 12px;
+        }
+
+        .sidebar-brand .logo-text {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--mh-primary);
+            line-height: 1.1;
+        }
+
+        .sidebar-brand .logo-text span {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--mh-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 8px;
+            padding: 0.8rem 1.2rem;
+            color: var(--mh-text-muted);
+            font-weight: 500;
+            margin: 0 1rem 0.25rem 1rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .nav-pills .nav-link i {
+            font-size: 1.1rem;
+            margin-right: 12px;
+            color: #9ca3af;
+            transition: color 0.2s ease;
+        }
+
+        .nav-pills .nav-link:hover {
+            background-color: #f3f4f6;
+            color: var(--mh-text-main);
+        }
+
+        .nav-pills .nav-link:hover i {
+            color: var(--mh-text-main);
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #e0e7ff; /* Very light blue */
+            color: var(--mh-primary);
             font-weight: 600;
         }
 
+        .nav-pills .nav-link.active i {
+            color: var(--mh-primary);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--mh-border);
+            padding: 1rem;
+        }
+
+        /* Main Content Wrapper */
+        #content-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: calc(100% - 260px);
+        }
+
+        /* Top Navbar */
+        .topbar {
+            background-color: transparent;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .user-dropdown-toggle {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            border: 1px solid var(--mh-border);
+            color: var(--mh-text-main);
+            text-decoration: none;
+            font-weight: 500;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .user-dropdown-toggle:hover {
+            box-shadow: var(--card-shadow);
+            color: var(--mh-primary);
+        }
+
+        /* Global UI Elements */
         .btn-primary {
-            background: var(--primary-gradient);
-            border: none;
+            background-color: var(--mh-primary);
+            border-color: var(--mh-primary);
+            border-radius: 8px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(30, 92, 255, 0.2);
+            transition: all 0.2s ease;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+            background-color: var(--mh-primary-hover);
+            border-color: var(--mh-primary-hover);
             transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(30, 92, 255, 0.3);
         }
 
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        .card {
+            border: 1px solid var(--mh-border);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--card-shadow);
+            background: white;
+            transition: box-shadow 0.2s ease;
         }
 
-        .table th {
-            background-color: #f1f5f9;
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid var(--mh-border);
+            border-radius: var(--card-border-radius) var(--card-border-radius) 0 0 !important;
+            padding: 1.25rem 1.5rem;
             font-weight: 600;
+            font-size: 1.1rem;
         }
 
-        .badge-status {
-            padding: 0.5em 1em;
-            font-weight: 500;
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--mh-text-main);
+            font-weight: 700;
         }
 
-        .stat-card {
-            border-left: 4px solid;
-            transition: transform 0.2s;
+        /* Toggle Sidebar on Mobile */
+        .sidebar-toggler {
+            display: none;
         }
 
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-card.correct {
-            border-left-color: #10b981;
-        }
-
-        .stat-card.wrong {
-            border-left-color: #ef4444;
-        }
-
-        .stat-card.blank {
-            border-left-color: #f59e0b;
-        }
-
-        .stat-card.invalid {
-            border-left-color: #6b7280;
-        }
-
-        footer {
-            background-color: #1e293b;
-            color: #94a3b8;
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                left: -260px;
+                transition: left 0.3s ease;
+            }
+            #sidebar.show {
+                left: 0;
+            }
+            #content-wrapper {
+                width: 100%;
+            }
+            .sidebar-toggler {
+                display: block;
+                background: white;
+                border: 1px solid var(--mh-border);
+                border-radius: 8px;
+                padding: 0.4rem 0.8rem;
+                margin-right: 1rem;
+            }
+            .topbar {
+                justify-content: space-between;
+                background-color: white;
+                border-bottom: 1px solid var(--mh-border);
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'landing' %}">
-                <i class="bi bi-file-earmark-spreadsheet me-2"></i>OptikForm
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard' %}">
-                            <i class="bi bi-speedometer2 me-1"></i>Panel
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'new_upload' %}">
-                            <i class="bi bi-upload me-1"></i>Yeni Okuma
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle me-1"></i>{{ user.first_name|default:user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'profile' %}"><i
-                                        class="bi bi-person me-2"></i>Profil</a></li>
-                            {% if user.is_staff %}
-                            <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}"><i
-                                        class="bi bi-shield-lock me-2"></i>Yönetim Paneli</a></li>
-                            {% endif %}
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="{% url 'logout' %}"><i
-                                        class="bi bi-box-arrow-right me-2"></i>Çıkış Yap</a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">
-                            <i class="bi bi-box-arrow-in-right me-1"></i>Giriş
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}">
-                            <i class="bi bi-person-plus me-1"></i>Kayıt Ol
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <!-- Sidebar -->
+    <nav id="sidebar">
+        <a href="{% url 'landing' %}" class="text-decoration-none sidebar-brand">
+            <div class="logo-box">MH</div>
+            <div class="logo-text">
+                {% trans "Madde Havuzum" %}
+                <span>{% trans "My Item Pool" %}</span>
             </div>
+        </a>
+
+        <ul class="nav nav-pills flex-column mb-auto pt-2">
+            {% if user.is_authenticated %}
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-house-door"></i> {% trans "Dashboard" %}
+                </a>
+            </li>
+            <li class="nav-item mt-1">
+                <a href="{% url 'itempool:pool_list' %}" class="nav-link {% if request.resolver_match.app_name == 'itempool' and 'analiz' not in request.path %}active{% endif %}">
+                    <i class="bi bi-collection"></i> {% trans "Item Pools" %}
+                </a>
+            </li>
+            <li class="nav-item mt-1">
+                <a href="{% url 'new_upload' %}" class="nav-link {% if request.resolver_match.url_name == 'new_upload' or request.resolver_match.url_name == 'upload_detail' or request.resolver_match.url_name == 'upload_stats' or request.resolver_match.url_name == 'upload_kr20' or request.resolver_match.url_name == 'upload_alpha' or request.resolver_match.url_name == 'cheating_analysis' %}active{% endif %}">
+                    <i class="bi bi-check2-square"></i> {% trans "Optical Reading" %}
+                </a>
+            </li>
+            <li class="nav-item mt-1">
+                <a href="{% url 'itempool:analysis_upload' %}" class="nav-link {% if request.resolver_match.url_name == 'analysis_upload' %}active{% endif %}">
+                    <i class="bi bi-graph-up"></i> {% trans "Test ve Madde Analizi" %}
+                </a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+                <a href="{% url 'login' %}" class="nav-link">
+                    <i class="bi bi-box-arrow-in-right"></i> {% trans "Giriş Yap" %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'register' %}" class="nav-link">
+                    <i class="bi bi-person-plus"></i> {% trans "Kayıt Ol" %}
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        {% if user.is_authenticated %}
+        <div class="sidebar-footer">
+            <ul class="nav nav-pills flex-column mb-0">
+                {% if user.is_staff %}
+                <li class="nav-item mb-1">
+                    <a href="{% url 'admin_dashboard' %}" class="nav-link">
+                        <i class="bi bi-shield-lock"></i> {% trans "Admin Panel" %}
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item mb-1">
+                    <a href="{% url 'profile' %}" class="nav-link">
+                        <i class="bi bi-gear"></i> {% trans "Settings" %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'logout' %}" class="nav-link text-danger">
+                        <i class="bi bi-box-arrow-left text-danger"></i> {% trans "Logout" %}
+                    </a>
+                </li>
+            </ul>
         </div>
+        {% endif %}
     </nav>
 
-    <!-- Messages -->
-    <div class="container">
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- Main Content Wrapper -->
+    <div id="content-wrapper">
+        <!-- Topbar -->
+        <header class="topbar">
+            <button class="sidebar-toggler" type="button" onclick="document.getElementById('sidebar').classList.toggle('show');">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            
+            <div class="d-flex align-items-center ms-auto">
+                <!-- Language Switcher -->
+                <form action="{% url 'set_language' %}" method="post" class="me-3 mb-0">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.get_full_path|default:'/' }}">
+                    <select name="language" onchange="this.form.submit()" class="form-select border-0 shadow-sm text-muted fw-medium" style="background-color: transparent; cursor: pointer; min-width: 100px;">
+                        {% get_current_language as CURRENT_LANGUAGE %}
+                        {% get_available_languages as AVAILABLE_LANGUAGES %}
+                        {% for language in AVAILABLE_LANGUAGES %}
+                            <option value="{{ language.0 }}" {% if language.0 == CURRENT_LANGUAGE %}selected{% endif %}>
+                                {{ language.1 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+
+                {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <a href="#" class="user-dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle text-primary me-2 fs-5"></i>
+                        {{ user.first_name|default:user.username }}
+                        <i class="bi bi-chevron-down ms-2 small text-muted"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm mt-2 rounded-3">
+                        <li><a class="dropdown-item py-2" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>{% trans "Profile" %}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>{% trans "Logout" %}</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Messages -->
+        <div class="container-fluid px-4 px-lg-5">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show border-0 shadow-sm rounded-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
         </div>
-        {% endfor %}
-        {% endif %}
+
+        <!-- Breadcrumb -->
+        {% block breadcrumb %}{% endblock %}
+
+        <!-- Main Page Content -->
+        <main class="container-fluid px-4 px-lg-5 pb-5 flex-grow-1">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center text-muted py-3 border-top mt-auto" style="font-size: 0.8rem;">
+            © 2026 Madde Havuzum. Tüm hakları saklıdır.
+        </footer>
     </div>
-
-    <!-- Main Content -->
-    <main class="container mb-5">
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="py-4 mt-auto">
-        <div class="container text-center">
-            <p class="mb-0">© 2026 OptikForm - Optik Form Değerlendirme Sistemi (Mehmet Emin Korkusuz)</p>
-        </div>
-    </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggler = document.querySelector('.sidebar-toggler');
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(event.target) && !toggler.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                }
+            }
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
-
 </html>

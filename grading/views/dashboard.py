@@ -17,22 +17,38 @@ from grading.services.parsing import ParsingService
 from grading.services.export_xlsx import ExcelExportService
 from grading.services.statistics import StatisticsService
 from grading.utils import sanitize_filename
+from itempool.models import ItemPool, ItemInstance, ItemAuditLog
 
 
 class DashboardView(LoginRequiredMixin, View):
     """Main dashboard showing upload history."""
     
     def get(self, request):
+        user = request.user
         # Get user's upload sessions
-        sessions = UploadSession.objects.filter(owner=request.user).order_by('-created_at')
+        sessions = UploadSession.objects.filter(owner=user).order_by('-created_at')
         
-        # Paginate
+        # Paginate sessions
         paginator = Paginator(sessions, 10)
         page = request.GET.get('page', 1)
         sessions_page = paginator.get_page(page)
         
+        # Madde Havuzu Statistics
+        stats = {
+            'total_pools': ItemPool.objects.filter(owner=user).count(),
+            'total_items': ItemInstance.objects.filter(pool__owner=user).count(),
+            'recent_activity': ItemAuditLog.objects.filter(user=user).order_by('-timestamp')[:10]
+        }
+        
+        # Admin Global Stats
+        if user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'ADMIN'):
+            stats['global_pools'] = ItemPool.objects.count()
+            stats['global_items'] = ItemInstance.objects.count()
+            stats['global_activity'] = ItemAuditLog.objects.order_by('-timestamp')[:20]
+
         return render(request, 'grading/dashboard.html', {
             'sessions': sessions_page,
+            'mh_stats': stats,
         })
 
 

@@ -2,13 +2,73 @@
 
 {% block title %}Panel - OptikForm{% endblock %}
 
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item active">Panel</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-speedometer2 me-2"></i>Panel</h2>
-    <a href="{% url 'new_upload' %}" class="btn btn-primary">
-        <i class="bi bi-upload me-2"></i>Yeni Okuma
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'itempool:pool_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-collection me-2"></i>Havuzlarım
+        </a>
+        <a href="{% url 'new_upload' %}" class="btn btn-primary">
+            <i class="bi bi-upload me-2"></i>Yeni Okuma
+        </a>
+    </div>
 </div>
+
+<!-- Madde Havuzu Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center p-4">
+                <div class="display-6 text-primary mb-2"><i class="bi bi-collection"></i></div>
+                <div class="h3 mb-0">{{ mh_stats.total_pools }}</div>
+                <div class="text-muted small">Madde Havuzlarım</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center p-4">
+                <div class="display-6 text-success mb-2"><i class="bi bi-file-earmark-text"></i></div>
+                <div class="h3 mb-0">{{ mh_stats.total_items }}</div>
+                <div class="text-muted small">Toplam Maddelerim</div>
+            </div>
+        </div>
+    </div>
+    {% if mh_stats.global_pools %}
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100 bg-light">
+            <div class="card-body text-center p-4">
+                <div class="display-6 text-info mb-2"><i class="bi bi-globe"></i></div>
+                <div class="h3 mb-0">{{ mh_stats.global_pools }}</div>
+                <div class="text-muted small">Global Havuz Sayısı</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100 bg-light">
+            <div class="card-body text-center p-4">
+                <div class="display-6 text-warning mb-2"><i class="bi bi-database"></i></div>
+                <div class="h3 mb-0">{{ mh_stats.global_items }}</div>
+                <div class="text-muted small">Global Madde Sayısı</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-8">
 
 {% if sessions %}
 <div class="card">
@@ -160,4 +220,54 @@
     </div>
 </div>
 {% endif %}
+    </div> <!-- end col-md-8 -->
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom-0 pb-0">
+                <h5 class="card-title fw-bold"><i class="bi bi-activity me-2"></i>Son Aktiviteler</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for activity in mh_stats.recent_activity %}
+                    <div class="list-group-item border-0 py-3">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                            <span class="badge bg-light text-primary border border-primary-subtle">{{ activity.action }}</span>
+                            <small class="text-muted">{{ activity.timestamp|date:"d.m.Y H:i" }}</small>
+                        </div>
+                        <p class="mb-1 small fw-medium">
+                            Madde #{{ activity.item.id }}
+                        </p>
+                        <div class="x-small text-muted">
+                            {% if activity.action == 'CREATE' %}
+                            Yeni madde oluşturuldu.
+                            {% elif activity.action == 'REMOVE_FROM_POOL' %}
+                            Madde havuzdan kaldırıldı.
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted">
+                        <p class="mb-0 small">Henüz aktivite kaydı yok.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if mh_stats.global_activity %}
+            <div class="card-footer bg-white border-top-0 pt-0">
+                <hr class="mt-0">
+                <h6 class="fw-bold small text-uppercase text-muted mb-3">Sistem Geneli (Admin)</h6>
+                <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                    {% for activity in mh_stats.global_activity %}
+                    <div class="list-group-item border-0 px-0 py-2 small">
+                        <strong>{{ activity.user.username }}</strong>: {{ activity.action }} - Madde #{{ activity.item_id }}
+                        <div class="x-small text-muted">{{ activity.timestamp|date:"d.m.Y H:i" }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div> <!-- end col-md-4 -->
+</div> <!-- end row -->
 {% endblock %}

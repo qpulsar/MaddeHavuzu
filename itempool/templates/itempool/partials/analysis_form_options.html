@@ -1,0 +1,8 @@
+<label class="form-label fw-bold">2. Test Formu Seçin (Opsiyonel)</label>
+<select name="form_id" class="form-select">
+    <option value="">Seçiniz (Opsiyonel)...</option>
+    {% for form in forms %}
+    <option value="{{ form.id }}">{{ form.name }} ({{ form.created_at|date:"d.m.Y" }})</option>
+    {% endfor %}
+</select>
+<div class="form-text">Veriler bu formdaki soru sırasına göre eşleştirilecektir.</div>

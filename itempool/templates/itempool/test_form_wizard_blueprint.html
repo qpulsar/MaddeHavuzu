@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Blueprint Sihirbazı - {{ form.name }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_detail' form.pool.id %}">{{ form.pool.name }}</a></li>
+            <li class="breadcrumb-item active">Blueprint Sihirbazı</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="card-title mb-0"><i class="bi bi-diagram-3"></i> Blueprint: Soru Dağılımını Belirleyin</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-2"></i> Her öğrenme çıktısı için hedeflediğiniz soru sayısını girin. Sistem bu çıktılara uygun soruları havuzdan rastgele seçecektir.
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Öğrenme Çıktısı</th>
+                                    <th class="text-center">Havuzdaki Soru</th>
+                                    <th class="text-center" style="width: 150px;">İstenecek Adet</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for oc in outcomes %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ oc.code }}</div>
+                                        <div class="small text-muted text-truncate" style="max-width: 400px;">{{ oc.description }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border">{{ oc.items.count }}</span>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="oc_{{ oc.id }}" class="form-control form-control-sm text-center oc-input" 
+                                               min="0" max="{{ oc.items.count }}" value="0" data-max="{{ oc.items.count }}">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr class="fw-bold">
+                                    <td colspan="2" class="text-end">Toplam Soru Sayısı:</td>
+                                    <td class="text-center">
+                                        <span id="total-count">0</span>
+                                        <input type="hidden" name="total_items" id="total_items_hidden" value="0">
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between border-top pt-4">
+                        <a href="{% url 'itempool:pool_detail' form.pool.id %}" class="btn btn-light px-4">Vazgeç</a>
+                        <button type="submit" class="btn btn-primary px-5" id="generate-btn" disabled>
+                            Formu Oluştur <i class="bi bi-magic ms-1"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('.oc-input');
+        const totalDisplay = document.getElementById('total-count');
+        const totalHidden = document.getElementById('total_items_hidden');
+        const submitBtn = document.getElementById('generate-btn');
+
+        function updateTotal() {
+            let total = 0;
+            inputs.forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            totalDisplay.textContent = total;
+            totalHidden.value = total;
+            submitBtn.disabled = total === 0;
+        }
+
+        inputs.forEach(input => {
+            input.addEventListener('input', updateTotal);
+        });
+    });
+</script>
+{% endblock %}
