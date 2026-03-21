@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from .pool import ItemPool, LearningOutcome
 
@@ -10,8 +11,9 @@ class Item(models.Model):
     class ItemType(models.TextChoices):
         MULTIPLE_CHOICE = 'MCQ', 'Çoktan Seçmeli'
         TRUE_FALSE = 'TF', 'Doğru-Yanlış'
-        MATCHING = 'MATCHING', 'Eşleştirme'
+        SHORT_ANSWER = 'SHORT_ANSWER', 'Kısa Cevaplı'
         OPEN_ENDED = 'OPEN', 'Açık Uçlu'
+        MATCHING = 'MATCHING', 'Eşleştirme'
 
     class Difficulty(models.TextChoices):
         EASY = 'EASY', 'Kolay'
@@ -37,6 +39,27 @@ class Item(models.Model):
         choices=Difficulty.choices,
         default=Difficulty.MEDIUM,
         verbose_name='Hedeflenen Zorluk'
+    )
+    # MCQ için seçenek sayısı (2-10 arası)
+    max_choices = models.IntegerField(
+        default=4,
+        validators=[MinValueValidator(2), MaxValueValidator(10)],
+        verbose_name='Seçenek Sayısı',
+        help_text='Çoktan seçmeli sorular için 2-10 arası seçenek sayısı'
+    )
+    # Kısa cevaplı sorular için beklenen cevap
+    expected_answer = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Beklenen Cevap',
+        help_text='Kısa cevaplı sorular için kabul edilebilir cevap(lar)'
+    )
+    # Açık uçlu sorular için puanlama kılavuzu
+    scoring_rubric = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Puanlama Kılavuzu',
+        help_text='Açık uçlu sorular için puanlama kriterleri'
     )
     author = models.ForeignKey(
         User,

@@ -22,9 +22,13 @@
             {% include "itempool/partials/item_detail_card.html" %}
         {% endwith %}
 
+        {% if instance.item.item_type == 'MCQ' or instance.item.item_type == 'TF' %}
         <div class="card shadow-sm">
             <div class="card-header bg-white fw-bold">
                 <i class="bi bi-list-check text-success"></i> Seçenekler
+                {% if instance.item.item_type == 'MCQ' %}
+                <span class="badge bg-secondary float-end">{{ instance.item.choices.count }} seçenek</span>
+                {% endif %}
             </div>
             <div class="list-group list-group-flush">
                 {% for choice in instance.item.choices.all %}
@@ -38,6 +42,33 @@
                 {% endfor %}
             </div>
         </div>
+        {% elif instance.item.item_type == 'SHORT_ANSWER' %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-bold">
+                <i class="bi bi-pencil-square text-primary"></i> Beklenen Cevap
+            </div>
+            <div class="card-body">
+                {% if instance.item.expected_answer %}
+                    <p class="mb-0">{{ instance.item.expected_answer|linebreaks }}</p>
+                {% else %}
+                    <p class="text-muted mb-0"><em>Beklenen cevap girilmemiş.</em></p>
+                {% endif %}
+            </div>
+        </div>
+        {% elif instance.item.item_type == 'OPEN' %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-bold">
+                <i class="bi bi-journal-text text-info"></i> Puanlama Kılavuzu
+            </div>
+            <div class="card-body">
+                {% if instance.item.scoring_rubric %}
+                    <p class="mb-0">{{ instance.item.scoring_rubric|linebreaks }}</p>
+                {% else %}
+                    <p class="text-muted mb-0"><em>Puanlama kılavuzu girilmemiş.</em></p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <div class="col-md-4">

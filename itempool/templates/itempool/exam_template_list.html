@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Sınav Kağıdı Şablonları{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item active">Sınav Kağıdı Şablonları</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-file-earmark-text"></i> Sınav Kağıdı Şablonları</h2>
+    <a href="{% url 'itempool:exam_template_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Yeni Şablon
+    </a>
+</div>
+
+<p class="text-muted mb-4">
+    Şablonlar sınav kağıdının baskı düzenini (sütunlar, font, kenar boşlukları, üst/alt bilgi) tanımlar.
+    Değişkenler: <code>{form_name}</code>, <code>{course}</code>, <code>{semester}</code>, <code>{date}</code>, <code>{page}</code>, <code>{total_pages}</code>
+</p>
+
+<div class="row g-3">
+    {% for tpl in templates %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card shadow-sm h-100 {% if tpl.is_default %}border-primary{% endif %}">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <strong>{{ tpl.name }}</strong>
+                {% if tpl.is_default %}
+                <span class="badge bg-primary">Varsayılan</span>
+                {% endif %}
+            </div>
+            <div class="card-body small">
+                <div class="row text-center mb-2">
+                    <div class="col-3 border-end">
+                        <div class="fw-bold">{{ tpl.column_count }}</div>
+                        <div class="text-muted">Sütun</div>
+                    </div>
+                    <div class="col-3 border-end">
+                        <div class="fw-bold">{{ tpl.font_size }}pt</div>
+                        <div class="text-muted">Font</div>
+                    </div>
+                    <div class="col-3 border-end">
+                        <div class="fw-bold">{{ tpl.page_size }}</div>
+                        <div class="text-muted">Kağıt</div>
+                    </div>
+                    <div class="col-3">
+                        <div class="fw-bold">{{ tpl.question_spacing }}pt</div>
+                        <div class="text-muted">Aralık</div>
+                    </div>
+                </div>
+                <ul class="list-unstyled mb-0 text-muted">
+                    <li><i class="bi bi-check2 text-success"></i> Font: {{ tpl.get_font_family_display }}</li>
+                    {% if tpl.column_count > 1 and tpl.column_divider %}
+                    <li><i class="bi bi-check2 text-success"></i> Sütun arası çizgi</li>
+                    {% endif %}
+                    {% if tpl.show_student_info_box %}
+                    <li><i class="bi bi-check2 text-success"></i> Öğrenci bilgi kutusu</li>
+                    {% endif %}
+                    {% if tpl.header_center %}
+                    <li><i class="bi bi-check2 text-success"></i> Üst bilgi: "{{ tpl.header_center|truncatechars:25 }}"</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+                <a href="{% url 'itempool:exam_template_update' tpl.pk %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil"></i> Düzenle
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <i class="bi bi-file-earmark-text display-1 text-muted"></i>
+        <p class="mt-2 text-muted">Şablon bulunamadı. Varsayılan şablonları eklemek için:</p>
+        <code>python manage.py seed_exam_templates</code>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

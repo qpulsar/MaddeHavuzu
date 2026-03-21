@@ -11,10 +11,13 @@ from django.core.paginator import Paginator
 
 from .models import (
     ItemPool, LearningOutcome, Item, ItemInstance, ImportBatch, DraftItem, ItemChoice, OutcomeSuggestion,
-    TestForm, FormItem, Blueprint, PoolPermission, ItemAuditLog
+    TestForm, FormItem, Blueprint, PoolPermission, ItemAuditLog, StudentGroup, ExamApplication, ExamTemplate
 )
 from .mixins import PoolAccessMixin
-from .forms import ItemPoolForm, LearningOutcomeForm, ItemForm, ItemChoiceFormSet, TestFormForm, BlueprintForm
+from .forms import (
+    ItemPoolForm, LearningOutcomeForm, ItemForm, ItemChoiceFormSet, TestFormForm, BlueprintForm,
+    StudentGroupForm, ExamApplicationForm
+)
 from .services.import_docx import DocxImportService
 from .services.llm_client import get_llm_client
 import json
@@ -149,32 +152,40 @@ def delete_learning_outcome(request, pk):
 @login_required
 def item_create(request, pool_id):
     pool = get_object_or_404(ItemPool, id=pool_id)
+    CHOICE_TYPES = ('MCQ', 'TF')
+
     if request.method == 'POST':
         form = ItemForm(request.POST)
-        formset = ItemChoiceFormSet(request.POST)
+        item_type = request.POST.get('item_type', 'MCQ')
+        needs_choices = item_type in CHOICE_TYPES
+        formset = ItemChoiceFormSet(request.POST) if needs_choices else None
         outcome_id = request.POST.get('learning_outcome')
-        
-        if form.is_valid() and formset.is_valid():
+
+        form_valid = form.is_valid()
+        formset_valid = (not needs_choices) or (formset is not None and formset.is_valid())
+
+        if form_valid and formset_valid:
             with transaction.atomic():
                 item = form.save(commit=False)
                 item.author = request.user
                 item.save()
-                
-                formset.instance = item
-                formset.save()
-                
+
+                if needs_choices and formset is not None:
+                    formset.instance = item
+                    formset.save()
+
                 # Havuz ile ilişkilendir
-                outcome = None
-                if outcome_id:
-                    outcome = get_object_or_404(LearningOutcome, id=outcome_id, pool=pool)
-                
-                ItemInstance.objects.create(
+                item_instance = ItemInstance.objects.create(
                     pool=pool,
                     item=item,
-                    learning_outcome=outcome,
                     added_by=request.user
                 )
-                
+
+                if outcome_id:
+                    outcome = LearningOutcome.objects.filter(id=outcome_id, pool=pool).first()
+                    if outcome:
+                        item_instance.learning_outcomes.add(outcome)
+
                 # Log kaydı
                 ItemAuditLog.objects.create(
                     item=item,
@@ -182,13 +193,16 @@ def item_create(request, pool_id):
                     user=request.user,
                     details_json={'pool_id': pool.id, 'outcome_id': outcome_id}
                 )
-                
+
                 messages.success(request, 'Madde başarıyla oluşturuldu.')
                 return redirect('itempool:pool_detail', pk=pool.id)
+        else:
+            if formset is None:
+                formset = ItemChoiceFormSet()
     else:
         form = ItemForm()
         formset = ItemChoiceFormSet()
-    
+
     outcomes = pool.outcomes.filter(is_active=True)
     return render(request, 'itempool/item_form.html', {
         'form': form,
@@ -522,11 +536,13 @@ def test_form_detail(request, pk):
     total_points = sum(item.points for item in items)
     item_count = items.count()
     
+    exam_templates = ExamTemplate.objects.order_by('-is_default', 'name')
     return render(request, 'itempool/test_form_detail.html', {
         'form': test_form,
         'items': items,
         'total_points': total_points,
-        'item_count': item_count
+        'item_count': item_count,
+        'exam_templates': exam_templates,
     })
 
 @login_required
@@ -719,7 +735,203 @@ def analysis_get_forms(request):
     pool_id = request.GET.get('pool_id')
     if not pool_id:
         return HttpResponse('<option value="">Önce havuz seçin...</option>')
-    
+
     forms = TestForm.objects.filter(pool_id=pool_id).order_by('-created_at')
     return render(request, 'itempool/partials/analysis_form_options.html', {'forms': forms})
+
+
+# ============================================================
+# Faz 11 — Öğrenci Grubu ve Sınav Uygulama View'ları
+# ============================================================
+
+@login_required
+def student_group_list(request):
+    groups = StudentGroup.objects.filter(created_by=request.user).order_by('-created_at')
+    return render(request, 'itempool/student_group_list.html', {'groups': groups})
+
+
+@login_required
+def student_group_create(request):
+    if request.method == 'POST':
+        form = StudentGroupForm(request.POST)
+        if form.is_valid():
+            group = form.save(commit=False)
+            group.created_by = request.user
+            group.save()
+            messages.success(request, 'Öğrenci grubu oluşturuldu.')
+            return redirect('itempool:student_group_list')
+    else:
+        form = StudentGroupForm()
+    return render(request, 'itempool/student_group_form.html', {'form': form, 'title': 'Yeni Grup'})
+
+
+@login_required
+def student_group_detail(request, pk):
+    group = get_object_or_404(StudentGroup, pk=pk, created_by=request.user)
+    applications = group.exam_applications.select_related('test_form').order_by('-applied_at')
+    return render(request, 'itempool/student_group_detail.html', {
+        'group': group,
+        'applications': applications,
+    })
+
+
+@login_required
+def exam_application_create(request, group_pk=None):
+    initial = {}
+    group = None
+    if group_pk:
+        group = get_object_or_404(StudentGroup, pk=group_pk, created_by=request.user)
+        initial['group'] = group
+
+    if request.method == 'POST':
+        form = ExamApplicationForm(request.POST)
+        if form.is_valid():
+            app = form.save(commit=False)
+            app.created_by = request.user
+            app.save()
+            messages.success(request, 'Sınav uygulaması kaydedildi.')
+            return redirect('itempool:student_group_detail', pk=app.group.pk)
+    else:
+        form = ExamApplicationForm(initial=initial)
+    return render(request, 'itempool/exam_application_form.html', {
+        'form': form,
+        'group': group,
+        'title': 'Sınav Uygulaması Kaydet'
+    })
+
+
+@login_required
+def exam_application_delete(request, pk):
+    app = get_object_or_404(ExamApplication, pk=pk, created_by=request.user)
+    group_pk = app.group.pk
+    if request.method == 'POST':
+        app.delete()
+        messages.success(request, 'Sınav uygulaması silindi.')
+    return redirect('itempool:student_group_detail', pk=group_pk)
+
+
+@login_required
+def group_applied_items(request, group_pk):
+    """Bir gruba daha önce uygulanan madde instance ID'lerini JSON döndürür (soru tekrar filtresi için)."""
+    from django.http import JsonResponse
+    group = get_object_or_404(StudentGroup, pk=group_pk, created_by=request.user)
+    applied_ids = list(group.get_applied_item_instance_ids())
+    return JsonResponse({'applied_item_instance_ids': applied_ids, 'count': len(applied_ids)})
+
+
+# ============================================================
+# Faz 12 — Sınav Kağıdı Şablonları ve PDF Oluşturma
+# ============================================================
+
+@login_required
+def exam_template_list(request):
+    templates = ExamTemplate.objects.order_by('-is_default', 'name')
+    return render(request, 'itempool/exam_template_list.html', {'templates': templates})
+
+
+@login_required
+def exam_template_create(request):
+    from .forms import ExamTemplateForm
+    if request.method == 'POST':
+        form = ExamTemplateForm(request.POST)
+        if form.is_valid():
+            tpl = form.save(commit=False)
+            tpl.created_by = request.user
+            tpl.save()
+            messages.success(request, 'Şablon oluşturuldu.')
+            return redirect('itempool:exam_template_list')
+    else:
+        form = ExamTemplateForm()
+    return render(request, 'itempool/exam_template_form.html', {'form': form, 'title': 'Yeni Şablon'})
+
+
+@login_required
+def exam_template_update(request, pk):
+    from .forms import ExamTemplateForm
+    tpl = get_object_or_404(ExamTemplate, pk=pk)
+    if request.method == 'POST':
+        form = ExamTemplateForm(request.POST, instance=tpl)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Şablon güncellendi.')
+            return redirect('itempool:exam_template_list')
+    else:
+        form = ExamTemplateForm(instance=tpl)
+    return render(request, 'itempool/exam_template_form.html', {'form': form, 'title': 'Şablon Düzenle', 'template': tpl})
+
+
+@login_required
+def test_form_pdf(request, pk):
+    """Test formundan PDF sınav kağıdı üret ve döndür."""
+    from django.http import HttpResponse
+    from .services.exam_pdf import generate_exam_pdf
+
+    test_form = get_object_or_404(TestForm, pk=pk)
+    template_id = request.GET.get('template')
+    with_answer_key = request.GET.get('answer_key') == '1'
+
+    if template_id:
+        exam_template = get_object_or_404(ExamTemplate, pk=template_id)
+    else:
+        exam_template = ExamTemplate.get_default()
+        if not exam_template:
+            messages.error(request, 'Henüz bir sınav kağıdı şablonu tanımlanmamış.')
+            return redirect('itempool:test_form_detail', pk=pk)
+
+    pdf_bytes = generate_exam_pdf(test_form, exam_template, with_answer_key=with_answer_key)
+
+    filename = f"sinav_{test_form.id}_{test_form.name[:30].replace(' ', '_')}.pdf"
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
+
+
+# ============================================================
+# Faz 13 — Değerlendirme Entegrasyonu Güçlendirme
+# ============================================================
+
+@login_required
+def test_form_answer_key(request, pk):
+    """TestForm'dan cevap anahtarı üretir ve UploadSession'a aktarma seçeneği sunar."""
+    from .services.answer_key import generate_answer_key_from_form
+    from django.http import JsonResponse
+
+    test_form = get_object_or_404(TestForm, pk=pk)
+    answer_key = generate_answer_key_from_form(test_form)
+
+    # Opsiyonel: doğrudan ilişkili bir UploadSession'a aktar
+    session_id = request.GET.get('apply_to_session')
+    if session_id and request.method == 'POST':
+        from grading.models import UploadSession
+        session = get_object_or_404(UploadSession, pk=session_id, owner=request.user)
+        session.answer_key = answer_key
+        session.test_form = test_form
+        session.save(update_fields=['answer_key', 'test_form'])
+        messages.success(request, f'Cevap anahtarı ({len(answer_key)} soru) oturuma aktarıldı.')
+        return redirect('grading:session_detail', pk=session_id)
+
+    return JsonResponse({'answer_key': answer_key, 'question_count': len(answer_key)})
+
+
+@login_required
+def outcome_performance_report(request, session_pk):
+    """Bir UploadSession için öğrenme çıktısı bazında başarı raporu."""
+    from grading.models import UploadSession
+    from .services.answer_key import get_outcome_performance
+
+    session = get_object_or_404(UploadSession, pk=session_pk, owner=request.user)
+
+    if not session.test_form:
+        messages.warning(request, 'Bu oturum için ilişkili bir test formu tanımlanmamış.')
+        return redirect('grading:session_detail', pk=session_pk)
+
+    performance = get_outcome_performance(session)
+    student_count = session.results.count()
+
+    return render(request, 'itempool/outcome_performance_report.html', {
+        'session': session,
+        'test_form': session.test_form,
+        'performance': performance,
+        'student_count': student_count,
+    })
 

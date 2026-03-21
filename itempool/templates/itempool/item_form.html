@@ -25,7 +25,7 @@
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
-                    
+
                     <div class="row mb-4">
                         <div class="col-md-8">
                             <label class="form-label fw-bold">Madde Kökü (Soru)</label>
@@ -45,6 +45,14 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Soru Tipi</label>
                                 {{ form.item_type }}
+                                {{ form.item_type.errors }}
+                            </div>
+                            <div class="mb-3" id="max-choices-field">
+                                <label class="form-label fw-bold">Seçenek Sayısı
+                                    <small class="text-muted fw-normal">(2-10)</small>
+                                </label>
+                                {{ form.max_choices }}
+                                {{ form.max_choices.errors }}
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Hedeflenen Zorluk</label>
@@ -57,35 +65,64 @@
                         </div>
                     </div>
 
-                    <hr>
-                    <h5 class="mb-3"><i class="bi bi-list-check"></i> Seçenekler</h5>
-                    
-                    {{ formset.management_form }}
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 10%">Etiket</th>
-                                    <th>Seçenek Metni</th>
-                                    <th style="width: 15%" class="text-center">Doğru mu?</th>
-                                    <th style="width: 10%">Sıra</th>
-                                    <th style="width: 5%">Sil</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for f in formset %}
-                                <tr class="formset-row">
-                                    <td>{{ f.label }}{{ f.id }}</td>
-                                    <td>{{ f.text }}</td>
-                                    <td class="text-center">{{ f.is_correct }}</td>
-                                    <td>{{ f.order }}</td>
-                                    <td class="text-center">
-                                        {% if f.instance.pk %}{{ f.DELETE }}{% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    {{-- Soru tipine göre ek alanlar --}}
+                    <div id="section-choices">
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="bi bi-list-check"></i> Seçenekler</h5>
+                            <button type="button" class="btn btn-sm btn-outline-success" id="add-choice-btn">
+                                <i class="bi bi-plus-circle"></i> Seçenek Ekle
+                            </button>
+                        </div>
+                        <p class="text-muted small">En az 2, en fazla 10 seçenek ekleyebilirsiniz. Seçenek etiketi için A-J arası harfler kullanın.</p>
+
+                        {{ formset.management_form }}
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle" id="choices-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 10%">Etiket</th>
+                                        <th>Seçenek Metni</th>
+                                        <th style="width: 15%" class="text-center">Doğru mu?</th>
+                                        <th style="width: 8%">Sıra</th>
+                                        <th style="width: 5%">Sil</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="choices-tbody">
+                                    {% for f in formset %}
+                                    <tr class="formset-row">
+                                        <td>{{ f.label }}{{ f.id }}</td>
+                                        <td>{{ f.text }}</td>
+                                        <td class="text-center">{{ f.is_correct }}</td>
+                                        <td>{{ f.order }}</td>
+                                        <td class="text-center">
+                                            {% if f.instance.pk %}{{ f.DELETE }}{% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="section-short-answer" style="display:none;">
+                        <hr>
+                        <h5 class="mb-3"><i class="bi bi-pencil-square"></i> Beklenen Cevap</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Kısa cevaplı sorularda kabul edilecek cevap(lar)</label>
+                            {{ form.expected_answer }}
+                            {{ form.expected_answer.errors }}
+                        </div>
+                    </div>
+
+                    <div id="section-open-ended" style="display:none;">
+                        <hr>
+                        <h5 class="mb-3"><i class="bi bi-journal-text"></i> Puanlama Kılavuzu</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Açık uçlu sorular için puanlama kriterleri</label>
+                            {{ form.scoring_rubric }}
+                            {{ form.scoring_rubric.errors }}
+                        </div>
                     </div>
 
                     <div class="mt-4 border-top pt-3 d-flex justify-content-between">
@@ -97,4 +134,57 @@
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    const itemTypeSelect = document.getElementById('id_item_type');
+    const sectionChoices = document.getElementById('section-choices');
+    const sectionShortAnswer = document.getElementById('section-short-answer');
+    const sectionOpenEnded = document.getElementById('section-open-ended');
+    const maxChoicesField = document.getElementById('max-choices-field');
+
+    function updateSections() {
+        const type = itemTypeSelect.value;
+        const isMcq = type === 'MCQ' || type === 'TF';
+        const isShortAnswer = type === 'SHORT_ANSWER';
+        const isOpenEnded = type === 'OPEN';
+
+        sectionChoices.style.display = (type === 'MCQ' || type === 'TF') ? '' : 'none';
+        maxChoicesField.style.display = (type === 'MCQ') ? '' : 'none';
+        sectionShortAnswer.style.display = isShortAnswer ? '' : 'none';
+        sectionOpenEnded.style.display = isOpenEnded ? '' : 'none';
+    }
+
+    itemTypeSelect.addEventListener('change', updateSections);
+    updateSections();
+
+    // Dinamik seçenek ekleme
+    const addBtn = document.getElementById('add-choice-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', function() {
+            const tbody = document.getElementById('choices-tbody');
+            const totalForms = document.getElementById('id_choices-TOTAL_FORMS');
+            const currentCount = parseInt(totalForms.value);
+            if (currentCount >= 10) {
+                alert('En fazla 10 seçenek ekleyebilirsiniz.');
+                return;
+            }
+            const labels = ['A','B','C','D','E','F','G','H','I','J'];
+            const newLabel = labels[currentCount] || currentCount;
+            const newRow = document.createElement('tr');
+            newRow.className = 'formset-row';
+            newRow.innerHTML = `
+                <td><input type="text" name="choices-${currentCount}-label" value="${newLabel}" maxlength="5" class="form-control form-control-sm" placeholder="A"></td>
+                <td><input type="text" name="choices-${currentCount}-text" class="form-control form-control-sm" placeholder="Seçenek metni"></td>
+                <td class="text-center"><input type="checkbox" name="choices-${currentCount}-is_correct" class="form-check-input mt-2"></td>
+                <td><input type="number" name="choices-${currentCount}-order" value="${currentCount}" class="form-control form-control-sm" style="width:50px;"></td>
+                <td></td>
+                <input type="hidden" name="choices-${currentCount}-id" value="">
+            `;
+            tbody.appendChild(newRow);
+            totalForms.value = currentCount + 1;
+        });
+    }
+})();
+</script>
 {% endblock %}

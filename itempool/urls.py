@@ -48,4 +48,23 @@ urlpatterns = [
     path('blueprints/<int:pk>/klonla/', views.blueprint_clone, name='blueprint_clone'),
     path('analiz/yukle/', views.analysis_upload, name='analysis_upload'),
     path('analiz/get-forms/', views.analysis_get_forms, name='analysis_get_forms'),
+
+    # Faz 11 — Öğrenci Grubu ve Sınav Uygulama Rotaları
+    path('gruplar/', views.student_group_list, name='student_group_list'),
+    path('gruplar/yeni/', views.student_group_create, name='student_group_create'),
+    path('gruplar/<int:pk>/', views.student_group_detail, name='student_group_detail'),
+    path('gruplar/<int:group_pk>/uygulama/yeni/', views.exam_application_create, name='exam_application_create'),
+    path('uygulama/yeni/', views.exam_application_create, name='exam_application_create_general'),
+    path('uygulama/<int:pk>/sil/', views.exam_application_delete, name='exam_application_delete'),
+    path('gruplar/<int:group_pk>/uygulanan-maddeler/', views.group_applied_items, name='group_applied_items'),
+
+    # Faz 12 — Sınav Kağıdı Şablonları ve PDF
+    path('sablonlar/', views.exam_template_list, name='exam_template_list'),
+    path('sablonlar/yeni/', views.exam_template_create, name='exam_template_create'),
+    path('sablonlar/<int:pk>/duzenle/', views.exam_template_update, name='exam_template_update'),
+    path('formlar/<int:pk>/pdf/', views.test_form_pdf, name='test_form_pdf'),
+
+    # Faz 13 — Değerlendirme Entegrasyonu
+    path('formlar/<int:pk>/cevap-anahtari/', views.test_form_answer_key, name='test_form_answer_key'),
+    path('analiz/oturum/<int:session_pk>/cikti-raporu/', views.outcome_performance_report, name='outcome_performance_report'),
 ]

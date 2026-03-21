@@ -1,5 +1,5 @@
 from django import forms
-from .models import ItemPool, LearningOutcome, Item, ItemChoice, TestForm, Blueprint, SpecificationTable
+from .models import ItemPool, LearningOutcome, Item, ItemChoice, TestForm, Blueprint, SpecificationTable, StudentGroup, ExamApplication, ExamTemplate
 
 class ItemPoolForm(forms.ModelForm):
     # ... (existing code unchanged)
@@ -40,12 +40,15 @@ class LearningOutcomeForm(forms.ModelForm):
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['stem', 'item_type', 'difficulty_intended', 'status']
+        fields = ['stem', 'item_type', 'max_choices', 'difficulty_intended', 'status', 'expected_answer', 'scoring_rubric']
         widgets = {
             'stem': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Soru kökünü buraya yazın...'}),
-            'item_type': forms.Select(attrs={'class': 'form-select'}),
+            'item_type': forms.Select(attrs={'class': 'form-select', 'id': 'id_item_type'}),
+            'max_choices': forms.NumberInput(attrs={'class': 'form-control', 'min': 2, 'max': 10}),
             'difficulty_intended': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
+            'expected_answer': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Kabul edilebilir kısa cevap(lar)...'}),
+            'scoring_rubric': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Puanlama kriterleri, tam cevap, kısmi cevap...'}),
         }
 
 class ItemChoiceForm(forms.ModelForm):
@@ -62,16 +65,20 @@ class ItemChoiceForm(forms.ModelForm):
 class ItemDetailEditForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['stem', 'difficulty_intended', 'status']
+        fields = ['stem', 'difficulty_intended', 'status', 'max_choices', 'expected_answer', 'scoring_rubric']
         widgets = {
             'stem': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
             'difficulty_intended': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
+            'max_choices': forms.NumberInput(attrs={'class': 'form-control', 'min': 2, 'max': 10}),
+            'expected_answer': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'scoring_rubric': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
 
 ItemChoiceFormSet = forms.inlineformset_factory(
-    Item, ItemChoice, form=ItemChoiceForm, 
-    extra=5, can_delete=True, min_num=2, validate_min=True
+    Item, ItemChoice, form=ItemChoiceForm,
+    extra=4, can_delete=True, min_num=2, validate_min=True,
+    max_num=10, validate_max=True
 )
 
 class TestFormForm(forms.ModelForm):
@@ -110,4 +117,65 @@ class SpecificationTableForm(forms.ModelForm):
         fields = ['name']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class StudentGroupForm(forms.ModelForm):
+    class Meta:
+        model = StudentGroup
+        fields = ['name', 'course', 'semester', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: BM 2024-Güz Grup A'}),
+            'course': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: Yazılım Mühendisliği'}),
+            'semester': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: 2024-Güz'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class ExamApplicationForm(forms.ModelForm):
+    class Meta:
+        model = ExamApplication
+        fields = ['test_form', 'group', 'applied_at', 'notes']
+        widgets = {
+            'test_form': forms.Select(attrs={'class': 'form-select'}),
+            'group': forms.Select(attrs={'class': 'form-select'}),
+            'applied_at': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class ExamTemplateForm(forms.ModelForm):
+    class Meta:
+        model = ExamTemplate
+        fields = [
+            'name', 'is_default', 'page_size', 'column_count', 'column_divider',
+            'margin_top', 'margin_bottom', 'margin_left', 'margin_right',
+            'font_family', 'font_size', 'question_spacing', 'choice_layout',
+            'header_left', 'header_center', 'header_right', 'show_header_line',
+            'footer_left', 'footer_center', 'footer_right', 'show_footer_line',
+            'show_student_info_box',
+        ]
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_default': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'page_size': forms.Select(attrs={'class': 'form-select'}),
+            'column_count': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 3}),
+            'column_divider': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'margin_top': forms.NumberInput(attrs={'class': 'form-control', 'min': 5, 'max': 50}),
+            'margin_bottom': forms.NumberInput(attrs={'class': 'form-control', 'min': 5, 'max': 50}),
+            'margin_left': forms.NumberInput(attrs={'class': 'form-control', 'min': 5, 'max': 50}),
+            'margin_right': forms.NumberInput(attrs={'class': 'form-control', 'min': 5, 'max': 50}),
+            'font_family': forms.Select(attrs={'class': 'form-select'}),
+            'font_size': forms.NumberInput(attrs={'class': 'form-control', 'min': 8, 'max': 16}),
+            'question_spacing': forms.NumberInput(attrs={'class': 'form-control', 'min': 4, 'max': 30}),
+            'choice_layout': forms.Select(attrs={'class': 'form-select'}),
+            'header_left': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '{course}'}),
+            'header_center': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '{form_name}'}),
+            'header_right': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tarih: {date}'}),
+            'show_header_line': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'footer_left': forms.TextInput(attrs={'class': 'form-control'}),
+            'footer_center': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '{page} / {total_pages}'}),
+            'footer_right': forms.TextInput(attrs={'class': 'form-control'}),
+            'show_footer_line': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'show_student_info_box': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
