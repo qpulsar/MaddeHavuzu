@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:student_group_list' %}">Öğrenci Grupları</a></li>
+            {% if group %}
+            <li class="breadcrumb-item"><a href="{% url 'itempool:student_group_detail' group.pk %}">{{ group.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center pt-4">
+    <div class="col-md-7">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> {{ title }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Bir test formunu belirli bir gruba uyguladığınızda buraya kaydedin.
+                    Bu kayıt, gelecekte aynı gruba soru tekrarını önlemek için kullanılır.
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex justify-content-between mt-3">
+                        {% if group %}
+                        <a href="{% url 'itempool:student_group_detail' group.pk %}" class="btn btn-outline-secondary">İptal</a>
+                        {% else %}
+                        <a href="{% url 'itempool:student_group_list' %}" class="btn btn-outline-secondary">İptal</a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-success">Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Öğrenme Çıktısı Başarı Raporu{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item active">Çıktı Raporu</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-bar-chart-line"></i> Öğrenme Çıktısı Başarı Raporu</h2>
+        <p class="text-muted mb-0">
+            {{ test_form.name }} — {{ student_count }} öğrenci
+        </p>
+    </div>
+</div>
+
+{% if performance %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">
+        <i class="bi bi-bullseye"></i> Çıktı Bazında Ortalama Başarı
+    </div>
+    <div class="card-body">
+        {% for item in performance %}
+        {% with pct=item.avg_correct_rate|floatformat:0 %}
+        <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+                <span class="fw-bold">
+                    {% if item.outcome %}{{ item.outcome.code }} — {{ item.outcome.description|truncatechars:60 }}{% else %}Bilinmeyen Çıktı{% endif %}
+                </span>
+                <span class="badge {% if item.avg_correct_rate >= 0.7 %}bg-success{% elif item.avg_correct_rate >= 0.4 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                    %{{ item.avg_correct_rate|floatformat:1|stringformat:"s"|add:"0" }}
+                    — {{ item.question_count }} soru
+                </span>
+            </div>
+            <div class="progress" style="height: 18px;">
+                <div class="progress-bar {% if item.avg_correct_rate >= 0.7 %}bg-success{% elif item.avg_correct_rate >= 0.4 %}bg-warning{% else %}bg-danger{% endif %}"
+                     role="progressbar"
+                     style="width: {% widthratio item.avg_correct_rate 1 100 %}%"
+                     aria-valuenow="{{ item.avg_correct_rate }}" aria-valuemin="0" aria-valuemax="1">
+                    %{% widthratio item.avg_correct_rate 1 100 %}
+                </div>
+            </div>
+            <div class="text-muted x-small mt-1">
+                Sorular: {{ item.question_indices|join:", " }}
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    <strong>Renk Kodları:</strong>
+    <span class="badge bg-success ms-1">Yeşil ≥ %70</span>
+    <span class="badge bg-warning text-dark ms-1">Sarı %40–70</span>
+    <span class="badge bg-danger ms-1">Kırmızı &lt; %40</span>
+    — Kırmızı çıktılar öğrencilerin yeterince kazanamadığı alanlara işaret eder.
+</div>
+
+{% else %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    Rapor oluşturulamadı. Test formunda öğrenme çıktısı atanmış madde bulunamadı
+    veya öğrenci sonuçları henüz mevcut değil.
+</div>
+{% endif %}
+{% endblock %}

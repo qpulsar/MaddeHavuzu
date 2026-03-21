@@ -89,9 +89,27 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white fw-bold">İşlemler</div>
             <div class="card-body">
-                <button class="btn btn-outline-secondary w-100 mb-2 btn-sm">
-                    <i class="bi bi-printer"></i> Yazdır (PDF)
-                </button>
+                {% if items.count > 0 %}
+                <div class="d-grid gap-2 mb-2">
+                    <a href="{% url 'itempool:test_form_pdf' form.id %}" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="bi bi-printer"></i> Sınav Kağıdı (PDF)
+                    </a>
+                    <a href="{% url 'itempool:test_form_pdf' form.id %}?answer_key=1" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-key"></i> Cevap Anahtarı ile PDF
+                    </a>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small text-muted">Şablon Seçimi:</label>
+                    <select class="form-select form-select-sm" id="template-select" onchange="updatePdfLinks(this.value)">
+                        {% for tpl in exam_templates %}
+                        <option value="{{ tpl.pk }}" {% if tpl.is_default %}selected{% endif %}>
+                            {{ tpl.name }}{% if tpl.is_default %} ★{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <hr>
+                {% endif %}
                 <button class="btn btn-outline-secondary w-100 mb-2 btn-sm">
                     <i class="bi bi-download"></i> Dışa Aktar (XLSX)
                 </button>
@@ -102,6 +120,22 @@
                 {% endif %}
             </div>
         </div>
+
+<script>
+function updatePdfLinks(templateId) {
+    const base = "{% url 'itempool:test_form_pdf' form.id %}";
+    document.querySelectorAll('a[href*="/pdf/"]').forEach(a => {
+        const url = new URL(a.href);
+        url.searchParams.set('template', templateId);
+        a.href = url.toString();
+    });
+}
+// Sayfa yüklenince varsayılan şablonu setle
+document.addEventListener('DOMContentLoaded', function() {
+    const sel = document.getElementById('template-select');
+    if (sel) updatePdfLinks(sel.value);
+});
+</script>
     </div>
 </div>
 {% endblock %}

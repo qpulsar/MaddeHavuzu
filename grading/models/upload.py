@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from grading.models.file_format import FileFormatConfig
+# itempool.TestForm FK için lazy import kullanılıyor (circular import önlemi)
+# bkz. test_form alanı
 
 
 class ProcessingStatus(models.TextChoices):
@@ -84,7 +86,18 @@ class UploadSession(models.Model):
         blank=True,
         verbose_name='Cevap Anahtarı'
     )
-    
+
+    # Faz 13: TestForm ile bağlantı (opsiyonel)
+    test_form = models.ForeignKey(
+        'itempool.TestForm',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='upload_sessions',
+        verbose_name='İlişkili Test Formu',
+        help_text='Bu yükleme hangi test formunun değerlendirmesi için?'
+    )
+
     wrong_to_correct_ratio = models.IntegerField(
         null=True,
         blank=True,

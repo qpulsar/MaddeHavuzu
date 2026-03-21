@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:exam_template_list' %}">Sınav Şablonları</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center pt-4">
+    <div class="col-md-9">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> {{ title }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">{{ form.name.label }}</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                {{ form.is_default }}
+                                <label class="form-check-label">{{ form.is_default.label }}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="text-muted">Sayfa Yapısı</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.page_size.label }}</label>
+                            {{ form.page_size }}
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">{{ form.column_count.label }}</label>
+                            {{ form.column_count }}
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                {{ form.column_divider }}
+                                <label class="form-check-label">{{ form.column_divider.label }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                {{ form.show_student_info_box }}
+                                <label class="form-check-label">{{ form.show_student_info_box.label }}</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Üst (mm)</label>{{ form.margin_top }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Alt (mm)</label>{{ form.margin_bottom }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sol (mm)</label>{{ form.margin_left }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sağ (mm)</label>{{ form.margin_right }}
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="text-muted">Tipografi</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.font_family.label }}</label>
+                            {{ form.font_family }}
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Font Boyutu</label>
+                            {{ form.font_size }}
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Soru Aralığı</label>
+                            {{ form.question_spacing }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.choice_layout.label }}</label>
+                            {{ form.choice_layout }}
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="text-muted">Üst Bilgi</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Sol</label>{{ form.header_left }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Orta</label>{{ form.header_center }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Sağ</label>{{ form.header_right }}
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        {{ form.show_header_line }}
+                        <label class="form-check-label">{{ form.show_header_line.label }}</label>
+                    </div>
+
+                    <hr>
+                    <h6 class="text-muted">Alt Bilgi</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Sol</label>{{ form.footer_left }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Orta</label>{{ form.footer_center }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Sağ</label>{{ form.footer_right }}
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        {{ form.show_footer_line }}
+                        <label class="form-check-label">{{ form.show_footer_line.label }}</label>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4 border-top pt-3">
+                        <a href="{% url 'itempool:exam_template_list' %}" class="btn btn-outline-secondary">İptal</a>
+                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

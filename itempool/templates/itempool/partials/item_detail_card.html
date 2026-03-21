@@ -20,14 +20,17 @@
 <div class="card shadow-sm mb-4" id="meta-card">
     <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
         <span>Meta Veriler</span>
-        <button class="btn btn-sm btn-outline-primary py-0" 
-                hx-get="{% url 'itempool:item_detail_edit' instance.id 'meta' %}" 
+        <button class="btn btn-sm btn-outline-primary py-0"
+                hx-get="{% url 'itempool:item_detail_edit' instance.id 'meta' %}"
                 hx-target="#meta-card" hx-swap="outerHTML">
             <i class="bi bi-pencil"></i> Düzenle
         </button>
     </div>
     <ul class="list-group list-group-flush">
         <li class="list-group-item"><strong>Tip:</strong> <span class="float-end">{{ instance.item.get_item_type_display }}</span></li>
+        {% if instance.item.item_type == 'MCQ' %}
+        <li class="list-group-item"><strong>Seçenek Sayısı:</strong> <span class="float-end badge bg-secondary">{{ instance.item.max_choices }}</span></li>
+        {% endif %}
         <li class="list-group-item"><strong>Hedef Zorluk:</strong> <span class="float-end badge bg-info text-dark">{{ instance.item.get_difficulty_intended_display }}</span></li>
         <li class="list-group-item"><strong>Durum:</strong> <span class="float-end">{{ instance.item.get_status_display }}</span></li>
         <li class="list-group-item"><strong>Ekleyen:</strong> <span class="float-end">{{ instance.added_by.username }}</span></li>

@@ -226,6 +226,111 @@
 
 ---
 
+## Faz 10 — Soru Modeli Genişletme
+
+### 10.1 Item Tipi ve Ek Alanlar
+- [x] **F10.1.1** `Item.ItemType`'a `SHORT_ANSWER` (Kısa Cevaplı) tipi ekle
+- [x] **F10.1.2** `Item` modeline `expected_answer` alanı ekle (SHORT_ANSWER için beklenen cevap)
+- [x] **F10.1.3** `Item` modeline `scoring_rubric` alanı ekle (OPEN_ENDED için puanlama kılavuzu)
+- [x] **F10.1.4** Migration
+
+### 10.2 MCQ Dinamik Seçenek Sayısı
+- [x] **F10.2.1** `ItemChoice.clean()` validasyonu: MCQ için min 2, max 10 şık zorla
+- [x] **F10.2.2** `ItemChoice.label` help_text güncelle; A-J (10 seçenek) destekleniyor yap
+- [x] **F10.2.3** `Item` modeline `max_choices` field ekle (varsayılan 4, 2-10 arası)
+
+### 10.3 UI Güncellemeleri
+- [x] **F10.3.1** Madde oluşturma formu (`item_form.html`): soru tipine göre dinamik alan göster/gizle (JS)
+- [x] **F10.3.2** MCQ formunda dinamik şık ekle/çıkar butonu (2-10 arası)
+- [x] **F10.3.3** SHORT_ANSWER için beklenen cevap alanı göster
+- [x] **F10.3.4** OPEN_ENDED için puanlama kılavuzu (scoring_rubric) textarea göster
+- [x] **F10.3.5** Madde detay sayfasında yeni alanları göster
+
+### 10.4 Testler
+- [x] **F10.4.1** Model validasyon testleri (SHORT_ANSWER, seçenek sayısı limitleri)
+- [x] **F10.4.2** View testleri (farklı soru tipleri için form gönderimi)
+
+---
+
+## Faz 11 — Sınav Uygulama ve Grup Yönetimi
+
+### 11.1 Öğrenci Grubu Modeli
+- [x] **F11.1.1** Model: `StudentGroup` (ad, dönem, ders, açıklama)
+- [x] **F11.1.2** CRUD view ve şablonları (`studentgroup_list.html`, `studentgroup_form.html`)
+- [x] **F11.1.3** Migration ve URL tanımlamaları
+
+### 11.2 Sınav Uygulama Modeli
+- [x] **F11.2.1** Model: `ExamApplication` (`TestForm` FK, `StudentGroup` FK, `applied_at`, `notes`)
+- [x] **F11.2.2** `UploadSession`'a `exam_application` FK ekle (opsiyonel, grading entegrasyonu için)
+- [x] **F11.2.3** CRUD view ve şablonları
+- [x] **F11.2.4** Migration
+
+### 11.3 Soru Tekrar Etmeme
+- [x] **F11.3.1** Servis: bir gruba daha önce uygulanmış soruların `ItemInstance` ID listesini döndür
+- [x] **F11.3.2** Test formu oluşturma sihirbazında "bu gruba daha önce sorulmuş soruları dışla" filtresi
+- [x] **F11.3.3** Madde seçim ekranında "tekrar eden soru" uyarısı göster
+
+### 11.4 Testler
+- [x] **F11.4.1** Model testleri (StudentGroup, ExamApplication)
+- [x] **F11.4.2** Soru tekrar filtresi mantığı testleri
+
+---
+
+## Faz 12 — Sınav Kağıdı Oluşturma (PDF)
+
+### 12a — Sayfa Düzeni Şablonu
+- [x] **F12a.1** Model: `ExamTemplate` (sütun sayısı 1-3, sütun arası çizgi, font, satır aralığı, kenar boşlukları, başlık/altbilgi alanları)
+- [x] **F12a.2** `requirements.txt`'e `weasyprint` ekle
+- [x] **F12a.3** Varsayılan şablon seed verisi (5 hazır şablon: Standart, 2 Sütun, Yoğun, Geniş Kenar, Sade)
+- [x] **F12a.4** Şablon CRUD view ve şablonları
+- [x] **F12a.5** Migration
+
+### 12b — PDF Üretimi
+- [x] **F12b.1** `ExamPdfService`: `TestForm` + `ExamTemplate` → PDF üretim servisi
+- [x] **F12b.2** Django HTML şablonu (`exam_print.html`): CSS sütun düzeni, WeasyPrint uyumlu
+- [x] **F12b.3** A4/A5 sayfa boyutu ve kenar boşluğu desteği
+- [x] **F12b.4** Öğretmen kopyası: cevap anahtarı sayfası ekle
+- [x] **F12b.5** Cevap kâğıdı / boş form seçeneği (opsiyonel)
+
+### 12c — UI
+- [x] **F12c.1** Test formu detay sayfasına "Sınav Kağıdı Oluştur" butonu ekle
+- [x] **F12c.2** Şablon seçimi + önizleme modalı
+- [x] **F12c.3** PDF indirme endpoint (`/formlar/<pk>/pdf/`)
+- [x] **F12c.4** URL tanımlamaları
+
+### 12d — Testler
+- [x] **F12d.1** `ExamPdfService` testleri (PDF üretimi başarı/hata senaryoları)
+- [x] **F12d.2** Şablon CRUD testleri
+
+---
+
+## Faz 13 — Değerlendirme Entegrasyonu Güçlendirme
+
+### 13.1 TestForm ↔ UploadSession Bağlantısı
+- [x] **F13.1.1** `UploadSession` modeline `test_form` FK ekle (opsiyonel, `grading` → `itempool`)
+- [x] **F13.1.2** Grading yükleme formunda TestForm seçimi
+- [x] **F13.1.3** Migration
+
+### 13.2 Otomatik Cevap Anahtarı
+- [x] **F13.2.1** `TestForm`dan cevap anahtarı üretim servisi (`FormToAnswerKeyService`)
+- [x] **F13.2.2** `UploadSession.answer_key` alanına otomatik aktarım
+- [x] **F13.2.3** Cevap anahtarı uyuşmazlığı (soru sayısı farklı) uyarısı
+
+### 13.3 Öğrenme Çıktısı Bazında Başarı Raporu
+- [x] **F13.3.1** `FormItem` ↔ `LearningOutcome` üzerinden çıktı bazında doğru/yanlış hesaplama servisi
+- [x] **F13.3.2** Öğrenme çıktısı başarı raporu view ve template
+- [x] **F13.3.3** Sınıf ortalaması + zayıf/güçlü çıktı görselleştirmesi (Bootstrap progress bar)
+
+### 13.4 Grup Karşılaştırma Raporu
+- [x] **F13.4.1** Aynı `TestForm`u alan farklı grupların karşılaştırmalı istatistikleri (ortalama, standart sapma)
+- [x] **F13.4.2** Karşılaştırma raporu view ve template
+
+### 13.5 Testler
+- [x] **F13.5.1** Cevap anahtarı aktarım testleri
+- [x] **F13.5.2** Öğrenme çıktısı raporu hesaplama testleri
+
+---
+
 ## Notlar
 
 ### NefOptik'ten Devralınan Modüller

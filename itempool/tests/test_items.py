@@ -1,4 +1,5 @@
 import pytest
+from django.core.exceptions import ValidationError
 from itempool.models import Item, ItemChoice, ItemInstance, LearningOutcome
 
 @pytest.mark.django_db
@@ -46,6 +47,54 @@ class TestItemModels:
         
         with pytest.raises(Exception): # IntegrityError
             ItemInstance.objects.create(pool=item_pool, item=item, added_by=user)
+
+    # --- Faz 10: Yeni soru tipleri testleri ---
+
+    def test_short_answer_item(self, user):
+        item = Item.objects.create(
+            stem='Python\'da liste nasıl tanımlanır?',
+            item_type=Item.ItemType.SHORT_ANSWER,
+            expected_answer='Köşeli parantez kullanılır: [1, 2, 3]',
+            author=user
+        )
+        assert item.item_type == 'SHORT_ANSWER'
+        assert item.expected_answer is not None
+        assert item.choices.count() == 0
+
+    def test_open_ended_item(self, user):
+        item = Item.objects.create(
+            stem='Yazılım mühendisliğinin önemi hakkında kısaca yazınız.',
+            item_type=Item.ItemType.OPEN_ENDED,
+            scoring_rubric='Tam puan: Tüm ana kavramlar açıklandı. Yarım puan: En az 2 kavram açıklandı.',
+            author=user
+        )
+        assert item.item_type == 'OPEN'
+        assert item.scoring_rubric is not None
+
+    def test_mcq_max_choices_default(self, user):
+        item = Item.objects.create(stem='Soru', item_type='MCQ', author=user)
+        assert item.max_choices == 4
+
+    def test_mcq_max_choices_custom(self, user):
+        item = Item.objects.create(stem='Soru', item_type='MCQ', max_choices=5, author=user)
+        assert item.max_choices == 5
+
+    def test_mcq_max_choices_validation(self, user):
+        item = Item(stem='Soru', item_type='MCQ', max_choices=11, author=user)
+        with pytest.raises(ValidationError):
+            item.full_clean()
+
+    def test_mcq_max_choices_min_validation(self, user):
+        item = Item(stem='Soru', item_type='MCQ', max_choices=1, author=user)
+        with pytest.raises(ValidationError):
+            item.full_clean()
+
+    def test_mcq_10_choices(self, user):
+        item = Item.objects.create(stem='Soru', item_type='MCQ', max_choices=10, author=user)
+        labels = list('ABCDEFGHIJ')
+        for i, label in enumerate(labels):
+            ItemChoice.objects.create(item=item, label=label, text=f'Seçenek {label}', order=i)
+        assert item.choices.count() == 10
 
     def test_forking_item(self, item_pool, user):
         # Orijinal madde

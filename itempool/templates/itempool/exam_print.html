@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>{{ test_form.name }}</title>
+<style>
+@page {
+    size: {{ template.page_size }};
+    margin-top: {{ template.margin_top }}mm;
+    margin-bottom: {{ template.margin_bottom }}mm;
+    margin-left: {{ template.margin_left }}mm;
+    margin-right: {{ template.margin_right }}mm;
+
+    @top-left   { content: "{{ header.left }}"; font-family: {{ template.font_family }}; font-size: 9pt; }
+    @top-center { content: "{{ header.center }}"; font-family: {{ template.font_family }}; font-size: 10pt; font-weight: bold; }
+    @top-right  { content: "{{ header.right }}"; font-family: {{ template.font_family }}; font-size: 9pt; }
+
+    @bottom-left   { content: "{{ footer.left }}"; font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
+    @bottom-center { content: counter(page) " / " counter(pages); font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
+    @bottom-right  { content: "{{ footer.right }}"; font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: {{ template.font_family }};
+    font-size: {{ template.font_size }}pt;
+    line-height: 1.4;
+    color: #000;
+    margin: 0;
+    padding: 0;
+}
+
+{% if header.show_line %}
+.header-line {
+    border-bottom: 1px solid #000;
+    margin-bottom: 8pt;
+    padding-bottom: 4pt;
+}
+{% endif %}
+
+{% if template.show_student_info_box %}
+.student-info-box {
+    border: 1px solid #000;
+    padding: 6pt 8pt;
+    margin-bottom: 12pt;
+    display: flex;
+    gap: 20pt;
+}
+.student-info-box .info-field {
+    flex: 1;
+    border-bottom: 1px solid #000;
+    padding-bottom: 2pt;
+    font-size: {{ template.font_size|add:"-1" }}pt;
+}
+.student-info-box .info-label {
+    font-size: 8pt;
+    color: #555;
+    display: block;
+    margin-top: 2pt;
+}
+{% endif %}
+
+.questions-container {
+    {% if template.column_count > 1 %}
+    column-count: {{ template.column_count }};
+    column-gap: 15pt;
+    {% if template.column_divider %}
+    column-rule: 1px solid #aaa;
+    {% endif %}
+    {% endif %}
+}
+
+.question-block {
+    break-inside: avoid;
+    margin-bottom: {{ template.question_spacing }}pt;
+    page-break-inside: avoid;
+}
+
+.question-number {
+    font-weight: bold;
+    margin-right: 4pt;
+}
+
+.question-points {
+    float: right;
+    font-size: 8pt;
+    color: #555;
+    font-style: italic;
+}
+
+.question-stem {
+    margin-bottom: 4pt;
+    text-align: justify;
+}
+
+.choices-list {
+    {% if template.choice_layout == 'horizontal' %}
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6pt 16pt;
+    margin-top: 4pt;
+    {% else %}
+    list-style: none;
+    padding: 0;
+    margin: 4pt 0 0 10pt;
+    {% endif %}
+}
+
+.choice-item {
+    {% if template.choice_layout == 'horizontal' %}
+    min-width: 80pt;
+    {% else %}
+    margin-bottom: 2pt;
+    {% endif %}
+}
+
+.choice-label {
+    font-weight: bold;
+    margin-right: 3pt;
+}
+
+.short-answer-line {
+    border-bottom: 1px solid #aaa;
+    height: 20pt;
+    margin-top: 6pt;
+}
+
+.open-ended-box {
+    border: 1px solid #aaa;
+    height: 60pt;
+    margin-top: 6pt;
+}
+
+/* Cevap Anahtarı Sayfası */
+.answer-key-page {
+    page-break-before: always;
+}
+
+.answer-key-title {
+    font-size: 14pt;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 6pt;
+    margin-bottom: 12pt;
+}
+
+.answer-key-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4pt 12pt;
+}
+
+.answer-key-item {
+    width: 60pt;
+    border: 1px solid #ccc;
+    padding: 2pt 4pt;
+    font-size: 9pt;
+    display: flex;
+    justify-content: space-between;
+}
+
+.answer-key-item .ak-no { font-weight: bold; }
+.answer-key-item .ak-ans { color: #c00; font-weight: bold; }
+</style>
+</head>
+<body>
+
+{% if template.show_student_info_box %}
+<div class="student-info-box">
+    <div class="info-field">
+        &nbsp;
+        <span class="info-label">Ad Soyad</span>
+    </div>
+    <div class="info-field" style="max-width: 90pt;">
+        &nbsp;
+        <span class="info-label">Öğrenci No</span>
+    </div>
+    <div class="info-field" style="max-width: 70pt;">
+        &nbsp;
+        <span class="info-label">Tarih</span>
+    </div>
+</div>
+{% endif %}
+
+<div class="questions-container">
+{% for fi in form_items %}
+    {% with item=fi.item_instance.item %}
+    <div class="question-block">
+        <div class="question-stem">
+            <span class="question-number">{{ fi.order }}.</span>
+            <span class="question-points">({{ fi.points }} puan)</span>
+            {{ item.stem }}
+        </div>
+
+        {% if item.item_type == 'MCQ' or item.item_type == 'TF' %}
+        <{% if template.choice_layout == 'horizontal' %}div{% else %}ul{% endif %} class="choices-list">
+            {% for choice in item.choices.all %}
+            <{% if template.choice_layout == 'horizontal' %}div{% else %}li{% endif %} class="choice-item">
+                <span class="choice-label">{{ choice.label }})</span> {{ choice.text }}
+            </{% if template.choice_layout == 'horizontal' %}div{% else %}li{% endif %}>
+            {% endfor %}
+        </{% if template.choice_layout == 'horizontal' %}div{% else %}ul{% endif %}>
+
+        {% elif item.item_type == 'SHORT_ANSWER' %}
+        <div class="short-answer-line"></div>
+
+        {% elif item.item_type == 'OPEN' %}
+        <div class="open-ended-box"></div>
+
+        {% endif %}
+    </div>
+    {% endwith %}
+{% endfor %}
+</div>
+
+{% if with_answer_key %}
+<div class="answer-key-page">
+    <div class="answer-key-title">CEVAP ANAHTARI — {{ test_form.name }}</div>
+    <div class="answer-key-grid">
+        {% for fi in form_items %}
+        {% with item=fi.item_instance.item %}
+        <div class="answer-key-item">
+            <span class="ak-no">{{ fi.order }}.</span>
+            <span class="ak-ans">
+                {% if item.item_type == 'MCQ' or item.item_type == 'TF' %}
+                    {{ item.choices.filter.is_correct|first }}
+                    {% for c in item.choices.all %}{% if c.is_correct %}{{ c.label }}{% endif %}{% endfor %}
+                {% elif item.item_type == 'SHORT_ANSWER' %}
+                    {{ item.expected_answer|truncatechars:15|default:"—" }}
+                {% else %}
+                    Açık
+                {% endif %}
+            </span>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+</body>
+</html>

@@ -269,13 +269,23 @@
                 </a>
             </li>
             <li class="nav-item mt-1">
-                <a href="{% url 'itempool:pool_list' %}" class="nav-link {% if request.resolver_match.app_name == 'itempool' and 'analiz' not in request.path %}active{% endif %}">
-                    <i class="bi bi-collection"></i> {% trans "Item Pools" %}
+                <a href="{% url 'itempool:pool_list' %}" class="nav-link {% if request.resolver_match.app_name == 'itempool' and request.resolver_match.url_name in 'pool_list,pool_create,pool_detail,pool_update,pool_archive,item_create,item_detail,item_edit,item_delete,form_list,form_create,form_detail,form_update,test_form_pdf,test_form_answer_key' %}active{% endif %}">
+                    <i class="bi bi-collection"></i> {% trans "Madde Havuzu" %}
+                </a>
+            </li>
+            <li class="nav-item mt-1">
+                <a href="{% url 'itempool:student_group_list' %}" class="nav-link {% if request.resolver_match.url_name in 'student_group_list,student_group_create,student_group_detail,exam_application_create,exam_application_delete,group_applied_items' %}active{% endif %}">
+                    <i class="bi bi-people"></i> {% trans "Öğrenci Grupları" %}
+                </a>
+            </li>
+            <li class="nav-item mt-1">
+                <a href="{% url 'itempool:exam_template_list' %}" class="nav-link {% if request.resolver_match.url_name in 'exam_template_list,exam_template_create,exam_template_update' %}active{% endif %}">
+                    <i class="bi bi-file-earmark-text"></i> {% trans "Sınav Şablonları" %}
                 </a>
             </li>
             <li class="nav-item mt-1">
                 <a href="{% url 'new_upload' %}" class="nav-link {% if request.resolver_match.url_name == 'new_upload' or request.resolver_match.url_name == 'upload_detail' or request.resolver_match.url_name == 'upload_stats' or request.resolver_match.url_name == 'upload_kr20' or request.resolver_match.url_name == 'upload_alpha' or request.resolver_match.url_name == 'cheating_analysis' %}active{% endif %}">
-                    <i class="bi bi-check2-square"></i> {% trans "Optical Reading" %}
+                    <i class="bi bi-check2-square"></i> {% trans "Optik Okuma" %}
                 </a>
             </li>
             <li class="nav-item mt-1">
