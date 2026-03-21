@@ -182,8 +182,7 @@
             <div class="card-footer">
                 <div class="items-count fw-medium">
                     <i class="bi bi-file-earmark-text"></i>
-                    <!-- Items count placeholder till items are implemented -->
-                    0 {% trans "Items" %}
+                    {{ pool.item_instances.count }} {% trans "Items" %}
                 </div>
                 <div class="btn-group border rounded-2 shadow-sm" role="group">
                     <a href="{% url 'itempool:pool_detail' pool.id %}" class="btn btn-action btn-light border-end text-primary">{% trans "View" %}</a>

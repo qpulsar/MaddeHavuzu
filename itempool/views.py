@@ -637,12 +637,13 @@ def _generate_items_from_blueprint(test_form, blueprint):
         test_form.form_items.all().delete()
         
         current_order = 1
+        used_ids = set()  # Aynı maddenin tekrar eklenmesini önle
         distribution = blueprint.distribution_json
         for oc_id, count in distribution.items():
             items = ItemInstance.objects.filter(
                 pool=blueprint.pool, 
                 learning_outcomes__id=oc_id
-            ).order_by('?')[:count]
+            ).exclude(id__in=used_ids).order_by('?')[:count]
             
             for inst in items:
                 FormItem.objects.create(
@@ -650,6 +651,7 @@ def _generate_items_from_blueprint(test_form, blueprint):
                     item_instance=inst,
                     order=current_order
                 )
+                used_ids.add(inst.id)
                 current_order += 1
 
 @login_required
