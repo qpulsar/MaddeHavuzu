@@ -13,9 +13,25 @@ class TestForm(models.Model):
         APPLIED = 'APPLIED', 'Uygulandı'
         ARCHIVED = 'ARCHIVED', 'Arşivlendi'
 
+    # Derse bağlantı (nullable — bağımsız form oluşturulabilir)
+    course = models.ForeignKey(
+        'itempool.Course',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='test_forms',
+        verbose_name='Ders'
+    )
+    # Soru çekilecek havuzlar
+    pools = models.ManyToManyField(
+        ItemPool,
+        blank=True,
+        related_name='test_forms',
+        verbose_name='Madde Havuzları'
+    )
     name = models.CharField(max_length=255, verbose_name='Form Adı')
     description = models.TextField(null=True, blank=True, verbose_name='Açıklama')
-    
+
     status = models.CharField(
         max_length=20,
         choices=Status.choices,

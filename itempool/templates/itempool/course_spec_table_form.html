@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Belirtke Tablosu — {{ course.name }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:course_list' %}">Dersler</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:course_detail' course.pk %}">{{ course.name }}</a></li>
+            <li class="breadcrumb-item active">Belirtke Tablosu</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 mb-0"><i class="bi bi-table text-primary"></i> Yeni Belirtke Tablosu</h1>
+        <p class="text-muted mb-0 small"><i class="bi bi-book"></i> {{ course.name }} — {{ course.semester }}</p>
+    </div>
+    <a href="{% url 'itempool:course_detail' course.pk %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri
+    </a>
+</div>
+
+{% if not outcomes %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    Bu derse bağlı havuzlarda öğrenme çıktısı tanımlanmamış. Belirtke tablosu oluşturmak için önce havuzlara öğrenme çıktısı ekleyin.
+</div>
+{% else %}
+
+<form method="post" id="specTableForm">
+    {% csrf_token %}
+    <input type="hidden" name="topic_count" id="topicCount" value="1">
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold"><i class="bi bi-info-circle"></i> Tablo Bilgileri</div>
+        <div class="card-body">
+            <div class="mb-0">
+                <label class="form-label fw-bold">Tablo Adı *</label>
+                {{ form.name }}
+                {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <span class="fw-bold"><i class="bi bi-grid"></i> Konu × Öğrenme Çıktısı Matrisi</span>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="addTopicBtn">
+                <i class="bi bi-plus"></i> Konu Satırı Ekle
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm align-middle mb-0" id="specMatrix">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="min-width: 180px;">Konu / Ünite</th>
+                            {% for oc in outcomes %}
+                            <th class="text-center small" style="min-width: 80px;" title="{{ oc.description }}">
+                                <span class="d-block fw-bold">{{ oc.code }}</span>
+                                <span class="text-muted" style="font-size: 0.7rem;">{{ oc.level }}</span>
+                            </th>
+                            {% endfor %}
+                            <th class="text-center" style="min-width: 60px;">Toplam</th>
+                            <th style="width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="topicRows">
+                        <!-- İlk satır -->
+                        <tr class="topic-row" data-index="0">
+                            <td>
+                                <input type="text" name="topic_0" class="form-control form-control-sm" placeholder="Konu adı...">
+                            </td>
+                            {% for oc in outcomes %}
+                            <td>
+                                <input type="number" name="count_0_{{ oc.id }}" class="form-control form-control-sm text-center count-input"
+                                       min="0" value="0" data-row="0">
+                            </td>
+                            {% endfor %}
+                            <td class="text-center fw-bold row-total" id="rowTotal_0">0</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1 remove-row" title="Satırı sil">
+                                    <i class="bi bi-trash small"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-light fw-bold">
+                            <td>Toplam</td>
+                            {% for oc in outcomes %}
+                            <td class="text-center col-total" id="colTotal_{{ oc.id }}">0</td>
+                            {% endfor %}
+                            <td class="text-center" id="grandTotal">0</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Öğrenme çıktısı açıklamaları -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light fw-bold small"><i class="bi bi-list-check"></i> Öğrenme Çıktıları</div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <tbody>
+                    {% for oc in outcomes %}
+                    <tr>
+                        <td class="fw-bold" style="width: 80px;">{{ oc.code }}</td>
+                        <td class="small text-muted">{{ oc.level }}</td>
+                        <td class="small">{{ oc.description|truncatechars:120 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mb-4">
+        <a href="{% url 'itempool:course_detail' course.pk %}" class="btn btn-light border">İptal</a>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> Kaydet
+        </button>
+    </div>
+</form>
+
+{% endif %}
+
+<script>
+(function () {
+    const outcomeIds = [{% for oc in outcomes %}{{ oc.id }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+    let rowCount = 1;
+
+    function buildRow(index) {
+        let cells = `<td><input type="text" name="topic_${index}" class="form-control form-control-sm" placeholder="Konu adı..."></td>`;
+        outcomeIds.forEach(function (oid) {
+            cells += `<td><input type="number" name="count_${index}_${oid}" class="form-control form-control-sm text-center count-input" min="0" value="0" data-row="${index}"></td>`;
+        });
+        cells += `<td class="text-center fw-bold row-total" id="rowTotal_${index}">0</td>`;
+        cells += `<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger py-0 px-1 remove-row" title="Satırı sil"><i class="bi bi-trash small"></i></button></td>`;
+        const tr = document.createElement('tr');
+        tr.className = 'topic-row';
+        tr.dataset.index = index;
+        tr.innerHTML = cells;
+        return tr;
+    }
+
+    document.getElementById('addTopicBtn').addEventListener('click', function () {
+        const tbody = document.getElementById('topicRows');
+        const tr = buildRow(rowCount);
+        tbody.appendChild(tr);
+        rowCount++;
+        updateTopicCount();
+        attachInputListeners(tr);
+    });
+
+    document.getElementById('topicRows').addEventListener('click', function (e) {
+        if (e.target.closest('.remove-row')) {
+            const row = e.target.closest('.topic-row');
+            if (document.querySelectorAll('.topic-row').length > 1) {
+                row.remove();
+                updateTotals();
+                updateTopicCount();
+            }
+        }
+    });
+
+    function updateTopicCount() {
+        document.getElementById('topicCount').value = document.querySelectorAll('.topic-row').length;
+    }
+
+    function updateTotals() {
+        // Row totals
+        document.querySelectorAll('.topic-row').forEach(function (row) {
+            const idx = row.dataset.index;
+            let total = 0;
+            row.querySelectorAll('.count-input').forEach(function (inp) { total += parseInt(inp.value || 0); });
+            const rt = row.querySelector('.row-total');
+            if (rt) rt.textContent = total;
+        });
+
+        // Column totals
+        outcomeIds.forEach(function (oid) {
+            let total = 0;
+            document.querySelectorAll(`input[name^="count_"][name$="_${oid}"]`).forEach(function (inp) {
+                total += parseInt(inp.value || 0);
+            });
+            const ct = document.getElementById(`colTotal_${oid}`);
+            if (ct) ct.textContent = total;
+        });
+
+        // Grand total
+        let grand = 0;
+        document.querySelectorAll('.count-input').forEach(function (inp) { grand += parseInt(inp.value || 0); });
+        document.getElementById('grandTotal').textContent = grand;
+    }
+
+    function attachInputListeners(container) {
+        container.querySelectorAll('.count-input').forEach(function (inp) {
+            inp.addEventListener('input', updateTotals);
+        });
+    }
+
+    // Attach to initial row
+    attachInputListeners(document.getElementById('topicRows'));
+    updateTotals();
+})();
+</script>
+{% endblock %}

@@ -5,7 +5,7 @@ from .suggestions import OutcomeSuggestion
 from .analysis import ItemAnalysisResult
 from .test_form import TestForm, FormItem, Blueprint, SpecificationTable
 from .audit import ItemAuditLog
-from .exam_application import StudentGroup, ExamApplication
+from .exam_application import Course, CourseSpecTable, ExamApplication
 from .exam_template import ExamTemplate
 
 __all__ = [
@@ -24,7 +24,8 @@ __all__ = [
     'SpecificationTable',
     'PoolPermission',
     'ItemAuditLog',
-    'StudentGroup',
+    'Course',
+    'CourseSpecTable',
     'ExamApplication',
     'ExamTemplate',
 ]

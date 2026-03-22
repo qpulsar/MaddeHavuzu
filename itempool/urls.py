@@ -67,14 +67,18 @@ urlpatterns = [
     path('analiz/yukle/', views.analysis_upload, name='analysis_upload'),
     path('analiz/get-forms/', views.analysis_get_forms, name='analysis_get_forms'),
 
-    # Faz 11 — Öğrenci Grubu ve Sınav Uygulama Rotaları
-    path('gruplar/', views.student_group_list, name='student_group_list'),
-    path('gruplar/yeni/', views.student_group_create, name='student_group_create'),
-    path('gruplar/<int:pk>/', views.student_group_detail, name='student_group_detail'),
-    path('gruplar/<int:group_pk>/uygulama/yeni/', views.exam_application_create, name='exam_application_create'),
+    # Ders Rotaları
+    path('dersler/', views.course_list, name='course_list'),
+    path('dersler/yeni/', views.course_create, name='course_create'),
+    path('dersler/<int:pk>/', views.course_detail, name='course_detail'),
+    path('dersler/<int:pk>/duzenle/', views.course_update, name='course_update'),
+    path('dersler/<int:course_pk>/belirtke/yeni/', views.course_spec_table_create, name='course_spec_table_create'),
+    path('belirtke/<int:pk>/sil/', views.course_spec_table_delete, name='course_spec_table_delete'),
+    path('dersler/<int:course_pk>/sinav/yeni/', views.course_test_form_create, name='course_test_form_create'),
+    path('dersler/<int:course_pk>/uygulama/yeni/', views.exam_application_create, name='exam_application_create'),
     path('uygulama/yeni/', views.exam_application_create, name='exam_application_create_general'),
     path('uygulama/<int:pk>/sil/', views.exam_application_delete, name='exam_application_delete'),
-    path('gruplar/<int:group_pk>/uygulanan-maddeler/', views.group_applied_items, name='group_applied_items'),
+    path('dersler/<int:course_pk>/uygulanan-maddeler/', views.course_applied_items, name='course_applied_items'),
 
     # Faz 12 — Sınav Kağıdı Şablonları ve PDF
     path('sablonlar/', views.exam_template_list, name='exam_template_list'),

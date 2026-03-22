@@ -6,10 +6,9 @@
 <div class="container-fluid px-4 px-lg-5 pt-2">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'itempool:student_group_list' %}">Öğrenci Grupları</a></li>
-            {% if group %}
-            <li class="breadcrumb-item"><a href="{% url 'itempool:student_group_detail' group.pk %}">{{ group.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:course_list' %}">Dersler</a></li>
+            {% if course %}
+            <li class="breadcrumb-item"><a href="{% url 'itempool:course_detail' course.pk %}">{{ course.name }}</a></li>
             {% endif %}
             <li class="breadcrumb-item active">{{ title }}</li>
         </ol>
@@ -26,8 +25,8 @@
             </div>
             <div class="card-body">
                 <p class="text-muted small mb-3">
-                    Bir test formunu belirli bir gruba uyguladığınızda buraya kaydedin.
-                    Bu kayıt, gelecekte aynı gruba soru tekrarını önlemek için kullanılır.
+                    Bir sınav formunu bir derse uyguladığınızda buraya kaydedin.
+                    Bu kayıt, gelecekte aynı derse soru tekrarını önlemek için kullanılır.
                 </p>
                 <form method="post">
                     {% csrf_token %}
@@ -35,16 +34,17 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">{{ field.label }}</label>
                         {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
                         {% if field.errors %}
                         <div class="text-danger small mt-1">{{ field.errors }}</div>
                         {% endif %}
                     </div>
                     {% endfor %}
                     <div class="d-flex justify-content-between mt-3">
-                        {% if group %}
-                        <a href="{% url 'itempool:student_group_detail' group.pk %}" class="btn btn-outline-secondary">İptal</a>
+                        {% if course %}
+                        <a href="{% url 'itempool:course_detail' course.pk %}" class="btn btn-outline-secondary">İptal</a>
                         {% else %}
-                        <a href="{% url 'itempool:student_group_list' %}" class="btn btn-outline-secondary">İptal</a>
+                        <a href="{% url 'itempool:course_list' %}" class="btn btn-outline-secondary">İptal</a>
                         {% endif %}
                         <button type="submit" class="btn btn-success">Kaydet</button>
                     </div>
