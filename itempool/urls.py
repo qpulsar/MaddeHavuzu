@@ -1,9 +1,27 @@
 from django.urls import path
-from . import views
+from . import views, views_wizard
 
 app_name = 'itempool'
 
 urlpatterns = [
+    # ── Sihirbazlar ──────────────────────────────────────────────────────────
+    path('sihirbaz/', views_wizard.wizard_landing, name='wizard_landing'),
+    # Havuz sihirbazı
+    path('sihirbaz/havuz/adim/1/', views_wizard.wizard_pool_step1, name='wizard_pool_step1'),
+    path('sihirbaz/havuz/adim/2/<int:pool_id>/', views_wizard.wizard_pool_step2, name='wizard_pool_step2'),
+    path('sihirbaz/havuz/adim/3/<int:pool_id>/', views_wizard.wizard_pool_step3, name='wizard_pool_step3'),
+    # Sınav sihirbazı
+    path('sihirbaz/sinav/adim/1/', views_wizard.wizard_exam_step1, name='wizard_exam_step1'),
+    path('sihirbaz/sinav/adim/2/<int:form_id>/', views_wizard.wizard_exam_step2, name='wizard_exam_step2'),
+    path('sihirbaz/sinav/adim/3/<int:form_id>/', views_wizard.wizard_exam_step3, name='wizard_exam_step3'),
+    path('sihirbaz/sinav/adim/4/<int:form_id>/', views_wizard.wizard_exam_step4, name='wizard_exam_step4'),
+    # Değerlendirme sihirbazı
+    path('sihirbaz/degerlendirme/adim/1/', views_wizard.wizard_eval_step1, name='wizard_eval_step1'),
+    path('sihirbaz/degerlendirme/adim/2/<int:form_id>/', views_wizard.wizard_eval_step2, name='wizard_eval_step2'),
+    path('sihirbaz/degerlendirme/adim/3/<int:session_id>/', views_wizard.wizard_eval_step3, name='wizard_eval_step3'),
+    # Global test formu listesi
+    path('formlar/', views_wizard.test_form_list_all, name='test_form_list_all'),
+
     path('', views.ItemPoolListView.as_view(), name='pool_list'),
     path('yeni/', views.ItemPoolCreateView.as_view(), name='pool_create'),
     path('<int:pk>/', views.ItemPoolDetailView.as_view(), name='pool_detail'),
@@ -62,6 +80,7 @@ urlpatterns = [
     path('sablonlar/', views.exam_template_list, name='exam_template_list'),
     path('sablonlar/yeni/', views.exam_template_create, name='exam_template_create'),
     path('sablonlar/<int:pk>/duzenle/', views.exam_template_update, name='exam_template_update'),
+    path('sablonlar/<int:pk>/onizleme/', views.exam_template_preview, name='exam_template_preview'),
     path('formlar/<int:pk>/pdf/', views.test_form_pdf, name='test_form_pdf'),
 
     # Faz 13 — Değerlendirme Entegrasyonu

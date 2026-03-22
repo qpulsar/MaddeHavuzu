@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Sihirbaz ile Başla{% endblock %}
+
+{% block extra_css %}
+<style>
+.wizard-hero {
+    background: linear-gradient(135deg,#1e5cff 0%,#7c3aed 100%);
+    border-radius:16px; color:white; padding:2.5rem 2rem; margin-bottom:2rem; text-align:center;
+}
+.wizard-hero h1 { color:white; font-size:1.9rem; }
+.wizard-hero p  { color:rgba(255,255,255,.8); max-width:520px; margin:0 auto; }
+.wiz-card {
+    background:white; border:1px solid #e5e7eb; border-radius:14px;
+    padding:2rem; height:100%; cursor:pointer; text-decoration:none; color:inherit;
+    transition:transform .2s, box-shadow .2s;
+    display:block;
+}
+.wiz-card:hover { transform:translateY(-4px); box-shadow:0 12px 24px rgba(0,0,0,.1); color:inherit; }
+.wiz-card .wiz-icon {
+    width:60px; height:60px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.6rem; margin-bottom:1.25rem;
+}
+.wiz-card h5 { font-weight:700; margin-bottom:.5rem; }
+.wiz-card p  { color:#6b7280; font-size:.9rem; margin-bottom:1rem; }
+.wiz-card ul { padding-left:1.2rem; color:#6b7280; font-size:.85rem; }
+.wiz-card ul li { margin-bottom:.25rem; }
+.wiz-badge {
+    font-size:.7rem; font-weight:600; padding:.25rem .6rem;
+    border-radius:20px; display:inline-block; margin-bottom:.75rem;
+}
+.stat-mini { font-size:.8rem; color:#9ca3af; margin-top:1rem; }
+.stat-mini strong { color:#374151; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="wizard-hero">
+        <div style="font-size:2.5rem; margin-bottom:.75rem;">🪄</div>
+        <h1>Sihirbaz ile Başla</h1>
+        <p class="mt-2">Tecrübesiz kullanıcılar için adım adım rehberli akış.
+           Hangi işlemi yapmak istediğinizi seçin.</p>
+    </div>
+
+    <div class="row g-3">
+
+        {# ── Kart 1: Havuz ── #}
+        <div class="col-md-4">
+            <a href="{% url 'itempool:wizard_pool_step1' %}" class="wiz-card">
+                <div class="wiz-icon" style="background:#e0e7ff;">📁</div>
+                <span class="wiz-badge" style="background:#e0e7ff; color:#1e5cff;">3 Adım</span>
+                <h5>Madde Havuzu Kur</h5>
+                <p>Ders için yeni bir soru bankası oluşturun.</p>
+                <ul>
+                    <li>Havuz bilgilerini gir</li>
+                    <li>Öğrenme çıktılarını tanımla</li>
+                    <li>Sorularını ekle (elle veya Word'den)</li>
+                </ul>
+                {% if pool_count %}
+                <div class="stat-mini">Mevcut havuz: <strong>{{ pool_count }}</strong></div>
+                {% endif %}
+            </a>
+        </div>
+
+        {# ── Kart 2: Sınav ── #}
+        <div class="col-md-4">
+            <a href="{% url 'itempool:wizard_exam_step1' %}" class="wiz-card {% if not has_pools %}opacity-50 pe-none{% endif %}">
+                <div class="wiz-icon" style="background:#fef9c3;">📝</div>
+                <span class="wiz-badge" style="background:#fef9c3; color:#ca8a04;">4 Adım</span>
+                <h5>Sınav Formu Oluştur</h5>
+                <p>Havuzunuzdan otomatik soru seçerek sınav formu oluşturun.</p>
+                <ul>
+                    <li>Sınav adını ve havuzu seç</li>
+                    <li>Soru türü ve sayılarını belirle</li>
+                    <li>Soruları gözden geçir</li>
+                    <li>Baskı şablonu seç ve PDF al</li>
+                </ul>
+                {% if not has_pools %}
+                <div class="stat-mini" style="color:#dc2626;">⚠ Önce bir havuz oluşturun.</div>
+                {% elif form_count %}
+                <div class="stat-mini">Mevcut form: <strong>{{ form_count }}</strong></div>
+                {% endif %}
+            </a>
+        </div>
+
+        {# ── Kart 3: Değerlendirme ── #}
+        <div class="col-md-4">
+            <a href="{% url 'itempool:wizard_eval_step1' %}" class="wiz-card {% if not has_forms %}opacity-50 pe-none{% endif %}">
+                <div class="wiz-icon" style="background:#dcfce7;">📊</div>
+                <span class="wiz-badge" style="background:#dcfce7; color:#16a34a;">3 Adım</span>
+                <h5>Sınavı Değerlendir</h5>
+                <p>Optik okuyucu çıktısını yükleyip sonuçları analiz edin.</p>
+                <ul>
+                    <li>Sınav formunu seç</li>
+                    <li>Optik okuyucu dosyasını yükle</li>
+                    <li>Öğrenme çıktısı raporunu görüntüle</li>
+                </ul>
+                {% if not has_forms %}
+                <div class="stat-mini" style="color:#dc2626;">⚠ Önce bir sınav formu oluşturun.</div>
+                {% endif %}
+            </a>
+        </div>
+
+    </div>
+
+    {# Hızlı erişim linkleri #}
+    <div class="mt-4 text-center text-muted" style="font-size:.875rem;">
+        Doğrudan erişim:
+        <a href="{% url 'itempool:pool_list' %}" class="ms-2">Havuzlarım</a> ·
+        <a href="{% url 'itempool:test_form_list_all' %}" class="ms-2">Sınav Formlarım</a> ·
+        <a href="{% url 'new_upload' %}" class="ms-2">Optik Okuma</a>
+    </div>
+
+</div>
+{% endblock %}

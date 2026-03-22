@@ -69,6 +69,9 @@
                 </ul>
             </div>
             <div class="card-footer bg-white d-flex gap-2 justify-content-end">
+                <a href="{% url 'itempool:exam_template_preview' tpl.pk %}" class="btn btn-sm btn-outline-primary" target="_blank" title="Örnek PDF önizlemesi açar">
+                    <i class="bi bi-eye"></i> Önizle
+                </a>
                 <a href="{% url 'itempool:exam_template_update' tpl.pk %}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-pencil"></i> Düzenle
                 </a>

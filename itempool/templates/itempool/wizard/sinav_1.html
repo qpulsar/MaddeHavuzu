@@ -1,0 +1,79 @@
+{% extends "itempool/wizard/_base.html" %}
+
+{% block title %}Sınav Oluştur — Adım 1{% endblock %}
+
+{% block wizard_steps %}
+<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
+    <div class="wizard-step active"><div class="wizard-step-dot">1</div><span class="wizard-step-label">Temel Bilgiler</span></div>
+    <div class="wizard-step"><div class="wizard-step-dot">2</div><span class="wizard-step-label">Soru Seçimi</span></div>
+    <div class="wizard-step"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Gözden Geçir</span></div>
+    <div class="wizard-step"><div class="wizard-step-dot">4</div><span class="wizard-step-label">PDF Al</span></div>
+</div>
+{% endblock %}
+
+{% block wizard_title %}📝 Sınav Formu Oluştur{% endblock %}
+{% block wizard_subtitle %}Sınav bilgilerini ve kullanacağınız havuzu seçin.{% endblock %}
+
+{% block wizard_body %}
+<form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Sınav Adı <span class="text-danger">*</span></label>
+        <input type="text" name="name" class="form-control" placeholder="Örn: BİL 201 — 2024 Vize Sınavı" required
+               value="{{ request.POST.name|default:'' }}">
+        <div class="form-text">Sınavı tanımlamak için anlamlı bir isim verin.</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Madde Havuzu <span class="text-danger">*</span></label>
+        {% if pools %}
+        <div class="row g-2">
+            {% for pool in pools %}
+            <div class="col-md-6">
+                <label class="d-block cursor-pointer">
+                    <input type="radio" name="pool_id" value="{{ pool.pk }}" class="d-none pool-radio" required>
+                    <div class="border rounded-3 p-3 pool-card h-100">
+                        <div class="fw-semibold">{{ pool.name }}</div>
+                        <div class="text-muted small mt-1">
+                            {% if pool.course %}<span class="me-2">📚 {{ pool.course }}</span>{% endif %}
+                            {% if pool.semester %}<span>📅 {{ pool.semester }}</span>{% endif %}
+                        </div>
+                        <div class="mt-2">
+                            <span class="badge bg-light text-dark">{{ pool.item_instances.count }} soru</span>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Henüz aktif madde havuzunuz yok.
+            <a href="{% url 'itempool:wizard_pool_step1' %}" class="alert-link">Havuz oluşturun →</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="wizard-nav">
+        <a href="{% url 'itempool:wizard_landing' %}" class="btn-wizard-back btn">← Geri</a>
+        {% if pools %}
+        <button type="submit" class="btn-wizard-next btn">Devam →</button>
+        {% endif %}
+    </div>
+</form>
+
+<script>
+document.querySelectorAll('.pool-radio').forEach(radio => {
+    radio.addEventListener('change', () => {
+        document.querySelectorAll('.pool-card').forEach(c => c.classList.remove('border-primary','bg-primary','bg-opacity-10'));
+        if (radio.checked) radio.closest('label').querySelector('.pool-card').classList.add('border-primary','bg-opacity-10','bg-primary');
+    });
+});
+</script>
+<style>
+.pool-card { transition: all .2s; cursor: pointer; }
+.pool-card:hover { border-color: #1e5cff !important; background: #f0f4ff; }
+</style>
+{% endblock %}

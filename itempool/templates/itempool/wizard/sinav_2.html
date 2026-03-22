@@ -1,0 +1,113 @@
+{% extends "itempool/wizard/_base.html" %}
+
+{% block title %}Sınav Oluştur — Adım 2{% endblock %}
+
+{% block wizard_steps %}
+<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
+    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Temel Bilgiler</span></div>
+    <div class="wizard-step active"><div class="wizard-step-dot">2</div><span class="wizard-step-label">Soru Seçimi</span></div>
+    <div class="wizard-step"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Gözden Geçir</span></div>
+    <div class="wizard-step"><div class="wizard-step-dot">4</div><span class="wizard-step-label">PDF Al</span></div>
+</div>
+{% endblock %}
+
+{% block wizard_title %}🎲 Soru Türü ve Sayılarını Belirleyin{% endblock %}
+{% block wizard_subtitle %}{{ tf.name }} — Havuz: {{ pool.name }}{% endblock %}
+
+{% block wizard_body %}
+<form method="post">
+    {% csrf_token %}
+
+    <div class="table-responsive mb-3">
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Soru Türü</th>
+                    <th>Havuzda Mevcut</th>
+                    <th style="width:110px;">Soru Sayısı</th>
+                    <th style="width:110px;">Puan/Soru</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge bg-primary">MCQ</span> Çoktan Seçmeli</td>
+                    <td><span class="badge bg-light text-dark">{{ available.MCQ }} soru</span></td>
+                    <td>
+                        <input type="number" name="n_mcq" class="form-control form-control-sm"
+                               min="0" max="{{ available.MCQ }}" value="0">
+                    </td>
+                    <td>
+                        <input type="number" name="pts_mcq" class="form-control form-control-sm"
+                               min="1" value="5">
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-success">TF</span> Doğru / Yanlış</td>
+                    <td><span class="badge bg-light text-dark">{{ available.TF }} soru</span></td>
+                    <td>
+                        <input type="number" name="n_tf" class="form-control form-control-sm"
+                               min="0" max="{{ available.TF }}" value="0">
+                    </td>
+                    <td>
+                        <input type="number" name="pts_tf" class="form-control form-control-sm"
+                               min="1" value="5">
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-warning text-dark">SA</span> Kısa Cevaplı</td>
+                    <td><span class="badge bg-light text-dark">{{ available.SHORT_ANSWER }} soru</span></td>
+                    <td>
+                        <input type="number" name="n_sa" class="form-control form-control-sm"
+                               min="0" max="{{ available.SHORT_ANSWER }}" value="0">
+                    </td>
+                    <td>
+                        <input type="number" name="pts_sa" class="form-control form-control-sm"
+                               min="1" value="10">
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-danger">OE</span> Açık Uçlu</td>
+                    <td><span class="badge bg-light text-dark">{{ available.OPEN }} soru</span></td>
+                    <td>
+                        <input type="number" name="n_open" class="form-control form-control-sm"
+                               min="0" max="{{ available.OPEN }}" value="0">
+                    </td>
+                    <td>
+                        <input type="number" name="pts_open" class="form-control form-control-sm"
+                               min="1" value="20">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {% if groups %}
+    <div class="card border-0 bg-light p-3 mb-3">
+        <h6 class="fw-semibold mb-2">🎓 Daha Önce Kullanılan Soruları Hariç Tut (İsteğe Bağlı)</h6>
+        <select name="group_id" class="form-select form-select-sm">
+            <option value="">— Hariç tutma uygulama —</option>
+            {% for g in groups %}
+            <option value="{{ g.pk }}">{{ g.name }}</option>
+            {% endfor %}
+        </select>
+        <div class="form-text">Seçilen öğrenci grubuna daha önce uygulanmış sorular seçime dahil edilmez.</div>
+    </div>
+    {% endif %}
+
+    {% if outcomes %}
+    <details class="mb-3">
+        <summary class="text-muted small cursor-pointer">🎯 Öğrenme çıktılarını görüntüle ({{ outcomes|length }})</summary>
+        <ul class="mt-2 small text-muted">
+            {% for oc in outcomes %}
+            <li><code>{{ oc.code }}</code> {{ oc.description }} <span class="badge bg-light text-dark">{{ oc.get_level_display }}</span></li>
+            {% endfor %}
+        </ul>
+    </details>
+    {% endif %}
+
+    <div class="wizard-nav">
+        <a href="{% url 'itempool:wizard_exam_step1' %}" class="btn-wizard-back btn">← Geri</a>
+        <button type="submit" class="btn-wizard-next btn">Soruları Seç →</button>
+    </div>
+</form>
+{% endblock %}

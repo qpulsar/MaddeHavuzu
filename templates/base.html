@@ -132,6 +132,39 @@
             color: var(--mh-primary);
         }
 
+        /* Sidebar section labels */
+        .nav-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #9ca3af;
+            padding: 0.75rem 1.5rem 0.25rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Wizard CTA button */
+        .wizard-cta {
+            margin: 0 1rem 1rem;
+            padding: 0.65rem 1rem;
+            background: linear-gradient(135deg, #1e5cff 0%, #7c3aed 100%);
+            color: white !important;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: opacity 0.2s, transform 0.2s;
+            box-shadow: 0 3px 10px rgba(30,92,255,0.3);
+        }
+        .wizard-cta:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+            color: white !important;
+        }
+        .wizard-cta i { margin-right: 10px; font-size: 1.1rem; }
+
         .sidebar-footer {
             margin-top: auto;
             border-top: 1px solid var(--mh-border);
@@ -261,51 +294,83 @@
             </div>
         </a>
 
-        <ul class="nav nav-pills flex-column mb-auto pt-2">
-            {% if user.is_authenticated %}
-            <li class="nav-item">
-                <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                    <i class="bi bi-house-door"></i> {% trans "Dashboard" %}
-                </a>
-            </li>
-            <li class="nav-item mt-1">
-                <a href="{% url 'itempool:pool_list' %}" class="nav-link {% if request.resolver_match.app_name == 'itempool' and request.resolver_match.url_name in 'pool_list,pool_create,pool_detail,pool_update,pool_archive,item_create,item_detail,item_edit,item_delete,form_list,form_create,form_detail,form_update,test_form_pdf,test_form_answer_key' %}active{% endif %}">
-                    <i class="bi bi-collection"></i> {% trans "Madde Havuzu" %}
-                </a>
-            </li>
-            <li class="nav-item mt-1">
-                <a href="{% url 'itempool:student_group_list' %}" class="nav-link {% if request.resolver_match.url_name in 'student_group_list,student_group_create,student_group_detail,exam_application_create,exam_application_delete,group_applied_items' %}active{% endif %}">
-                    <i class="bi bi-people"></i> {% trans "Öğrenci Grupları" %}
-                </a>
-            </li>
-            <li class="nav-item mt-1">
-                <a href="{% url 'itempool:exam_template_list' %}" class="nav-link {% if request.resolver_match.url_name in 'exam_template_list,exam_template_create,exam_template_update' %}active{% endif %}">
-                    <i class="bi bi-file-earmark-text"></i> {% trans "Sınav Şablonları" %}
-                </a>
-            </li>
-            <li class="nav-item mt-1">
-                <a href="{% url 'new_upload' %}" class="nav-link {% if request.resolver_match.url_name == 'new_upload' or request.resolver_match.url_name == 'upload_detail' or request.resolver_match.url_name == 'upload_stats' or request.resolver_match.url_name == 'upload_kr20' or request.resolver_match.url_name == 'upload_alpha' or request.resolver_match.url_name == 'cheating_analysis' %}active{% endif %}">
-                    <i class="bi bi-check2-square"></i> {% trans "Optik Okuma" %}
-                </a>
-            </li>
-            <li class="nav-item mt-1">
-                <a href="{% url 'itempool:analysis_upload' %}" class="nav-link {% if request.resolver_match.url_name == 'analysis_upload' %}active{% endif %}">
-                    <i class="bi bi-graph-up"></i> {% trans "Test ve Madde Analizi" %}
-                </a>
-            </li>
-            {% else %}
-            <li class="nav-item">
-                <a href="{% url 'login' %}" class="nav-link">
-                    <i class="bi bi-box-arrow-in-right"></i> {% trans "Giriş Yap" %}
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'register' %}" class="nav-link">
-                    <i class="bi bi-person-plus"></i> {% trans "Kayıt Ol" %}
-                </a>
-            </li>
-            {% endif %}
-        </ul>
+        <div class="pt-2">
+        {% if user.is_authenticated %}
+
+            {# Sihirbaz CTA #}
+            <a href="{% url 'itempool:wizard_landing' %}" class="wizard-cta">
+                <i class="bi bi-magic"></i> Sihirbaz ile Başla
+            </a>
+
+            {# Genel #}
+            <ul class="nav nav-pills flex-column mb-0">
+                <li class="nav-item">
+                    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="bi bi-house-door"></i> Ana Sayfa
+                    </a>
+                </li>
+            </ul>
+
+            {# Soru Hazırlığı #}
+            <div class="nav-section-label">Soru Hazırlığı</div>
+            <ul class="nav nav-pills flex-column mb-0">
+                <li class="nav-item">
+                    <a href="{% url 'itempool:pool_list' %}" class="nav-link {% if request.resolver_match.url_name in 'pool_list,pool_create,pool_detail,pool_update,pool_archive,item_create,item_detail' %}active{% endif %}">
+                        <i class="bi bi-collection"></i> Madde Havuzları
+                    </a>
+                </li>
+            </ul>
+
+            {# Sınavlar #}
+            <div class="nav-section-label">Sınavlar</div>
+            <ul class="nav nav-pills flex-column mb-0">
+                <li class="nav-item">
+                    <a href="{% url 'itempool:test_form_list_all' %}" class="nav-link {% if request.resolver_match.url_name in 'test_form_list_all,test_form_create,test_form_detail,test_form_edit_items,test_form_pdf,test_form_answer_key,test_form_wizard_blueprint' %}active{% endif %}">
+                        <i class="bi bi-journal-text"></i> Sınav Formları
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'itempool:student_group_list' %}" class="nav-link {% if request.resolver_match.url_name in 'student_group_list,student_group_create,student_group_detail,exam_application_create,exam_application_delete,group_applied_items' %}active{% endif %}">
+                        <i class="bi bi-people"></i> Öğrenci Grupları
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'itempool:exam_template_list' %}" class="nav-link {% if request.resolver_match.url_name in 'exam_template_list,exam_template_create,exam_template_update' %}active{% endif %}">
+                        <i class="bi bi-layout-text-sidebar"></i> Baskı Şablonları
+                    </a>
+                </li>
+            </ul>
+
+            {# Değerlendirme #}
+            <div class="nav-section-label">Değerlendirme</div>
+            <ul class="nav nav-pills flex-column mb-0">
+                <li class="nav-item">
+                    <a href="{% url 'new_upload' %}" class="nav-link {% if request.resolver_match.url_name in 'new_upload,upload_detail,upload_stats,upload_kr20,upload_alpha,cheating_analysis' %}active{% endif %}">
+                        <i class="bi bi-upc-scan"></i> Optik Okuma
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'itempool:analysis_upload' %}" class="nav-link {% if request.resolver_match.url_name in 'analysis_upload,outcome_performance_report' %}active{% endif %}">
+                        <i class="bi bi-bar-chart-line"></i> Analiz &amp; Raporlar
+                    </a>
+                </li>
+            </ul>
+
+        {% else %}
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{% url 'login' %}" class="nav-link">
+                        <i class="bi bi-box-arrow-in-right"></i> Giriş Yap
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'register' %}" class="nav-link">
+                        <i class="bi bi-person-plus"></i> Kayıt Ol
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
+        </div>
 
         {% if user.is_authenticated %}
         <div class="sidebar-footer">

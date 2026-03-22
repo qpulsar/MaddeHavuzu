@@ -1,0 +1,73 @@
+{% extends "itempool/wizard/_base.html" %}
+
+{% block title %}Değerlendirme — Adım 1{% endblock %}
+
+{% block wizard_steps %}
+<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
+    <div class="wizard-step active"><div class="wizard-step-dot">1</div><span class="wizard-step-label">Form Seç</span></div>
+    <div class="wizard-step"><div class="wizard-step-dot">2</div><span class="wizard-step-label">Cevap Anahtarı</span></div>
+    <div class="wizard-step"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Sonuçlar</span></div>
+</div>
+{% endblock %}
+
+{% block wizard_title %}📊 Sınavı Değerlendir{% endblock %}
+{% block wizard_subtitle %}Değerlendirmek istediğiniz sınav formunu seçin.{% endblock %}
+
+{% block wizard_body %}
+<form method="post">
+    {% csrf_token %}
+
+    {% if forms %}
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Sınav Formu <span class="text-danger">*</span></label>
+        <div class="row g-2">
+            {% for f in forms %}
+            <div class="col-md-6">
+                <label class="d-block cursor-pointer">
+                    <input type="radio" name="form_id" value="{{ f.pk }}" class="d-none form-radio" required>
+                    <div class="border rounded-3 p-3 form-card h-100">
+                        <div class="fw-semibold">{{ f.name }}</div>
+                        <div class="text-muted small mt-1">
+                            📚 {{ f.pool.name }}
+                        </div>
+                        <div class="mt-2 d-flex gap-2 flex-wrap">
+                            <span class="badge bg-light text-dark">{{ f.form_items.count }} soru</span>
+                            {% if f.created_at %}
+                            <span class="badge bg-light text-dark">{{ f.created_at|date:"d.m.Y" }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Henüz sınav formunuz yok.
+        <a href="{% url 'itempool:wizard_exam_step1' %}" class="alert-link">Sınav formu oluşturun →</a>
+    </div>
+    {% endif %}
+
+    <div class="wizard-nav">
+        <a href="{% url 'itempool:wizard_landing' %}" class="btn-wizard-back btn">← Geri</a>
+        {% if forms %}
+        <button type="submit" class="btn-wizard-next btn">Devam →</button>
+        {% endif %}
+    </div>
+</form>
+
+<script>
+document.querySelectorAll('.form-radio').forEach(radio => {
+    radio.addEventListener('change', () => {
+        document.querySelectorAll('.form-card').forEach(c => c.classList.remove('border-primary','bg-primary','bg-opacity-10'));
+        if (radio.checked) radio.closest('label').querySelector('.form-card').classList.add('border-primary','bg-opacity-10','bg-primary');
+    });
+});
+</script>
+<style>
+.form-card { transition: all .2s; cursor: pointer; }
+.form-card:hover { border-color: #1e5cff !important; background: #f0f4ff; }
+</style>
+{% endblock %}

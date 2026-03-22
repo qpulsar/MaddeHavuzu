@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block extra_css %}
+<style>
+/* ── Wizard Chrome ──────────────────────────────────────────────── */
+.wizard-header {
+    background: linear-gradient(135deg, #1e5cff 0%, #7c3aed 100%);
+    color: white;
+    padding: 2rem 2rem 1rem;
+    margin: -1.5rem -1.5rem 2rem;
+    border-radius: 12px 12px 0 0;
+}
+.wizard-header h2 { color: white; font-size: 1.4rem; margin-bottom: 0.25rem; }
+.wizard-header p  { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin: 0; }
+
+/* Progress Steps */
+.wizard-steps {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0 0.5rem;
+}
+.wizard-step {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+.wizard-step:not(:last-child)::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: #e5e7eb;
+    margin: 0 0.5rem;
+}
+.wizard-step.done::after  { background: #1e5cff; }
+.wizard-step-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #9ca3af;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+.wizard-step.done  .wizard-step-dot { background: #1e5cff; color: white; }
+.wizard-step.active .wizard-step-dot { background: #1e5cff; color: white; box-shadow: 0 0 0 4px rgba(30,92,255,0.2); }
+.wizard-step-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #9ca3af;
+    white-space: nowrap;
+    margin-left: 0.4rem;
+}
+.wizard-step.active .wizard-step-label, .wizard-step.done .wizard-step-label { color: #1e5cff; }
+
+/* Wizard Card */
+.wizard-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    padding: 2rem;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+/* Wizard Nav Buttons */
+.wizard-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+.btn-wizard-next {
+    background: linear-gradient(135deg, #1e5cff, #7c3aed);
+    color: white; border: none;
+    padding: 0.6rem 1.75rem;
+    border-radius: 8px; font-weight: 600;
+    transition: opacity 0.2s, transform 0.2s;
+}
+.btn-wizard-next:hover { opacity: 0.9; transform: translateY(-1px); color: white; }
+.btn-wizard-back {
+    color: #6b7280; background: none; border: 1px solid #e5e7eb;
+    padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 500;
+}
+.btn-wizard-back:hover { background: #f3f4f6; color: #374151; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+
+    {# Adım göstergesi #}
+    {% block wizard_steps %}{% endblock %}
+
+    <div class="wizard-card">
+        {# Başlık #}
+        <div class="wizard-header">
+            <h2>{% block wizard_title %}{% endblock %}</h2>
+            <p>{% block wizard_subtitle %}{% endblock %}</p>
+        </div>
+
+        {# Mesajlar #}
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show mb-3" role="alert">
+            {{ msg }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {# İçerik #}
+        {% block wizard_body %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

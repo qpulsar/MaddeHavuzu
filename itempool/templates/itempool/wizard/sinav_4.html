@@ -1,0 +1,101 @@
+{% extends "itempool/wizard/_base.html" %}
+
+{% block title %}Sınav Oluştur — Adım 4{% endblock %}
+
+{% block wizard_steps %}
+<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
+    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Temel Bilgiler</span></div>
+    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Soru Seçimi</span></div>
+    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Gözden Geçir</span></div>
+    <div class="wizard-step active"><div class="wizard-step-dot">4</div><span class="wizard-step-label">PDF Al</span></div>
+</div>
+{% endblock %}
+
+{% block wizard_title %}🖨️ Baskı Şablonu Seç ve PDF Al{% endblock %}
+{% block wizard_subtitle %}{{ tf.name }} — {{ form_items|length }} soru / {{ total_points }} puan{% endblock %}
+
+{% block wizard_body %}
+
+{# Özet kartı #}
+<div class="row g-2 mb-4">
+    <div class="col-4 text-center">
+        <div class="border rounded-3 p-3">
+            <div class="fw-bold fs-4 text-primary">{{ form_items|length }}</div>
+            <div class="text-muted small">Soru</div>
+        </div>
+    </div>
+    <div class="col-4 text-center">
+        <div class="border rounded-3 p-3">
+            <div class="fw-bold fs-4 text-primary">{{ total_points }}</div>
+            <div class="text-muted small">Toplam Puan</div>
+        </div>
+    </div>
+    <div class="col-4 text-center">
+        <div class="border rounded-3 p-3">
+            <div class="fw-bold fs-4 text-primary">{{ tf.pool.name|truncatechars:15 }}</div>
+            <div class="text-muted small">Havuz</div>
+        </div>
+    </div>
+</div>
+
+{# Şablon seçimi #}
+{% if templates %}
+<h6 class="fw-semibold mb-3">Baskı Şablonu Seçin:</h6>
+<div class="row g-3 mb-4">
+    {% for tmpl in templates %}
+    <div class="col-md-4">
+        <a href="{% url 'itempool:test_form_pdf' pk=tf.pk %}?template_id={{ tmpl.pk }}"
+           class="d-block border rounded-3 p-3 text-decoration-none text-dark tmpl-card h-100"
+           target="_blank">
+            <div style="font-size:2rem; margin-bottom:.5rem;">📄</div>
+            <div class="fw-semibold">{{ tmpl.name }}</div>
+            {% if tmpl.description %}
+            <div class="text-muted small mt-1">{{ tmpl.description|truncatechars:60 }}</div>
+            {% endif %}
+            <div class="mt-2">
+                <span class="badge bg-primary">PDF İndir</span>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    Henüz baskı şablonu tanımlanmamış.
+    <a href="{% url 'itempool:exam_template_create' %}" class="alert-link" target="_blank">Şablon oluştur →</a>
+</div>
+<div class="mb-4">
+    <a href="{% url 'itempool:test_form_pdf' pk=tf.pk %}" class="btn btn-outline-primary" target="_blank">
+        <i class="bi bi-file-earmark-pdf me-1"></i> Varsayılan PDF
+    </a>
+</div>
+{% endif %}
+
+{# Cevap anahtarı #}
+<div class="mb-4">
+    <a href="{% url 'itempool:test_form_answer_key' pk=tf.pk %}" class="btn btn-outline-secondary btn-sm" target="_blank">
+        <i class="bi bi-key me-1"></i> Cevap Anahtarını Görüntüle
+    </a>
+    <a href="{% url 'itempool:test_form_detail' pk=tf.pk %}" class="btn btn-outline-secondary btn-sm ms-2">
+        <i class="bi bi-pencil me-1"></i> Formu Düzenle
+    </a>
+</div>
+
+<div class="alert alert-success">
+    <i class="bi bi-check-circle me-2"></i>
+    Sınav formu başarıyla oluşturuldu! Şablon seçerek PDF'i indirin veya daha sonra
+    <a href="{% url 'itempool:test_form_list_all' %}" class="alert-link">Sınav Formlarım</a>
+    sayfasından erişin.
+</div>
+
+<div class="wizard-nav">
+    <a href="{% url 'itempool:wizard_exam_step3' form_id=tf.pk %}" class="btn-wizard-back btn">← Geri</a>
+    <a href="{% url 'itempool:wizard_landing' %}" class="btn-wizard-next btn">Sihirbaza Dön ✓</a>
+</div>
+
+<style>
+.tmpl-card { transition: all .2s; }
+.tmpl-card:hover { border-color: #1e5cff !important; background: #f0f4ff; transform: translateY(-2px); }
+</style>
+{% endblock %}

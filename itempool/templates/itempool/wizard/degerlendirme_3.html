@@ -1,0 +1,118 @@
+{% extends "itempool/wizard/_base.html" %}
+
+{% block title %}Değerlendirme — Adım 3{% endblock %}
+
+{% block wizard_steps %}
+<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
+    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Form Seç</span></div>
+    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Cevap Anahtarı</span></div>
+    <div class="wizard-step active"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Sonuçlar</span></div>
+</div>
+{% endblock %}
+
+{% block wizard_title %}📈 Değerlendirme Sonuçları{% endblock %}
+{% block wizard_subtitle %}Oturum #{{ session.pk }} — {{ session.created_at|date:"d.m.Y H:i" }}{% endblock %}
+
+{% block wizard_body %}
+
+{# Özet istatistikler #}
+{% if session.student_count %}
+<div class="row g-2 mb-4">
+    <div class="col-4 text-center">
+        <div class="border rounded-3 p-3">
+            <div class="fw-bold fs-4 text-primary">{{ session.student_count }}</div>
+            <div class="text-muted small">Öğrenci</div>
+        </div>
+    </div>
+    {% if session.avg_score %}
+    <div class="col-4 text-center">
+        <div class="border rounded-3 p-3">
+            <div class="fw-bold fs-4 text-success">{{ session.avg_score|floatformat:1 }}</div>
+            <div class="text-muted small">Ortalama Puan</div>
+        </div>
+    </div>
+    {% endif %}
+    {% if session.pass_rate %}
+    <div class="col-4 text-center">
+        <div class="border rounded-3 p-3">
+            <div class="fw-bold fs-4 text-info">%{{ session.pass_rate|floatformat:0 }}</div>
+            <div class="text-muted small">Geçme Oranı</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{# Öğrenme çıktısı performansı #}
+{% if performance %}
+<div class="mb-4">
+    <h6 class="fw-semibold mb-3">🎯 Öğrenme Çıktısı Başarı Raporu</h6>
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Kod</th>
+                    <th>Açıklama</th>
+                    <th>Başarı Oranı</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in performance %}
+                <tr>
+                    <td><code>{{ row.code }}</code></td>
+                    <td class="small">{{ row.description }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height:8px;">
+                                <div class="progress-bar
+                                    {% if row.rate >= 70 %}bg-success
+                                    {% elif row.rate >= 50 %}bg-warning
+                                    {% else %}bg-danger{% endif %}"
+                                    style="width:{{ row.rate }}%"></div>
+                            </div>
+                            <span class="small fw-semibold" style="min-width:40px;">%{{ row.rate|floatformat:0 }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if row.rate >= 70 %}
+                            <span class="badge bg-success">İyi</span>
+                        {% elif row.rate >= 50 %}
+                            <span class="badge bg-warning text-dark">Orta</span>
+                        {% else %}
+                            <span class="badge bg-danger">Geliştirilmeli</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-light border mb-4">
+    <i class="bi bi-info-circle me-2 text-primary"></i>
+    Bu oturum için henüz öğrenme çıktısı raporu oluşturulmamış.
+</div>
+{% endif %}
+
+{# Detaylı rapor linki #}
+<div class="mb-4">
+    <a href="{% url 'itempool:outcome_performance_report' session_pk=session.pk %}"
+       class="btn btn-outline-primary btn-sm" target="_blank">
+        <i class="bi bi-file-earmark-bar-graph me-1"></i> Detaylı Çıktı Raporunu Görüntüle
+    </a>
+</div>
+
+<div class="alert alert-success">
+    <i class="bi bi-check-circle me-2"></i>
+    Değerlendirme tamamlandı.
+    <a href="{% url 'itempool:wizard_landing' %}" class="alert-link">Sihirbaza Dön →</a>
+</div>
+
+<div class="wizard-nav">
+    <a href="{% url 'itempool:wizard_eval_step2' form_id=session.test_form.pk %}" class="btn-wizard-back btn">← Geri</a>
+    <a href="{% url 'itempool:wizard_landing' %}" class="btn-wizard-next btn">Tamamla ✓</a>
+</div>
+
+{% endblock %}

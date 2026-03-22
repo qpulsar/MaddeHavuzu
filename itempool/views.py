@@ -863,6 +863,30 @@ def exam_template_update(request, pk):
 
 
 @login_required
+def exam_template_preview(request, pk):
+    """Şablon önizlemesi: kullanıcının en son test formunu örnek olarak kullanır."""
+    from django.http import HttpResponse
+    from .services.exam_pdf import generate_exam_pdf
+
+    tpl = get_object_or_404(ExamTemplate, pk=pk)
+    sample_form = (
+        TestForm.objects.filter(created_by=request.user)
+        .prefetch_related('form_items')
+        .order_by('-id')
+        .first()
+    )
+    if not sample_form:
+        messages.warning(request, 'Önizleme için en az bir sınav formu gerekli.')
+        return redirect('itempool:exam_template_list')
+
+    pdf_bytes = generate_exam_pdf(sample_form, tpl)
+    filename = f"onizleme_{tpl.name[:30].replace(' ', '_')}.pdf"
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
+
+
+@login_required
 def test_form_pdf(request, pk):
     """Test formundan PDF sınav kağıdı üret ve döndür."""
     from django.http import HttpResponse
