@@ -57,7 +57,7 @@ urlpatterns = [
     path('items/instance/<int:pk>/save/<str:section>/', views.item_detail_save, name='item_detail_save'),
 
     # Test Formu Rotaları
-    path('<int:pool_id>/formlar/yeni/', views.test_form_create, name='test_form_create'),
+    path('formlar/yeni/', views.test_form_create, name='test_form_create'),
     path('formlar/<int:pk>/', views.test_form_detail, name='test_form_detail'),
     path('formlar/<int:pk>/maddeler/duzenle/', views.test_form_edit_items, name='test_form_edit_items'),
     path('formlar/<int:pk>/wizard/blueprint/', views.test_form_wizard_blueprint, name='test_form_wizard_blueprint'),

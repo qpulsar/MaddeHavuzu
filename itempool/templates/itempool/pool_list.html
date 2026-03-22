@@ -169,14 +169,18 @@
                     </div>
                 </div>
                 
+                {% if pool.description %}
+                <p class="text-muted small mb-2" style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
+                    {{ pool.description }}
+                </p>
+                {% endif %}
+                {% if pool.level %}
                 <div class="d-flex gap-2 flex-wrap mb-2">
-                    <span class="pool-badge badge-course text-truncate" style="max-width: 150px;">
-                        {{ pool.course }}
-                    </span>
-                    <span class="pool-badge badge-level text-truncate" style="max-width: 150px;">
+                    <span class="pool-badge badge-level text-truncate" style="max-width: 200px;">
                         {{ pool.level }}
                     </span>
                 </div>
+                {% endif %}
             </div>
             
             <div class="card-footer">

@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1">📝 Sınav Formlarım</h2>
-            <p class="text-muted mb-0">Tüm havuzlardaki sınav formları</p>
+            <p class="text-muted mb-0">Tüm sınav formları</p>
         </div>
         <a href="{% url 'itempool:wizard_exam_step1' %}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i> Yeni Sınav Formu
@@ -21,7 +21,6 @@
                 <thead class="table-light">
                     <tr>
                         <th>Sınav Adı</th>
-                        <th>Havuz</th>
                         <th>Soru Sayısı</th>
                         <th>Oluşturulma</th>
                         <th class="text-end">İşlemler</th>
@@ -33,11 +32,6 @@
                         <td>
                             <a href="{% url 'itempool:test_form_detail' pk=f.pk %}" class="fw-semibold text-decoration-none">
                                 {{ f.name }}
-                            </a>
-                        </td>
-                        <td>
-                            <a href="{% url 'itempool:pool_detail' pk=f.pool.pk %}" class="text-muted text-decoration-none small">
-                                {{ f.pool.name }}
                             </a>
                         </td>
                         <td>

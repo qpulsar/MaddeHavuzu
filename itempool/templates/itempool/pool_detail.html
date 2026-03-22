@@ -28,8 +28,6 @@
     </div>
 </div>
 
-
-
 <div class="row mb-4">
     <!-- Havuz Özeti -->
     <div class="col-md-3">
@@ -37,17 +35,24 @@
             <div class="card-header bg-light fw-bold">
                 <i class="bi bi-info-circle"></i> Havuz Bilgileri
             </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item"><strong>Ders:</strong> <span class="float-end">{{ pool.course }}</span></li>
-                <li class="list-group-item"><strong>Dönem:</strong> <span class="float-end badge bg-secondary">{{ pool.semester }}</span></li>
-                <li class="list-group-item"><strong>Seviye:</strong> <span class="float-end">{{ pool.level }}</span></li>
-                <li class="list-group-item"><strong>Durum:</strong> 
-                    <span class="float-end badge {% if pool.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">
-                        {{ pool.get_status_display }}
-                    </span>
-                </li>
-                <li class="list-group-item"><strong>Sahibi:</strong> <span class="float-end">{{ pool.owner.get_full_name|default:pool.owner.username }}</span></li>
-            </ul>
+            <div class="card-body">
+                {% if pool.description %}
+                <p class="small text-muted mb-3">{{ pool.description }}</p>
+                <hr>
+                {% endif %}
+                <ul class="list-unstyled mb-0 small">
+                    {% if pool.level %}
+                    <li class="mb-2"><strong>Düzey:</strong> <span class="float-end">{{ pool.level }}</span></li>
+                    {% endif %}
+                    <li class="mb-2">
+                        <strong>Durum:</strong>
+                        <span class="float-end badge {% if pool.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ pool.get_status_display }}
+                        </span>
+                    </li>
+                    <li class="mb-0"><strong>Sahibi:</strong> <span class="float-end">{{ pool.owner.get_full_name|default:pool.owner.username }}</span></li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -57,26 +62,21 @@
             <div class="card-header">
                 <ul class="nav nav-tabs card-header-tabs" id="poolTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items-pane" type="button" role="tab" aria-controls="items-pane" aria-selected="true">
+                        <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items-pane" type="button" role="tab" aria-selected="true">
                             <i class="bi bi-list-ol"></i> Maddeler <span class="badge bg-secondary ms-1">{{ items.paginator.count }}</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="outcomes-tab" data-bs-toggle="tab" data-bs-target="#outcomes-pane" type="button" role="tab" aria-controls="outcomes-pane" aria-selected="false">
+                        <button class="nav-link" id="outcomes-tab" data-bs-toggle="tab" data-bs-target="#outcomes-pane" type="button" role="tab" aria-selected="false">
                             <i class="bi bi-bullseye"></i> Öğrenme Çıktıları <span class="badge bg-secondary ms-1">{{ outcomes.count }}</span>
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms-pane" type="button" role="tab" aria-controls="forms-pane" aria-selected="false">
-                            <i class="bi bi-file-earmark-text"></i> Test Formları <span class="badge bg-secondary ms-1">{{ test_forms.count }}</span>
                         </button>
                     </li>
                 </ul>
             </div>
-            
+
             <div class="card-body">
                 <div class="tab-content" id="poolTabsContent">
-                    
+
                     <!-- Maddeler Sekmesi -->
                     <div class="tab-pane fade show active" id="items-pane" role="tabpanel" aria-labelledby="items-tab">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -93,7 +93,7 @@
                                 </a>
                             </div>
                         </div>
-                        
+
                         {% if items %}
                         <div class="list-group">
                             {% for inst in items %}
@@ -106,7 +106,7 @@
                                     <p class="mb-0 small text-muted">
                                         Zorluk: <span class="badge bg-light text-dark">{{ inst.item.get_difficulty_intended_display }}</span>
                                         {% if inst.learning_outcomes.exists %}
-                                        | Çıktı: 
+                                        | Çıktı:
                                         {% for oc in inst.learning_outcomes.all %}
                                             <span class="badge bg-info text-dark">{{ oc.code }}</span>
                                         {% endfor %}
@@ -123,7 +123,6 @@
                             {% endfor %}
                         </div>
 
-                        <!-- Pagination for Items -->
                         {% if items.has_other_pages %}
                         <nav class="mt-3">
                             <ul class="pagination pagination-sm justify-content-center">
@@ -132,7 +131,7 @@
                                 {% else %}
                                 <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
                                 {% endif %}
-                                
+
                                 {% for i in items.paginator.page_range %}
                                     {% if items.number == i %}
                                     <li class="page-item active"><span class="page-link">{{ i }}</span></li>
@@ -140,7 +139,7 @@
                                     <li class="page-item"><a class="page-link" href="?page={{ i }}#items-pane">{{ i }}</a></li>
                                     {% endif %}
                                 {% endfor %}
-                                
+
                                 {% if items.has_next %}
                                 <li class="page-item"><a class="page-link" href="?page={{ items.next_page_number }}#items-pane">&raquo;</a></li>
                                 {% else %}
@@ -172,8 +171,8 @@
                         <!-- Çıktı Ekleme Formu -->
                         <div class="collapse mb-4" id="addOutcomeForm">
                             <div class="card card-body bg-light">
-                                <form hx-post="{% url 'itempool:outcome_add' pool.id %}" 
-                                      hx-target="#outcomes-tbody" 
+                                <form hx-post="{% url 'itempool:outcome_add' pool.id %}"
+                                      hx-target="#outcomes-tbody"
                                       hx-swap="beforeend"
                                       hx-on::after-request="if(event.detail.successful) { this.reset(); bootstrap.Collapse.getInstance(document.getElementById('addOutcomeForm')).hide(); }">
                                     {% csrf_token %}
@@ -181,16 +180,13 @@
                                         <div class="col-md-2">
                                             {{ outcome_form.code }}
                                         </div>
-                                        <div class="col-md-5">
+                                        <div class="col-md-6">
                                             {{ outcome_form.description }}
                                         </div>
                                         <div class="col-md-2">
                                             {{ outcome_form.level }}
                                         </div>
                                         <div class="col-md-2">
-                                            {{ outcome_form.weight }}
-                                        </div>
-                                        <div class="col-md-1">
                                             {{ outcome_form.order }}
                                         </div>
                                         <div class="col-12 text-end mt-2">
@@ -210,9 +206,8 @@
                                     <tr>
                                         <th style="width: 5%">#</th>
                                         <th style="width: 10%">Kod</th>
-                                        <th style="width: 50%">Açıklama</th>
+                                        <th style="width: 60%">Açıklama</th>
                                         <th style="width: 15%">Düzey (Bloom)</th>
-                                        <th style="width: 10%">Ağırlık</th>
                                         <th style="width: 10%">İşlem</th>
                                     </tr>
                                 </thead>
@@ -229,91 +224,8 @@
                             <p class="mb-0">Henüz öğrenme çıktısı tanımlanmamış.</p>
                         </div>
                         {% endif %}
-                        
                     </div>
 
-                    <!-- Test Formları Sekmesi -->
-                    <div class="tab-pane fade" id="forms-pane" role="tabpanel" aria-labelledby="forms-tab">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="card-title mb-0">Sınav Formları</h5>
-                            <a href="{% url 'itempool:test_form_create' pool.id %}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-plus"></i> Yeni Form Oluştur
-                            </a>
-                        </div>
-                        
-                        {% if test_forms %}
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Form Adı</th>
-                                        <th>Durum</th>
-                                        <th>Soru Sayısı</th>
-                                        <th>Tarih</th>
-                                        <th class="text-end">İşlem</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for form in test_forms %}
-                                    <tr>
-                                        <td><strong>{{ form.name }}</strong></td>
-                                        <td>
-                                            <span class="badge {% if form.status == 'ACTIVE' %}bg-success{% elif form.status == 'DRAFT' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
-                                                {{ form.get_status_display }}
-                                            </span>
-                                        </td>
-                                        <td>{{ form.form_items.count }}</td>
-                                        <td>{{ form.created_at|date:"d.m.Y" }}</td>
-                                        <td class="text-end">
-                                            <a href="{% url 'itempool:test_form_detail' form.id %}" class="btn btn-sm btn-outline-primary" title="Detay">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4 text-muted bg-light rounded border mb-4">
-                            <i class="bi bi-file-earmark-text fs-3 d-block mb-1"></i>
-                            <p class="mb-0">Henüz hiç test formu oluşturulmamış.</p>
-                        </div>
-                        {% endif %}
-
-                        <hr>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0">Blueprintler ve Belirtke Tabloları</h6>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="list-group mb-3">
-                                    <div class="list-group-item bg-light fw-bold small">Blueprints</div>
-                                    {% for bp in blueprints %}
-                                    <div class="list-group-item d-flex justify-content-between align-items-center small">
-                                        {{ bp.name }}
-                                        <span class="badge bg-secondary rounded-pill">{{ bp.total_items }} Soru</span>
-                                    </div>
-                                    {% empty %}
-                                    <div class="list-group-item text-muted small">Tanımlı blueprint yok.</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="list-group mb-3">
-                                    <div class="list-group-item bg-light fw-bold small">Belirtke Tabloları</div>
-                                    {% for st in spec_tables %}
-                                    <div class="list-group-item small">
-                                        {{ st.name }}
-                                    </div>
-                                    {% empty %}
-                                    <div class="list-group-item text-muted small">Tanımlı belirtke tablosu yok.</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

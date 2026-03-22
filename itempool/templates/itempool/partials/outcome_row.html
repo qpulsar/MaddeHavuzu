@@ -3,12 +3,11 @@
     <td><span class="badge bg-primary">{{ oc.code }}</span></td>
     <td class="small">{{ oc.description }}</td>
     <td><span class="badge bg-info text-dark">{{ oc.get_level_display }}</span></td>
-    <td>{% if oc.weight %}%{{ oc.weight }}{% else %}-{% endif %}</td>
     <td>
         <div class="btn-group">
-            <button class="btn btn-sm btn-light border py-0 px-1" 
-                    hx-get="{% url 'itempool:outcome_edit' oc.id %}" 
-                    hx-target="#outcome-{{ oc.id }}" 
+            <button class="btn btn-sm btn-light border py-0 px-1"
+                    hx-get="{% url 'itempool:outcome_edit' oc.id %}"
+                    hx-target="#outcome-{{ oc.id }}"
                     hx-swap="outerHTML">
                 <i class="bi bi-pencil small"></i>
             </button>

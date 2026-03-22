@@ -136,7 +136,11 @@ def wizard_exam_step1(request):
             messages.error(request, 'Havuz seçimi zorunludur.')
         else:
             pool = get_object_or_404(ItemPool, pk=pool_id, owner=request.user)
-            tf = TestForm.objects.create(name=name, pool=pool, created_by=request.user)
+            tf = TestForm.objects.create(
+                name=name,
+                created_by=request.user,
+                generation_metadata={'source_pool_id': pool.pk}
+            )
             return redirect('itempool:wizard_exam_step2', form_id=tf.pk)
 
     return render(request, 'itempool/wizard/sinav_1.html', {
@@ -149,7 +153,11 @@ def wizard_exam_step1(request):
 def wizard_exam_step2(request, form_id):
     """Adım 2: Soru türü ve sayı belirleme + otomatik seçim."""
     tf = get_object_or_404(TestForm, pk=form_id, created_by=request.user)
-    pool = tf.pool
+    pool_id = tf.generation_metadata.get('source_pool_id')
+    pool = get_object_or_404(ItemPool, pk=pool_id) if pool_id else None
+    if not pool:
+        messages.error(request, 'Bu form için kaynak havuz bilgisi bulunamadı.')
+        return redirect('itempool:test_form_list_all')
     outcomes = LearningOutcome.objects.filter(pool=pool, is_active=True).order_by('order')
     groups = StudentGroup.objects.filter(created_by=request.user)
 
@@ -289,7 +297,6 @@ def wizard_eval_step1(request):
     """Adım 1: Sınav formu seç."""
     forms_qs = (
         TestForm.objects.filter(created_by=request.user)
-        .select_related('pool')
         .prefetch_related('form_items')
         .order_by('-id')
     )
@@ -348,10 +355,9 @@ def wizard_eval_step3(request, session_id):
 
 @login_required
 def test_form_list_all(request):
-    """Tüm havuzlardaki test formlarını listeler."""
+    """Tüm test formlarını listeler."""
     forms_qs = (
         TestForm.objects.filter(created_by=request.user)
-        .select_related('pool')
         .prefetch_related('form_items')
         .order_by('-id')
     )

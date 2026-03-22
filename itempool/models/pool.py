@@ -4,27 +4,24 @@ from django.contrib.auth.models import User
 
 class ItemPool(models.Model):
     """
-    Madde Havuzu tablosu. Ders/Sınav havuzlarını temsil eder.
+    Madde Havuzu tablosu. Herhangi bir konuya ait soru havuzunu temsil eder.
     """
     class Status(models.TextChoices):
         ACTIVE = 'ACTIVE', 'Aktif'
         ARCHIVED = 'ARCHIVED', 'Arşivlendi'
-    
+
     name = models.CharField(
         max_length=200,
         verbose_name='Havuz Adı'
     )
-    course = models.CharField(
-        max_length=200,
-        verbose_name='Ders Adı'
-    )
-    semester = models.CharField(
-        max_length=20,
-        verbose_name='Dönem',
-        help_text='Örn: 2024-Güz'
+    description = models.TextField(
+        blank=True,
+        verbose_name='Açıklama',
+        help_text='Havuzun hangi konu veya aşanlara ait olduğunu açıklayın'
     )
     level = models.CharField(
         max_length=20,
+        blank=True,
         verbose_name='Eğitim Düzeyi',
         help_text='Örn: Lisans 1, Yüksek Lisans'
     )
@@ -55,7 +52,7 @@ class ItemPool(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.name} ({self.semester})"
+        return self.name
 
 
 class LearningOutcome(models.Model):
@@ -89,11 +86,6 @@ class LearningOutcome(models.Model):
         choices=BloomLevel.choices,
         default=BloomLevel.KNOWLEDGE,
         verbose_name='Bilişsel Düzey (Bloom)'
-    )
-    weight = models.FloatField(
-        null=True,
-        blank=True,
-        verbose_name='Ağırlık (%)'
     )
     order = models.IntegerField(
         default=0,

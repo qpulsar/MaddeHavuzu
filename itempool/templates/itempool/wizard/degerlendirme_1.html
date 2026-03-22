@@ -28,10 +28,10 @@
                     <div class="border rounded-3 p-3 form-card h-100">
                         <div class="fw-semibold">{{ f.name }}</div>
                         <div class="text-muted small mt-1">
-                            📚 {{ f.pool.name }}
+                            {{ f.form_items.count }} soru
                         </div>
                         <div class="mt-2 d-flex gap-2 flex-wrap">
-                            <span class="badge bg-light text-dark">{{ f.form_items.count }} soru</span>
+                            <span class="badge bg-light text-dark">{{ f.form_items.count }}</span>
                             {% if f.created_at %}
                             <span class="badge bg-light text-dark">{{ f.created_at|date:"d.m.Y" }}</span>
                             {% endif %}

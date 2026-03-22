@@ -5,7 +5,7 @@ from .item import ItemInstance
 
 class TestForm(models.Model):
     """
-    Bir havuzdan seçilen maddelerle oluşturulan sınav formu.
+    Birden fazla havuzdan seçilen maddelerle oluşturulan sınav formu.
     """
     class Status(models.TextChoices):
         DRAFT = 'DRAFT', 'Taslak'
@@ -13,12 +13,6 @@ class TestForm(models.Model):
         APPLIED = 'APPLIED', 'Uygulandı'
         ARCHIVED = 'ARCHIVED', 'Arşivlendi'
 
-    pool = models.ForeignKey(
-        ItemPool,
-        on_delete=models.CASCADE,
-        related_name='test_forms',
-        verbose_name='Havuz'
-    )
     name = models.CharField(max_length=255, verbose_name='Form Adı')
     description = models.TextField(null=True, blank=True, verbose_name='Açıklama')
     
