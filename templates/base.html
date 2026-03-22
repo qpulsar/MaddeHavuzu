@@ -330,8 +330,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'itempool:student_group_list' %}" class="nav-link {% if request.resolver_match.url_name in 'student_group_list,student_group_create,student_group_detail,exam_application_create,exam_application_delete,group_applied_items' %}active{% endif %}">
-                        <i class="bi bi-people"></i> Öğrenci Grupları
+                    <a href="{% url 'itempool:course_list' %}" class="nav-link {% if request.resolver_match.url_name in 'course_list,course_create,course_detail,course_update,course_test_form_create,course_spec_table_create,exam_application_create,exam_application_delete,course_applied_items' %}active{% endif %}">
+                        <i class="bi bi-book"></i> Dersler
                     </a>
                 </li>
                 <li class="nav-item">

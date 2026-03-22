@@ -133,10 +133,9 @@ class CourseForm(forms.ModelForm):
 class CourseSpecTableForm(forms.ModelForm):
     class Meta:
         model = CourseSpecTable
-        fields = ['name', 'total_questions']
+        fields = ['name']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: Vize Belirtke Tablosu'}),
-            'total_questions': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         }
 
 

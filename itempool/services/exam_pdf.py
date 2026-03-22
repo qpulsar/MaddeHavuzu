@@ -26,8 +26,8 @@ def generate_exam_pdf(test_form, template: "ExamTemplate", with_answer_key: bool
     # Şablon değişkenleri
     var_context = {
         'form_name': test_form.name,
-        'course': test_form.pool.course,
-        'semester': test_form.pool.semester,
+        'course': test_form.course.name if test_form.course else 'Genel',
+        'semester': test_form.course.semester if test_form.course else 'Genel',
         'date': date.today().strftime('%d.%m.%Y'),
         'page': '<span class="page-number"></span>',
         'total_pages': '<span class="total-pages"></span>',
