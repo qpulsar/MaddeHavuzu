@@ -14,7 +14,7 @@ from django.contrib import messages
 
 from itempool.models import (
     ItemPool, LearningOutcome, ItemInstance, TestForm, FormItem,
-    ExamTemplate, StudentGroup,
+    ExamTemplate, Course,
 )
 from itempool.forms import ItemPoolForm, LearningOutcomeForm
 
@@ -159,7 +159,7 @@ def wizard_exam_step2(request, form_id):
         messages.error(request, 'Bu form için kaynak havuz bilgisi bulunamadı.')
         return redirect('itempool:test_form_list_all')
     outcomes = LearningOutcome.objects.filter(pool=pool, is_active=True).order_by('order')
-    groups = StudentGroup.objects.filter(created_by=request.user)
+    groups = Course.objects.filter(created_by=request.user)
 
     # Her türden mevcut soru sayısı
     def avail(itype):
@@ -188,7 +188,7 @@ def wizard_exam_step2(request, form_id):
         else:
             exclude_ids = set()
             if group_id:
-                group = get_object_or_404(StudentGroup, pk=group_id, created_by=request.user)
+                group = get_object_or_404(Course, pk=group_id, created_by=request.user)
                 exclude_ids = group.get_applied_item_instance_ids()
 
             tf.form_items.all().delete()

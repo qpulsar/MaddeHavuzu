@@ -11,12 +11,12 @@ from django.core.paginator import Paginator
 
 from .models import (
     ItemPool, LearningOutcome, Item, ItemInstance, ImportBatch, DraftItem, ItemChoice, OutcomeSuggestion,
-    TestForm, FormItem, Blueprint, PoolPermission, ItemAuditLog, StudentGroup, ExamApplication, ExamTemplate
+    TestForm, FormItem, Blueprint, PoolPermission, ItemAuditLog, Course, CourseSpecTable, ExamApplication, ExamTemplate
 )
 from .mixins import PoolAccessMixin
 from .forms import (
     ItemPoolForm, LearningOutcomeForm, ItemForm, ItemChoiceFormSet, TestFormForm, BlueprintForm,
-    StudentGroupForm, ExamApplicationForm
+    CourseForm, CourseSpecTableForm, TestFormCreateForm, ExamApplicationForm
 )
 from .services.import_docx import DocxImportService
 from .services.llm_client import get_llm_client
@@ -773,47 +773,227 @@ def analysis_get_forms(request):
 
 
 # ============================================================
-# Faz 11 — Öğrenci Grubu ve Sınav Uygulama View'ları
+# Ders (Course) View'ları
 # ============================================================
 
 @login_required
-def student_group_list(request):
-    groups = StudentGroup.objects.filter(created_by=request.user).order_by('-created_at')
-    return render(request, 'itempool/student_group_list.html', {'groups': groups})
+def course_list(request):
+    courses = Course.objects.filter(created_by=request.user).prefetch_related('pools').order_by('-created_at')
+    return render(request, 'itempool/course_list.html', {'courses': courses})
 
 
 @login_required
-def student_group_create(request):
+def course_create(request):
     if request.method == 'POST':
-        form = StudentGroupForm(request.POST)
+        form = CourseForm(request.POST)
         if form.is_valid():
-            group = form.save(commit=False)
-            group.created_by = request.user
-            group.save()
-            messages.success(request, 'Öğrenci grubu oluşturuldu.')
-            return redirect('itempool:student_group_list')
+            course = form.save(commit=False)
+            course.created_by = request.user
+            course.save()
+            form.save_m2m()  # pools M2M kaydet
+            messages.success(request, f'"{course}" dersi oluşturuldu.')
+            return redirect('itempool:course_detail', pk=course.pk)
     else:
-        form = StudentGroupForm()
-    return render(request, 'itempool/student_group_form.html', {'form': form, 'title': 'Yeni Grup'})
+        form = CourseForm()
+    return render(request, 'itempool/course_form.html', {'form': form, 'title': 'Yeni Ders'})
 
 
 @login_required
-def student_group_detail(request, pk):
-    group = get_object_or_404(StudentGroup, pk=pk, created_by=request.user)
-    applications = group.exam_applications.select_related('test_form').order_by('-applied_at')
-    return render(request, 'itempool/student_group_detail.html', {
-        'group': group,
+def course_update(request, pk):
+    course = get_object_or_404(Course, pk=pk, created_by=request.user)
+    if request.method == 'POST':
+        form = CourseForm(request.POST, instance=course)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Ders güncellendi.')
+            return redirect('itempool:course_detail', pk=course.pk)
+    else:
+        form = CourseForm(instance=course)
+    return render(request, 'itempool/course_form.html', {'form': form, 'course': course, 'title': 'Dersi Düzenle'})
+
+
+@login_required
+def course_detail(request, pk):
+    course = get_object_or_404(Course, pk=pk, created_by=request.user)
+    test_forms = course.test_forms.prefetch_related('form_items').order_by('-created_at')
+    spec_tables = course.spec_tables.all().order_by('-created_at')
+    applications = course.exam_applications.select_related('test_form').order_by('-applied_at')
+    return render(request, 'itempool/course_detail.html', {
+        'course': course,
+        'test_forms': test_forms,
+        'spec_tables': spec_tables,
         'applications': applications,
     })
 
 
+# ── Belirtke Tablosu ─────────────────────────────────────────
+
 @login_required
-def exam_application_create(request, group_pk=None):
+def course_spec_table_create(request, course_pk):
+    course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+    outcomes = LearningOutcome.objects.filter(
+        pool__in=course.pools.all(), is_active=True
+    ).select_related('pool').order_by('pool', 'order', 'code')
+
+    if request.method == 'POST':
+        form = CourseSpecTableForm(request.POST)
+        if form.is_valid():
+            spec = form.save(commit=False)
+            spec.course = course
+            spec.created_by = request.user
+            # rows_json form POST'undan manuel parse et
+            rows = []
+            topic_count = int(request.POST.get('topic_count', 0))
+            total = 0
+            for i in range(topic_count):
+                topic = request.POST.get(f'topic_{i}', '').strip()
+                if not topic:
+                    continue
+                row_outcomes = []
+                for oc in outcomes:
+                    count = int(request.POST.get(f'count_{i}_{oc.id}', 0) or 0)
+                    if count > 0:
+                        row_outcomes.append({
+                            'outcome_id': oc.id,
+                            'outcome_code': oc.code,
+                            'bloom_level': oc.level,
+                            'question_count': count,
+                        })
+                        total += count
+                if row_outcomes:
+                    rows.append({'topic': topic, 'outcomes': row_outcomes})
+            spec.rows_json = rows
+            spec.total_questions = total
+            spec.save()
+            messages.success(request, 'Belirtke tablosu kaydedildi.')
+            return redirect('itempool:course_detail', pk=course.pk)
+    else:
+        form = CourseSpecTableForm()
+    return render(request, 'itempool/course_spec_table_form.html', {
+        'form': form,
+        'course': course,
+        'outcomes': outcomes,
+    })
+
+
+@login_required
+def course_spec_table_delete(request, pk):
+    spec = get_object_or_404(CourseSpecTable, pk=pk, course__created_by=request.user)
+    course_pk = spec.course_id
+    if request.method == 'POST':
+        spec.delete()
+        messages.success(request, 'Belirtke tablosu silindi.')
+    return redirect('itempool:course_detail', pk=course_pk)
+
+
+# ── Derse Ait Sınav Formu Oluşturma ──────────────────────────
+
+@login_required
+def course_test_form_create(request, course_pk):
+    """Derse ait yeni sınav formu oluşturur."""
+    course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+
+    if request.method == 'POST':
+        form = TestFormCreateForm(request.POST, course=course)
+        if form.is_valid():
+            tf = form.save(commit=False)
+            tf.course = course
+            tf.created_by = request.user
+
+            # Otomatik seçim kriterlerini metadata olarak sakla
+            method = request.POST.get('method', 'MANUAL')
+            excluded_ids = [int(x) for x in request.POST.getlist('excluded_forms')]
+            metadata = {
+                'method': method,
+                'difficulty': form.cleaned_data.get('difficulty', 'MIXED'),
+                'item_type_counts': {
+                    'MCQ': form.cleaned_data.get('n_mcq') or 0,
+                    'TF': form.cleaned_data.get('n_tf') or 0,
+                    'SHORT_ANSWER': form.cleaned_data.get('n_short') or 0,
+                    'OPEN': form.cleaned_data.get('n_open') or 0,
+                },
+                'excluded_form_ids': excluded_ids,
+            }
+            tf.generation_metadata = metadata
+            tf.save()
+            form.save_m2m()  # pools M2M
+
+            if method == 'AUTO':
+                _auto_select_items(tf, course)
+                messages.success(request, f'Sınav formu otomatik oluşturuldu: {tf.form_items.count()} soru seçildi.')
+                return redirect('itempool:test_form_detail', pk=tf.pk)
+            else:
+                return redirect('itempool:test_form_edit_items', pk=tf.pk)
+    else:
+        form = TestFormCreateForm(course=course)
+
+    existing_forms = course.test_forms.order_by('-created_at')
+    return render(request, 'itempool/course_test_form_create.html', {
+        'form': form,
+        'course': course,
+        'existing_forms': existing_forms,
+    })
+
+
+def _auto_select_items(test_form, course):
+    """
+    generation_metadata'ya göre havuzlardan otomatik madde seçer.
+    Zorluk, madde türü ve dışlama kriterlerini uygular.
+    """
+    import random
+    meta = test_form.generation_metadata
+    difficulty = meta.get('difficulty', 'MIXED')
+    type_counts = meta.get('item_type_counts', {})
+    excluded_form_ids = meta.get('excluded_form_ids', [])
+
+    # Dışlanan sınavlardaki maddelerin ID'leri
+    excluded_instance_ids = set(
+        FormItem.objects.filter(form_id__in=excluded_form_ids)
+        .values_list('item_instance_id', flat=True)
+    )
+
+    # Bu derse daha önce uygulanan maddeler de dışlanabilir (isteğe bağlı)
+    pool_ids = list(test_form.pools.values_list('id', flat=True))
+    if not pool_ids:
+        pool_ids = list(course.pools.values_list('id', flat=True))
+
+    # Zorluk filtresi
+    difficulty_map = {
+        'EASY': ['EASY'],
+        'MEDIUM': ['MEDIUM'],
+        'HARD': ['HARD'],
+        'MIXED': ['EASY', 'MEDIUM', 'HARD'],
+    }
+    allowed_difficulties = difficulty_map.get(difficulty, ['EASY', 'MEDIUM', 'HARD'])
+
+    order = 1
+    test_form.form_items.all().delete()
+
+    for itype, count in type_counts.items():
+        if count <= 0:
+            continue
+        qs = list(
+            ItemInstance.objects.filter(
+                pool_id__in=pool_ids,
+                item__item_type=itype,
+                item__difficulty_intended__in=allowed_difficulties,
+            ).exclude(
+                id__in=excluded_instance_ids
+            ).select_related('item')
+        )
+        random.shuffle(qs)
+        for inst in qs[:count]:
+            FormItem.objects.create(form=test_form, item_instance=inst, order=order)
+            order += 1
+
+
+@login_required
+def exam_application_create(request, course_pk=None):
     initial = {}
-    group = None
-    if group_pk:
-        group = get_object_or_404(StudentGroup, pk=group_pk, created_by=request.user)
-        initial['group'] = group
+    course = None
+    if course_pk:
+        course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+        initial['course'] = course
 
     if request.method == 'POST':
         form = ExamApplicationForm(request.POST)
@@ -822,12 +1002,12 @@ def exam_application_create(request, group_pk=None):
             app.created_by = request.user
             app.save()
             messages.success(request, 'Sınav uygulaması kaydedildi.')
-            return redirect('itempool:student_group_detail', pk=app.group.pk)
+            return redirect('itempool:course_detail', pk=app.course.pk)
     else:
         form = ExamApplicationForm(initial=initial)
     return render(request, 'itempool/exam_application_form.html', {
         'form': form,
-        'group': group,
+        'course': course,
         'title': 'Sınav Uygulaması Kaydet'
     })
 
@@ -835,19 +1015,19 @@ def exam_application_create(request, group_pk=None):
 @login_required
 def exam_application_delete(request, pk):
     app = get_object_or_404(ExamApplication, pk=pk, created_by=request.user)
-    group_pk = app.group.pk
+    course_pk = app.course_id
     if request.method == 'POST':
         app.delete()
         messages.success(request, 'Sınav uygulaması silindi.')
-    return redirect('itempool:student_group_detail', pk=group_pk)
+    return redirect('itempool:course_detail', pk=course_pk)
 
 
 @login_required
-def group_applied_items(request, group_pk):
-    """Bir gruba daha önce uygulanan madde instance ID'lerini JSON döndürür (soru tekrar filtresi için)."""
+def course_applied_items(request, course_pk):
+    """Bir derse daha önce uygulanan madde instance ID'lerini JSON döndürür."""
     from django.http import JsonResponse
-    group = get_object_or_404(StudentGroup, pk=group_pk, created_by=request.user)
-    applied_ids = list(group.get_applied_item_instance_ids())
+    course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+    applied_ids = list(course.get_applied_item_instance_ids())
     return JsonResponse({'applied_item_instance_ids': applied_ids, 'count': len(applied_ids)})
 
 

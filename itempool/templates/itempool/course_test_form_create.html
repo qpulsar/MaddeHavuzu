@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Yeni Sınav Formu — {{ course.name }}{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:course_list' %}">Dersler</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'itempool:course_detail' course.pk %}">{{ course.name }}</a></li>
+            <li class="breadcrumb-item active">Yeni Sınav Formu</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 mb-0"><i class="bi bi-file-earmark-plus text-success"></i> Yeni Sınav Formu</h1>
+        <p class="text-muted mb-0 small"><i class="bi bi-book"></i> {{ course.name }} — {{ course.semester }}</p>
+    </div>
+    <a href="{% url 'itempool:course_detail' course.pk %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post" id="examCreateForm">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <!-- Temel Bilgiler -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light fw-bold"><i class="bi bi-info-circle"></i> Temel Bilgiler</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Sınav Adı *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-bold">Açıklama</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Havuz Seçimi -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light fw-bold"><i class="bi bi-stack"></i> Madde Havuzları</div>
+                <div class="card-body">
+                    {% if form.pools %}
+                    <div class="border rounded p-3 bg-light" style="max-height: 180px; overflow-y: auto;">
+                        {% for checkbox in form.pools %}
+                        <div class="form-check">
+                            {{ checkbox.tag }}
+                            <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                {{ checkbox.choice_label }}
+                            </label>
+                        </div>
+                        {% empty %}
+                        <span class="text-muted small">Bu derse bağlı havuz yok. <a href="{% url 'itempool:course_update' course.pk %}">Ders ayarlarından ekleyin →</a></span>
+                        {% endfor %}
+                    </div>
+                    <div class="form-text">Soruların çekileceği havuzları seçin.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Oluşturma Yöntemi -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light fw-bold"><i class="bi bi-gear"></i> Oluşturma Yöntemi</div>
+                <div class="card-body">
+                    <div class="d-flex gap-3 mb-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="method" id="methodManual" value="MANUAL" checked>
+                            <label class="form-check-label fw-bold" for="methodManual">
+                                <i class="bi bi-hand-index"></i> Manuel Seçim
+                            </label>
+                            <div class="form-text">Soruları tek tek kendiniz seçersiniz.</div>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="method" id="methodAuto" value="AUTO">
+                            <label class="form-check-label fw-bold" for="methodAuto">
+                                <i class="bi bi-magic"></i> Otomatik Seçim
+                            </label>
+                            <div class="form-text">Kriterlere göre sorular otomatik seçilir.</div>
+                        </div>
+                    </div>
+
+                    <!-- Otomatik Seçim Kriterleri (gizli/görünür) -->
+                    <div id="autoOptions" style="display: none;">
+                        <hr>
+                        <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-sliders"></i> Otomatik Seçim Kriterleri</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Zorluk Dağılımı</label>
+                            {{ form.difficulty }}
+                            {% if form.difficulty.errors %}<div class="text-danger small mt-1">{{ form.difficulty.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">Çoktan Seçmeli</label>
+                                {{ form.n_mcq }}
+                                {% if form.n_mcq.errors %}<div class="text-danger small">{{ form.n_mcq.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">Doğru/Yanlış</label>
+                                {{ form.n_tf }}
+                                {% if form.n_tf.errors %}<div class="text-danger small">{{ form.n_tf.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">Kısa Cevaplı</label>
+                                {{ form.n_short }}
+                                {% if form.n_short.errors %}<div class="text-danger small">{{ form.n_short.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label fw-bold small">Açık Uçlu</label>
+                                {{ form.n_open }}
+                                {% if form.n_open.errors %}<div class="text-danger small">{{ form.n_open.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        {% if form.excluded_forms.field.queryset.exists %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Soru Benzerliği İstenmeyen Sınavlar</label>
+                            <div class="border rounded p-3 bg-light" style="max-height: 160px; overflow-y: auto;">
+                                {% for checkbox in form.excluded_forms %}
+                                <div class="form-check">
+                                    {{ checkbox.tag }}
+                                    <label class="form-check-label small" for="{{ checkbox.id_for_label }}">
+                                        {{ checkbox.choice_label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text">{{ form.excluded_forms.help_text }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mb-4">
+                <a href="{% url 'itempool:course_detail' course.pk %}" class="btn btn-light border">İptal</a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Oluştur
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Yan panel: Mevcut sınavlar -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light fw-bold small">
+                <i class="bi bi-file-earmark-text"></i> Bu Dersteki Mevcut Sınavlar
+            </div>
+            {% if existing_forms %}
+            <ul class="list-group list-group-flush">
+                {% for ef in existing_forms %}
+                <li class="list-group-item py-2 px-3 small">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'itempool:test_form_detail' ef.pk %}" class="text-decoration-none fw-bold text-truncate me-2" style="max-width: 160px;" title="{{ ef.name }}">{{ ef.name }}</a>
+                        <span class="badge {% if ef.status == 'ACTIVE' %}bg-success{% elif ef.status == 'DRAFT' %}bg-warning text-dark{% elif ef.status == 'APPLIED' %}bg-info text-dark{% else %}bg-secondary{% endif %} flex-shrink-0">
+                            {{ ef.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="text-muted mt-1">{{ ef.form_items.count }} soru · {{ ef.created_at|date:"d.m.Y" }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="card-body text-center text-muted small py-3">
+                <i class="bi bi-inbox"></i> Henüz sınav yok.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const autoOptions = document.getElementById('autoOptions');
+    const radios = document.querySelectorAll('input[name="method"]');
+
+    function toggleAutoOptions() {
+        const isAuto = document.getElementById('methodAuto').checked;
+        autoOptions.style.display = isAuto ? 'block' : 'none';
+    }
+
+    radios.forEach(r => r.addEventListener('change', toggleAutoOptions));
+    toggleAutoOptions();
+});
+</script>
+{% endblock %}

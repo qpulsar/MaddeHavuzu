@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (
     ItemPool, LearningOutcome, Item, ItemChoice, ItemInstance,
     ImportBatch, DraftItem, OutcomeSuggestion, ItemAnalysisResult,
-    TestForm, FormItem, Blueprint, SpecificationTable
+    TestForm, FormItem, Blueprint, SpecificationTable,
+    Course, CourseSpecTable, ExamApplication,
 )
 
 
@@ -38,10 +39,30 @@ class FormItemInline(admin.TabularInline):
 
 @admin.register(TestForm)
 class TestFormAdmin(admin.ModelAdmin):
-    list_display = ('name', 'status', 'created_by', 'created_at')
-    list_filter = ('status',)
+    list_display = ('name', 'course', 'status', 'created_by', 'created_at')
+    list_filter = ('status', 'course')
     search_fields = ('name',)
     inlines = [FormItemInline]
+
+
+class CourseSpecTableInline(admin.TabularInline):
+    model = CourseSpecTable
+    extra = 0
+
+
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'semester', 'created_by', 'created_at')
+    list_filter = ('semester',)
+    search_fields = ('name', 'code')
+    filter_horizontal = ('pools',)
+    inlines = [CourseSpecTableInline]
+
+
+@admin.register(ExamApplication)
+class ExamApplicationAdmin(admin.ModelAdmin):
+    list_display = ('test_form', 'course', 'applied_at', 'created_by')
+    list_filter = ('course',)
 
 
 @admin.register(Blueprint)

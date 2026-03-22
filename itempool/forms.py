@@ -1,5 +1,5 @@
 from django import forms
-from .models import ItemPool, LearningOutcome, Item, ItemChoice, TestForm, Blueprint, SpecificationTable, StudentGroup, ExamApplication, ExamTemplate
+from .models import ItemPool, LearningOutcome, Item, ItemChoice, TestForm, Blueprint, SpecificationTable, Course, CourseSpecTable, ExamApplication, ExamTemplate
 
 class ItemPoolForm(forms.ModelForm):
     class Meta:
@@ -117,25 +117,88 @@ class SpecificationTableForm(forms.ModelForm):
         }
 
 
-class StudentGroupForm(forms.ModelForm):
+class CourseForm(forms.ModelForm):
     class Meta:
-        model = StudentGroup
-        fields = ['name', 'course', 'semester', 'description']
+        model = Course
+        fields = ['name', 'code', 'semester', 'description', 'pools']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: BM 2024-Güz Grup A'}),
-            'course': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: Yazılım Mühendisliği'}),
-            'semester': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: 2024-Güz'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: Eğitim Psikolojisi'}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: EPD 201'}),
+            'semester': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: 2026-Güz'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Ders hakkında notlar...'}),
+            'pools': forms.CheckboxSelectMultiple(),
         }
+
+
+class CourseSpecTableForm(forms.ModelForm):
+    class Meta:
+        model = CourseSpecTable
+        fields = ['name', 'total_questions']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: Vize Belirtke Tablosu'}),
+            'total_questions': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+        }
+
+
+class TestFormCreateForm(forms.ModelForm):
+    """Derse ait sınav formu oluşturma formu."""
+    DIFFICULTY_CHOICES = [
+        ('MIXED', 'Karışık (Hepsi)'),
+        ('EASY', 'Kolay Ağırlıklı'),
+        ('MEDIUM', 'Orta Ağırlıklı'),
+        ('HARD', 'Zor Ağırlıklı'),
+    ]
+
+    # Otomatik seçim kriterleri (ek alanlar)
+    difficulty = forms.ChoiceField(
+        choices=DIFFICULTY_CHOICES,
+        initial='MIXED',
+        required=False,
+        label='Zorluk Dağılımı',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    n_mcq = forms.IntegerField(min_value=0, initial=0, required=False, label='Çoktan Seçmeli',
+                               widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0}))
+    n_tf = forms.IntegerField(min_value=0, initial=0, required=False, label='Doğru/Yanlış',
+                              widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0}))
+    n_short = forms.IntegerField(min_value=0, initial=0, required=False, label='Kısa Cevaplı',
+                                 widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0}))
+    n_open = forms.IntegerField(min_value=0, initial=0, required=False, label='Açık Uçlu',
+                                widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0}))
+    excluded_forms = forms.ModelMultipleChoiceField(
+        queryset=TestForm.objects.none(),
+        required=False,
+        label='Soru Benzerliği İstenmeyen Sınavlar',
+        widget=forms.CheckboxSelectMultiple(),
+        help_text='Seçili sınavlardaki sorular otomatik seçimde dışarıda bırakılır.'
+    )
+
+    class Meta:
+        model = TestForm
+        fields = ['name', 'description', 'pools']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: 2026-Güz Vize Sınavı'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Sınav hakkında notlar...'}),
+            'pools': forms.CheckboxSelectMultiple(),
+        }
+
+    def __init__(self, *args, course=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if course:
+            self.fields['pools'].queryset = course.pools.all()
+            self.fields['pools'].initial = course.pools.all()
+            self.fields['excluded_forms'].queryset = TestForm.objects.filter(
+                course=course
+            ).order_by('-created_at')
 
 
 class ExamApplicationForm(forms.ModelForm):
     class Meta:
         model = ExamApplication
-        fields = ['test_form', 'group', 'applied_at', 'notes']
+        fields = ['test_form', 'course', 'applied_at', 'notes']
         widgets = {
             'test_form': forms.Select(attrs={'class': 'form-select'}),
-            'group': forms.Select(attrs={'class': 'form-select'}),
+            'course': forms.Select(attrs={'class': 'form-select'}),
             'applied_at': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }

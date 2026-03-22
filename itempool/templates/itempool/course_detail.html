@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.name }} ({{ course.semester }}){% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'itempool:course_list' %}">Dersler</a></li>
+            <li class="breadcrumb-item active">{{ course.name }}</li>
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 mb-0">
+            <i class="bi bi-book text-primary"></i> {{ course.name }}
+            {% if course.code %}<span class="badge bg-light text-secondary border ms-2 fs-6">{{ course.code }}</span>{% endif %}
+        </h1>
+        <p class="text-muted mb-0"><i class="bi bi-calendar3"></i> {{ course.semester }}</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+        <a href="{% url 'itempool:course_test_form_create' course.pk %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Yeni Sınav
+        </a>
+        <a href="{% url 'itempool:course_update' course.pk %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-pencil"></i> Düzenle
+        </a>
+        <a href="{% url 'itempool:course_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Geri
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Sol panel: Ders Bilgileri -->
+    <div class="col-md-3">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light fw-bold"><i class="bi bi-info-circle"></i> Ders Bilgileri</div>
+            <div class="card-body small">
+                {% if course.description %}
+                <p class="text-muted mb-3">{{ course.description }}</p>
+                <hr>
+                {% endif %}
+                <div class="mb-2"><strong>Dönem:</strong> {{ course.semester }}</div>
+                <div class="mb-2"><strong>Havuzlar:</strong>
+                    {% for pool in course.pools.all %}
+                    <a href="{% url 'itempool:pool_detail' pool.pk %}" class="badge bg-info text-dark text-decoration-none me-1">{{ pool.name }}</a>
+                    {% empty %}<span class="text-muted">—</span>{% endfor %}
+                </div>
+                <div><strong>Oluşturan:</strong> {{ course.created_by.get_full_name|default:course.created_by.username }}</div>
+            </div>
+        </div>
+
+        <!-- Tekrar filtresi özeti -->
+        {% with applied_count=course.get_applied_item_instance_ids|length %}
+        {% if applied_count %}
+        <div class="alert alert-secondary small">
+            <i class="bi bi-shield-check"></i> Bu derse daha önce <strong>{{ applied_count }}</strong> soru uygulanmış. Yeni sınavlarda otomatik dışlanabilir.
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Sağ panel: Sekmeler -->
+    <div class="col-md-9">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="courseTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#exams-pane" type="button">
+                            <i class="bi bi-file-earmark-text"></i> Sınav Formları
+                            <span class="badge bg-secondary ms-1">{{ test_forms.count }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#spectables-pane" type="button">
+                            <i class="bi bi-table"></i> Belirtke Tabloları
+                            <span class="badge bg-secondary ms-1">{{ spec_tables.count }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#applications-pane" type="button">
+                            <i class="bi bi-clipboard-check"></i> Geçmiş Uygulamalar
+                            <span class="badge bg-secondary ms-1">{{ applications.count }}</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card-body">
+                <div class="tab-content">
+
+                    <!-- Sınav Formları -->
+                    <div class="tab-pane fade show active" id="exams-pane" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Sınav Formları</h5>
+                            <a href="{% url 'itempool:course_test_form_create' course.pk %}" class="btn btn-sm btn-success">
+                                <i class="bi bi-plus"></i> Yeni Sınav
+                            </a>
+                        </div>
+                        {% if test_forms %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sınav Adı</th>
+                                        <th>Durum</th>
+                                        <th>Soru</th>
+                                        <th>Yöntem</th>
+                                        <th>Tarih</th>
+                                        <th class="text-end">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tf in test_forms %}
+                                    <tr>
+                                        <td><strong><a href="{% url 'itempool:test_form_detail' tf.pk %}" class="text-decoration-none">{{ tf.name }}</a></strong></td>
+                                        <td>
+                                            <span class="badge {% if tf.status == 'ACTIVE' %}bg-success{% elif tf.status == 'DRAFT' %}bg-warning text-dark{% elif tf.status == 'APPLIED' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                                                {{ tf.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ tf.form_items.count }}</td>
+                                        <td class="small text-muted">{{ tf.generation_metadata.method|default:"Manuel" }}</td>
+                                        <td class="small text-muted">{{ tf.created_at|date:"d.m.Y" }}</td>
+                                        <td class="text-end">
+                                            <a href="{% url 'itempool:test_form_detail' tf.pk %}" class="btn btn-sm btn-outline-primary py-0">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'itempool:test_form_pdf' tf.pk %}" class="btn btn-sm btn-outline-danger py-0" target="_blank">
+                                                <i class="bi bi-file-pdf"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4 text-muted bg-light rounded border">
+                            <i class="bi bi-file-earmark-text fs-2 d-block mb-2"></i>
+                            <p class="mb-1">Henüz sınav formu oluşturulmamış.</p>
+                            <a href="{% url 'itempool:course_test_form_create' course.pk %}" class="btn btn-sm btn-success mt-1">
+                                <i class="bi bi-plus"></i> İlk Sınavı Oluştur
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Belirtke Tabloları -->
+                    <div class="tab-pane fade" id="spectables-pane" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Belirtke Tabloları</h5>
+                            <a href="{% url 'itempool:course_spec_table_create' course.pk %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus"></i> Yeni Tablo
+                            </a>
+                        </div>
+                        {% if spec_tables %}
+                        {% for st in spec_tables %}
+                        <div class="card mb-3 border">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold">{{ st.name }}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary">{{ st.total_questions }} soru</span>
+                                    <form method="post" action="{% url 'itempool:course_spec_table_delete' st.pk %}" class="d-inline" onsubmit="return confirm('Bu belirtke tablosunu silmek istiyor musunuz?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                            <i class="bi bi-trash small"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% if st.rows_json %}
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Konu</th>
+                                                <th>Öğrenme Çıktısı</th>
+                                                <th>Bloom Düzeyi</th>
+                                                <th>Soru Sayısı</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in st.rows_json %}
+                                            {% for oc in row.outcomes %}
+                                            <tr>
+                                                {% if forloop.first %}<td rowspan="{{ row.outcomes|length }}">{{ row.topic }}</td>{% endif %}
+                                                <td class="small">{{ oc.outcome_code }}</td>
+                                                <td class="small text-muted">{{ oc.bloom_level }}</td>
+                                                <td><span class="badge bg-secondary">{{ oc.question_count }}</span></td>
+                                            </tr>
+                                            {% endfor %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="text-center py-4 text-muted bg-light rounded border">
+                            <i class="bi bi-table fs-2 d-block mb-2"></i>
+                            <p class="mb-1">Henüz belirtke tablosu tanımlanmamış.</p>
+                            <a href="{% url 'itempool:course_spec_table_create' course.pk %}" class="btn btn-sm btn-primary mt-1">
+                                <i class="bi bi-plus"></i> Tablo Ekle
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Geçmiş Uygulamalar -->
+                    <div class="tab-pane fade" id="applications-pane" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Geçmiş Sınav Uygulamaları</h5>
+                            <a href="{% url 'itempool:exam_application_create' course.pk %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-plus"></i> Uygulama Kaydet
+                            </a>
+                        </div>
+                        {% if applications %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sınav Formu</th>
+                                        <th>Uygulama Tarihi</th>
+                                        <th>Soru Sayısı</th>
+                                        <th>Notlar</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for app in applications %}
+                                    <tr>
+                                        <td><a href="{% url 'itempool:test_form_detail' app.test_form.pk %}">{{ app.test_form.name }}</a></td>
+                                        <td>{{ app.applied_at|date:"d.m.Y" }}</td>
+                                        <td>{{ app.test_form.form_items.count }}</td>
+                                        <td class="small text-muted">{{ app.notes|default:"—"|truncatechars:40 }}</td>
+                                        <td class="text-end">
+                                            <form method="post" action="{% url 'itempool:exam_application_delete' app.pk %}" class="d-inline" onsubmit="return confirm('Bu uygulamayı silmek istiyor musunuz?')">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4 text-muted bg-light rounded border">
+                            <i class="bi bi-clipboard fs-2 d-block mb-2"></i>
+                            <p class="mb-0">Bu derse henüz sınav uygulanmamış.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
