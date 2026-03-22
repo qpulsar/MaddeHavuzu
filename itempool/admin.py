@@ -13,9 +13,9 @@ class LearningOutcomeInline(admin.TabularInline):
 
 @admin.register(ItemPool)
 class ItemPoolAdmin(admin.ModelAdmin):
-    list_display = ('name', 'course', 'semester', 'status', 'owner', 'created_at')
-    list_filter = ('semester', 'level', 'status', 'course')
-    search_fields = ('name', 'course')
+    list_display = ('name', 'level', 'status', 'owner', 'created_at')
+    list_filter = ('level', 'status')
+    search_fields = ('name', 'description')
     inlines = [LearningOutcomeInline]
     date_hierarchy = 'created_at'
 
@@ -38,8 +38,8 @@ class FormItemInline(admin.TabularInline):
 
 @admin.register(TestForm)
 class TestFormAdmin(admin.ModelAdmin):
-    list_display = ('name', 'pool', 'status', 'created_by', 'created_at')
-    list_filter = ('status', 'pool')
+    list_display = ('name', 'status', 'created_by', 'created_at')
+    list_filter = ('status',)
     search_fields = ('name',)
     inlines = [FormItemInline]
 

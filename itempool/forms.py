@@ -2,14 +2,12 @@ from django import forms
 from .models import ItemPool, LearningOutcome, Item, ItemChoice, TestForm, Blueprint, SpecificationTable, StudentGroup, ExamApplication, ExamTemplate
 
 class ItemPoolForm(forms.ModelForm):
-    # ... (existing code unchanged)
     class Meta:
         model = ItemPool
-        fields = ['name', 'course', 'semester', 'level', 'status']
+        fields = ['name', 'description', 'level', 'status']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Havuz Adı'}),
-            'course': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bağlı Olduğu Ders'}),
-            'semester': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: 2024-Güz'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Hangi konu veya aşanlara ait olduğunu açıklayın...'}),
             'level': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn: Lisans 1'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
@@ -28,12 +26,11 @@ class LearningOutcomeForm(forms.ModelForm):
 
     class Meta:
         model = LearningOutcome
-        fields = ['code', 'description', 'level', 'weight', 'order']
+        fields = ['code', 'description', 'level', 'order']
         widgets = {
             'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ÖÇ-1'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Çıktı açıklaması'}),
             'level': forms.Select(attrs={'class': 'form-select'}),
-            'weight': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '% Ağırlık'}),
             'order': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 

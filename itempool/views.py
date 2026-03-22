@@ -87,8 +87,6 @@ class ItemPoolDetailView(PoolAccessMixin, DetailView):
         page_number = self.request.GET.get('page')
         context['items'] = paginator.get_page(page_number)
         
-        # Havuzdaki test formları
-        context['test_forms'] = self.object.test_forms.all().order_by('-created_at')
         # Havuzdaki blueprintler ve belirtke tabloları
         context['blueprints'] = self.object.blueprints.all().order_by('-created_at')
         context['spec_tables'] = self.object.spec_tables.all().order_by('-created_at')
@@ -502,26 +500,32 @@ def item_detail_save(request, pk, section):
 # Test Formu View'ları (Faz 5)
 
 @login_required
-def test_form_create(request, pool_id):
-    pool = get_object_or_404(ItemPool, id=pool_id)
+def test_form_create(request):
+    # İsteğe bağlı: havuz önceden seçilmişse URL query param'dan al
+    pool_id = request.GET.get('pool_id') or request.POST.get('pool_id')
+    pool = None
+    if pool_id:
+        pool = ItemPool.objects.filter(id=pool_id).first()
+
     if request.method == 'POST':
         form = TestFormForm(request.POST)
         if form.is_valid():
             test_form = form.save(commit=False)
-            test_form.pool = pool
             test_form.created_by = request.user
+            # Hangi havuzdan başlatıldığı bilgisini metadata'ya kaydet
+            if pool:
+                test_form.generation_metadata = {'source_pool_id': pool.id}
             test_form.save()
-            
+
             method = form.cleaned_data['creation_method']
             if method == 'MANUAL':
                 return redirect('itempool:test_form_edit_items', pk=test_form.id)
             elif method == 'BLUEPRINT':
                 return redirect('itempool:test_form_wizard_blueprint', pk=test_form.id)
-            # Spec Table henüz eklenmedi
             return redirect('itempool:test_form_edit_items', pk=test_form.id)
     else:
         form = TestFormForm()
-    
+
     return render(request, 'itempool/test_form_form.html', {
         'pool': pool,
         'form': form
@@ -548,22 +552,44 @@ def test_form_detail(request, pk):
 @login_required
 def test_form_edit_items(request, pk):
     test_form = get_object_or_404(TestForm, id=pk)
-    pool = test_form.pool
-    
-    # Mevcut maddeler ve havuzdaki tüm maddeler
+
+    # Havuzu metadata'dan veya query param'dan al
+    pool_id = request.GET.get('pool_id') or test_form.generation_metadata.get('source_pool_id')
+    pool = None
+    if pool_id:
+        pool = ItemPool.objects.filter(id=pool_id).first()
+
     form_item_ids = test_form.form_items.values_list('item_instance_id', flat=True)
-    available_items = pool.item_instances.exclude(id__in=form_item_ids)
-    
+    if pool:
+        available_items = pool.item_instances.exclude(id__in=form_item_ids)
+    else:
+        # Kullanıcının erişebildiği tüm havuzlardan maddeler
+        from django.db.models import Q
+        accessible_pool_ids = ItemPool.objects.filter(
+            Q(owner=request.user) | Q(permissions__user=request.user)
+        ).values_list('id', flat=True)
+        available_items = ItemInstance.objects.filter(
+            pool_id__in=accessible_pool_ids
+        ).exclude(id__in=form_item_ids).select_related('item', 'pool')
+
+    # Havuz seçimi için tüm erişilebilir havuzlar
+    from django.db.models import Q as Q2
+    pools = ItemPool.objects.filter(
+        Q2(owner=request.user) | Q2(permissions__user=request.user)
+    ).distinct()
+
     return render(request, 'itempool/test_form_edit_items.html', {
         'form': test_form,
         'available_items': available_items,
-        'current_items': test_form.form_items.all()
+        'current_items': test_form.form_items.all(),
+        'pool': pool,
+        'pools': pools,
     })
 
 @login_required
 def test_form_add_item(request, pk, instance_id):
     test_form = get_object_or_404(TestForm, id=pk)
-    instance = get_object_or_404(ItemInstance, id=instance_id, pool=test_form.pool)
+    instance = get_object_or_404(ItemInstance, id=instance_id)
     
     # Zaten ekli mi?
     if not FormItem.objects.filter(form=test_form, item_instance=instance).exists():
@@ -600,7 +626,11 @@ def test_form_remove_item(request, pk, item_id):
 @login_required
 def test_form_wizard_blueprint(request, pk):
     test_form = get_object_or_404(TestForm, id=pk)
-    pool = test_form.pool
+    pool_id = test_form.generation_metadata.get('source_pool_id')
+    pool = get_object_or_404(ItemPool, id=pool_id) if pool_id else None
+    if not pool:
+        messages.error(request, 'Blueprint oluşturmak için bir havuz kaynağı bulunamadı.')
+        return redirect('itempool:test_form_edit_items', pk=pk)
     outcomes = pool.outcomes.filter(is_active=True).order_by('order')
     
     if request.method == 'POST':
@@ -661,10 +691,9 @@ def blueprint_clone(request, pk):
     # Yeni bir TestForm oluştur ve bu blueprint'i kullan
     new_form_name = f"{blueprint.name} - Klon"
     new_form = TestForm.objects.create(
-        pool=blueprint.pool,
         name=new_form_name,
         created_by=request.user,
-        generation_metadata={'cloned_from_blueprint': blueprint.id}
+        generation_metadata={'cloned_from_blueprint': blueprint.id, 'source_pool_id': blueprint.pool.id}
     )
     
     _generate_items_from_blueprint(new_form, blueprint)
@@ -738,7 +767,8 @@ def analysis_get_forms(request):
     if not pool_id:
         return HttpResponse('<option value="">Önce havuz seçin...</option>')
 
-    forms = TestForm.objects.filter(pool_id=pool_id).order_by('-created_at')
+    # Pool bilgisi artık TestForm'da FK olarak değil, tüm formlar döndürülür
+    forms = TestForm.objects.filter(created_by=request.user).order_by('-created_at')
     return render(request, 'itempool/partials/analysis_form_options.html', {'forms': forms})
 
 
