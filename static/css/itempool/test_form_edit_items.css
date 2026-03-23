@@ -1,0 +1,6 @@
+.item-row:hover {
+        background-color: var(--mh-nav-hover);
+    }
+    .x-small {
+        font-size: 0.75rem;
+    }

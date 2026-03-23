@@ -1,66 +1,350 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Profil - OptikForm{% endblock %}
+{% block title %}Profil & Tema — Madde Havuzum{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/grading/profile.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block breadcrumb %}
 <div class="container-fluid px-4 px-lg-5 pt-2">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item active">Profil</li>
+            <li class="breadcrumb-item active" style="color:var(--mh-text-muted);">Profil &amp; Tema</li>
         </ol>
     </nav>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-person-gear me-2"></i>Profil Bilgileri
+<div style="max-width:900px;">
+<form method="post" id="profileForm" data-url="{% url 'set_theme' %}" data-csrf="{{ csrf_token }}">
+{% csrf_token %}
+
+<div class="profile-grid">
+
+    <!-- ── Kol 1: Profil Bilgileri ──────────────────────────────────── -->
+    <div>
+        <div class="profile-section">
+            <div class="profile-section-header">
+                <i class="bi bi-person-gear"></i> Profil Bilgileri
             </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="first_name" class="form-label">Ad</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name"
-                                value="{{ user.first_name }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="last_name" class="form-label">Soyad</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name"
-                                value="{{ user.last_name }}">
-                        </div>
+            <div class="profile-section-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold" style="font-size:.85rem;">Ad</label>
+                        <input type="text" class="form-control" name="first_name"
+                               value="{{ user.first_name }}" placeholder="Adınız">
                     </div>
-
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Kullanıcı Adı</label>
-                        <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
-                        <div class="form-text">Kullanıcı adı değiştirilemez.</div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold" style="font-size:.85rem;">Soyad</label>
+                        <input type="text" class="form-control" name="last_name"
+                               value="{{ user.last_name }}" placeholder="Soyadınız">
                     </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:.85rem;">Kullanıcı Adı</label>
+                    <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                    <div class="form-text">Kullanıcı adı değiştirilemez.</div>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label fw-semibold" style="font-size:.85rem;">E-posta Adresi</label>
+                    <input type="email" class="form-control" name="email"
+                           value="{{ user.email }}" required placeholder="ornek@kurum.edu.tr">
+                </div>
+            </div>
+        </div>
 
-                    <div class="mb-4">
-                        <label for="email" class="form-label">E-posta Adresi</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}"
-                            required>
-                    </div>
-
-                    <hr class="my-4">
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{% url 'change_password' %}" class="btn btn-outline-warning">
-                            <i class="bi bi-key me-2"></i>Şifre Değiştir
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg me-2"></i>Bilgileri Güncelle
-                        </button>
-                    </div>
-                </form>
+        <!-- Hesap bilgisi mini kartı -->
+        <div class="profile-section mt-3">
+            <div class="profile-section-header">
+                <i class="bi bi-shield-check"></i> Hesap
+            </div>
+            <div class="profile-section-body" style="padding:1rem 1.5rem;">
+                <div class="d-flex justify-content-between align-items-center mb-2" style="font-size:.85rem;">
+                    <span style="color:var(--mh-text-muted);">Rol</span>
+                    <span class="fw-semibold">{{ user.profile.get_role_display }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3" style="font-size:.85rem;">
+                    <span style="color:var(--mh-text-muted);">Durum</span>
+                    <span class="badge" style="background:var(--mh-primary-light);color:var(--mh-primary-text);">
+                        {{ user.profile.get_status_display }}
+                    </span>
+                </div>
+                <a href="{% url 'change_password' %}" class="btn btn-outline-warning btn-sm w-100">
+                    <i class="bi bi-key me-1"></i> Şifre Değiştir
+                </a>
             </div>
         </div>
     </div>
+
+    <!-- ── Kol 2: Görünüm & Tema ─────────────────────────────────────── -->
+    <div>
+        <div class="profile-section">
+            <div class="profile-section-header">
+                <i class="bi bi-palette2"></i> Görünüm &amp; Tema
+            </div>
+            <div class="profile-section-body">
+
+                <!-- ── Renk Paleti ──────────────────────────── -->
+                <p class="fw-semibold mb-2" style="font-size:.85rem;">Renk Paleti</p>
+
+                <div class="palette-grid mb-4">
+
+                    {% with cur=user.profile.color_palette %}
+
+                    <!-- Okyanus -->
+                    <div>
+                        <input type="radio" name="color_palette" value="ocean" class="palette-radio"
+                               id="pal-ocean" {% if cur == 'ocean' %}checked{% endif %}>
+                        <label for="pal-ocean">
+                            <div class="palette-card">
+                                <div class="palette-preview" style="background:#f0f4ff;">
+                                    <div class="palette-sidebar-strip" style="background:#1e5cff;">
+                                        <div class="palette-logo-dot" style="background:#7c3aed;"></div>
+                                        <div class="palette-nav-dot"></div>
+                                        <div class="palette-nav-dot"></div>
+                                    </div>
+                                    <div class="palette-content-area">
+                                        <div class="palette-btn-preview" style="background:#1e5cff;"></div>
+                                        <div class="palette-line" style="background:#1e5cff;"></div>
+                                        <div class="palette-line" style="background:#7c3aed;"></div>
+                                    </div>
+                                    <div class="palette-check"></div>
+                                </div>
+                                <div class="palette-name">
+                                    <span style="color:#1e5cff;">●</span> Okyanus
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Orman -->
+                    <div>
+                        <input type="radio" name="color_palette" value="forest" class="palette-radio"
+                               id="pal-forest" {% if cur == 'forest' %}checked{% endif %}>
+                        <label for="pal-forest">
+                            <div class="palette-card">
+                                <div class="palette-preview" style="background:#f0fdf4;">
+                                    <div class="palette-sidebar-strip" style="background:#059669;">
+                                        <div class="palette-logo-dot" style="background:#0284c7;"></div>
+                                        <div class="palette-nav-dot"></div>
+                                        <div class="palette-nav-dot"></div>
+                                    </div>
+                                    <div class="palette-content-area">
+                                        <div class="palette-btn-preview" style="background:#059669;"></div>
+                                        <div class="palette-line" style="background:#059669;"></div>
+                                        <div class="palette-line" style="background:#0284c7;"></div>
+                                    </div>
+                                    <div class="palette-check"></div>
+                                </div>
+                                <div class="palette-name">
+                                    <span style="color:#059669;">●</span> Orman
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Gün Batımı -->
+                    <div>
+                        <input type="radio" name="color_palette" value="sunset" class="palette-radio"
+                               id="pal-sunset" {% if cur == 'sunset' %}checked{% endif %}>
+                        <label for="pal-sunset">
+                            <div class="palette-card">
+                                <div class="palette-preview" style="background:#fff7ed;">
+                                    <div class="palette-sidebar-strip" style="background:#ea580c;">
+                                        <div class="palette-logo-dot" style="background:#dc2626;"></div>
+                                        <div class="palette-nav-dot"></div>
+                                        <div class="palette-nav-dot"></div>
+                                    </div>
+                                    <div class="palette-content-area">
+                                        <div class="palette-btn-preview" style="background:#ea580c;"></div>
+                                        <div class="palette-line" style="background:#ea580c;"></div>
+                                        <div class="palette-line" style="background:#dc2626;"></div>
+                                    </div>
+                                    <div class="palette-check"></div>
+                                </div>
+                                <div class="palette-name">
+                                    <span style="color:#ea580c;">●</span> Gün Batımı
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Ametist -->
+                    <div>
+                        <input type="radio" name="color_palette" value="amethyst" class="palette-radio"
+                               id="pal-amethyst" {% if cur == 'amethyst' %}checked{% endif %}>
+                        <label for="pal-amethyst">
+                            <div class="palette-card">
+                                <div class="palette-preview" style="background:#f5f3ff;">
+                                    <div class="palette-sidebar-strip" style="background:#7c3aed;">
+                                        <div class="palette-logo-dot" style="background:#4f46e5;"></div>
+                                        <div class="palette-nav-dot"></div>
+                                        <div class="palette-nav-dot"></div>
+                                    </div>
+                                    <div class="palette-content-area">
+                                        <div class="palette-btn-preview" style="background:#7c3aed;"></div>
+                                        <div class="palette-line" style="background:#7c3aed;"></div>
+                                        <div class="palette-line" style="background:#4f46e5;"></div>
+                                    </div>
+                                    <div class="palette-check"></div>
+                                </div>
+                                <div class="palette-name">
+                                    <span style="color:#7c3aed;">●</span> Ametist
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Gece Mavisi -->
+                    <div>
+                        <input type="radio" name="color_palette" value="midnight" class="palette-radio"
+                               id="pal-midnight" {% if cur == 'midnight' %}checked{% endif %}>
+                        <label for="pal-midnight">
+                            <div class="palette-card">
+                                <div class="palette-preview" style="background:#eef2ff;">
+                                    <div class="palette-sidebar-strip" style="background:#4f46e5;">
+                                        <div class="palette-logo-dot" style="background:#0891b2;"></div>
+                                        <div class="palette-nav-dot"></div>
+                                        <div class="palette-nav-dot"></div>
+                                    </div>
+                                    <div class="palette-content-area">
+                                        <div class="palette-btn-preview" style="background:#4f46e5;"></div>
+                                        <div class="palette-line" style="background:#4f46e5;"></div>
+                                        <div class="palette-line" style="background:#0891b2;"></div>
+                                    </div>
+                                    <div class="palette-check"></div>
+                                </div>
+                                <div class="palette-name">
+                                    <span style="color:#4f46e5;">●</span> Gece Mavisi
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Pembe -->
+                    <div>
+                        <input type="radio" name="color_palette" value="rose" class="palette-radio"
+                               id="pal-rose" {% if cur == 'rose' %}checked{% endif %}>
+                        <label for="pal-rose">
+                            <div class="palette-card">
+                                <div class="palette-preview" style="background:#fff1f2;">
+                                    <div class="palette-sidebar-strip" style="background:#e11d48;">
+                                        <div class="palette-logo-dot" style="background:#7c3aed;"></div>
+                                        <div class="palette-nav-dot"></div>
+                                        <div class="palette-nav-dot"></div>
+                                    </div>
+                                    <div class="palette-content-area">
+                                        <div class="palette-btn-preview" style="background:#e11d48;"></div>
+                                        <div class="palette-line" style="background:#e11d48;"></div>
+                                        <div class="palette-line" style="background:#7c3aed;"></div>
+                                    </div>
+                                    <div class="palette-check"></div>
+                                </div>
+                                <div class="palette-name">
+                                    <span style="color:#e11d48;">●</span> Pembe
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    {% endwith %}
+                </div>
+
+                <!-- ── Tema Modu ─────────────────────────────── -->
+                <p class="fw-semibold mb-2" style="font-size:.85rem;">Tema Modu</p>
+
+                <div class="theme-options mb-1">
+                    {% with cur_theme=user.profile.theme %}
+
+                    <!-- Aydınlık -->
+                    <div>
+                        <input type="radio" name="theme" value="light" class="theme-radio"
+                               id="theme-light" {% if cur_theme == 'light' or not cur_theme %}checked{% endif %}>
+                        <label for="theme-light">
+                            <div class="theme-opt-card theme-light">
+                                <div class="theme-preview">
+                                    <div class="theme-preview-sidebar"></div>
+                                    <div class="theme-preview-content">
+                                        <div class="theme-preview-topbar"></div>
+                                        <div class="theme-preview-card"></div>
+                                    </div>
+                                </div>
+                                <div class="theme-opt-name">
+                                    <i class="bi bi-sun-fill" style="color:#f59e0b;"></i> Aydınlık
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Karanlık -->
+                    <div>
+                        <input type="radio" name="theme" value="dark" class="theme-radio"
+                               id="theme-dark" {% if cur_theme == 'dark' %}checked{% endif %}>
+                        <label for="theme-dark">
+                            <div class="theme-opt-card theme-dark">
+                                <div class="theme-preview">
+                                    <div class="theme-preview-sidebar"></div>
+                                    <div class="theme-preview-content">
+                                        <div class="theme-preview-topbar"></div>
+                                        <div class="theme-preview-card"></div>
+                                    </div>
+                                </div>
+                                <div class="theme-opt-name">
+                                    <i class="bi bi-moon-fill" style="color:#6366f1;"></i> Karanlık
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Sistem -->
+                    <div>
+                        <input type="radio" name="theme" value="system" class="theme-radio"
+                               id="theme-system" {% if cur_theme == 'system' %}checked{% endif %}>
+                        <label for="theme-system">
+                            <div class="theme-opt-card theme-system">
+                                <div class="theme-preview">
+                                    <div class="theme-preview-sidebar"></div>
+                                    <div class="theme-preview-content">
+                                        <div class="theme-preview-topbar"></div>
+                                        <div class="theme-preview-card"></div>
+                                    </div>
+                                </div>
+                                <div class="theme-opt-name">
+                                    <i class="bi bi-circle-half" style="color:#8b5cf6;"></i> Sistem
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    {% endwith %}
+                </div>
+                <div class="form-text mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <em>Sistem</em> seçeneği işletim sistemi tercihini takip eder.
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div><!-- /profile-grid -->
+
+<!-- ── Kaydet butonu (tam genişlik) ──────────────────────────────── -->
+<div class="profile-section mt-3">
+    <div class="profile-section-body" style="padding:1rem 1.5rem;">
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check-lg me-2"></i>Değişiklikleri Kaydet
+            </button>
+        </div>
+    </div>
 </div>
+
+</form>
+</div>
+
+<script src="{% static 'js/grading/profile.js' %}"></script>
 {% endblock %}

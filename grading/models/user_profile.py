@@ -18,6 +18,21 @@ class UserRole(models.TextChoices):
     ADMIN = 'ADMIN', 'Yönetici'
 
 
+class ThemeMode(models.TextChoices):
+    LIGHT  = 'light',  'Aydınlık'
+    DARK   = 'dark',   'Karanlık'
+    SYSTEM = 'system', 'Sistem (OS)'
+
+
+class ColorPalette(models.TextChoices):
+    OCEAN     = 'ocean',     'Okyanus'
+    FOREST    = 'forest',    'Orman'
+    SUNSET    = 'sunset',    'Gün Batımı'
+    AMETHYST  = 'amethyst',  'Ametist'
+    MIDNIGHT  = 'midnight',  'Gece Mavisi'
+    ROSE      = 'rose',      'Pembe'
+
+
 class UserProfile(models.Model):
     """
     Extended user profile for approval workflow.
@@ -58,6 +73,18 @@ class UserProfile(models.Model):
         blank=True,
         verbose_name='Not',
         help_text='Admin tarafından eklenen not'
+    )
+    theme = models.CharField(
+        max_length=10,
+        choices=ThemeMode.choices,
+        default=ThemeMode.LIGHT,
+        verbose_name='Tema Modu',
+    )
+    color_palette = models.CharField(
+        max_length=20,
+        choices=ColorPalette.choices,
+        default=ColorPalette.OCEAN,
+        verbose_name='Renk Paleti',
     )
     created_at = models.DateTimeField(
         auto_now_add=True,

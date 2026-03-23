@@ -3,10 +3,22 @@
 {% block title %}Havuz Kur — Adım 3{% endblock %}
 
 {% block wizard_steps %}
-<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
-    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Temel Bilgiler</span></div>
-    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Öğrenme Çıktıları</span></div>
-    <div class="wizard-step active"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Soru Ekleme</span></div>
+<div class="wizard-progress">
+    <div class="wiz-step done">
+        <div class="wiz-step-dot">✓</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Temel Bilgiler</span>
+    </div>
+    <div class="wiz-step done">
+        <div class="wiz-step-dot">✓</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Öğrenme Çıktıları</span>
+    </div>
+    <div class="wiz-step active">
+        <div class="wiz-step-dot">3</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Soru Ekleme</span>
+    </div>
 </div>
 {% endblock %}
 
@@ -14,63 +26,109 @@
 {% block wizard_subtitle %}{{ pool.name }}{% endblock %}
 
 {% block wizard_body %}
+<style>
+.method-option { display: none; }
+.method-card {
+    border: 2px solid var(--mh-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    cursor: pointer;
+    background: var(--mh-card-bg);
+    transition: all .2s;
+    height: 100%;
+    position: relative;
+}
+.method-card:hover { border-color: var(--mh-primary); background: var(--mh-primary-light); }
+.method-option:checked + label .method-card {
+    border-color: var(--mh-primary);
+    background: var(--mh-primary-light);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mh-primary) 12%, transparent);
+}
+.method-card-check {
+    position: absolute;
+    top: .75rem; right: .75rem;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--mh-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .65rem; color: white;
+    transition: all .2s;
+}
+.method-option:checked + label .method-card-check {
+    background: var(--mh-primary);
+    border-color: var(--mh-primary);
+}
+.method-option:checked + label .method-card-check::after { content: '✓'; }
+.method-icon { font-size: 2rem; margin-bottom: .6rem; display: block; }
+.method-title { font-weight: 700; font-size: .95rem; margin-bottom: .35rem; color: var(--mh-text-main); }
+.method-desc  { font-size: .82rem; color: var(--mh-text-muted); margin: 0; }
+.method-tag   { font-size: .72rem; font-weight: 600; padding: .15rem .5rem; border-radius: 20px; margin-top: .6rem; display: inline-block; }
+.method-tag-blue   { background: var(--mh-primary-light); color: var(--mh-primary-text); }
+.method-tag-yellow { background: rgba(234,179,8,.12); color: #92400e; }
+.method-tag-green  { background: rgba(22,163,74,.12); color: #166534; }
+[data-theme="dark"] .method-tag-yellow { background: rgba(234,179,8,.15); color: #fde047; }
+[data-theme="dark"] .method-tag-green  { background: rgba(22,163,74,.15); color: #86efac; }
+</style>
+
 <form method="post">
     {% csrf_token %}
 
-    <div class="row g-3 mb-3">
+    <div class="row g-3 mb-4">
+        {# Elle gir #}
         <div class="col-md-4">
-            <label class="d-block cursor-pointer">
-                <input type="radio" name="method" value="manual" class="d-none" id="r-manual">
-                <div class="border rounded-3 p-3 h-100 method-card" for="r-manual">
-                    <div style="font-size:2rem;">✏️</div>
-                    <div class="fw-bold mt-2">Elle Gir</div>
-                    <div class="text-muted small">Soruları tek tek formu doldurarak oluşturun.</div>
-                    <div class="mt-2 text-muted small">MCQ, TF, Kısa Cevaplı, Açık Uçlu destekler.</div>
+            <input type="radio" name="method" value="manual" class="method-option" id="r-manual">
+            <label for="r-manual" class="d-block h-100">
+                <div class="method-card">
+                    <div class="method-card-check"></div>
+                    <span class="method-icon">✏️</span>
+                    <div class="method-title">Elle Gir</div>
+                    <p class="method-desc">Soruları tek tek form doldurarak oluşturun.</p>
+                    <span class="method-tag method-tag-blue">MCQ · TF · Kısa · Açık</span>
                 </div>
             </label>
         </div>
+
+        {# Word'den aktar #}
         <div class="col-md-4">
-            <label class="d-block cursor-pointer">
-                <input type="radio" name="method" value="import" class="d-none" id="r-import">
-                <div class="border rounded-3 p-3 h-100 method-card" for="r-import">
-                    <div style="font-size:2rem;">📄</div>
-                    <div class="fw-bold mt-2">Word'den İçe Aktar</div>
-                    <div class="text-muted small">Hazır .docx dosyanızı yükleyerek toplu aktarın.</div>
-                    <div class="mt-2 text-muted small">AI destekli otomatik tanıma ile hızlı aktarım.</div>
+            <input type="radio" name="method" value="import" class="method-option" id="r-import">
+            <label for="r-import" class="d-block h-100">
+                <div class="method-card">
+                    <div class="method-card-check"></div>
+                    <span class="method-icon">📄</span>
+                    <div class="method-title">Word'den İçe Aktar</div>
+                    <p class="method-desc">Hazır .docx dosyanızı yükleyerek toplu aktarın.</p>
+                    <span class="method-tag method-tag-yellow">AI destekli otomatik tanıma</span>
                 </div>
             </label>
         </div>
+
+        {# Şimdi değil #}
         <div class="col-md-4">
-            <label class="d-block cursor-pointer">
-                <input type="radio" name="method" value="skip" class="d-none" id="r-skip" checked>
-                <div class="border rounded-3 p-3 h-100 method-card" for="r-skip">
-                    <div style="font-size:2rem;">⏭️</div>
-                    <div class="fw-bold mt-2">Şimdi Değil</div>
-                    <div class="text-muted small">Havuzu kaydedin, soruları daha sonra ekleyin.</div>
-                    {% if item_count %}<div class="mt-2 badge bg-light text-dark">{{ item_count }} soru mevcut</div>{% endif %}
+            <input type="radio" name="method" value="skip" class="method-option" id="r-skip" checked>
+            <label for="r-skip" class="d-block h-100">
+                <div class="method-card">
+                    <div class="method-card-check"></div>
+                    <span class="method-icon">⏭️</span>
+                    <div class="method-title">Şimdi Değil</div>
+                    <p class="method-desc">Havuzu kaydedin, soruları daha sonra ekleyin.</p>
+                    {% if item_count %}
+                    <span class="method-tag method-tag-green">{{ item_count }} soru mevcut</span>
+                    {% endif %}
                 </div>
             </label>
         </div>
     </div>
+
+    {% if item_count %}
+    <div class="alert alert-success d-flex align-items-center gap-2 mb-3" style="font-size:.875rem;">
+        <i class="bi bi-check-circle-fill"></i>
+        Bu havuzda zaten <strong>{{ item_count }}</strong> soru var. İstediğiniz yöntemi seçerek daha fazla ekleyebilirsiniz.
+    </div>
+    {% endif %}
 
     <div class="wizard-nav">
-        <a href="{% url 'itempool:wizard_pool_step2' pool_id=pool.pk %}" class="btn-wizard-back btn">← Geri</a>
-        <button type="submit" class="btn-wizard-next btn">Tamamla ✓</button>
+        <a href="{% url 'itempool:wizard_pool_step2' pool_id=pool.pk %}" class="btn-wiz-back">← Geri</a>
+        <button type="submit" class="btn-wiz-next">Tamamla ✓</button>
     </div>
 </form>
-
-<script>
-document.querySelectorAll('input[name="method"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-        document.querySelectorAll('.method-card').forEach(c => c.classList.remove('border-primary','bg-primary','text-white','bg-opacity-10'));
-        if(radio.checked) radio.closest('label').querySelector('.method-card').classList.add('border-primary','bg-opacity-10','bg-primary');
-    });
-});
-// Init
-document.getElementById('r-skip').dispatchEvent(new Event('change'));
-</script>
-<style>
-.method-card { transition: all .2s; cursor: pointer; }
-.method-card:hover { border-color: #1e5cff !important; background: #f0f4ff; }
-</style>
 {% endblock %}

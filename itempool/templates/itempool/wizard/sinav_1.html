@@ -3,11 +3,27 @@
 {% block title %}Sınav Oluştur — Adım 1{% endblock %}
 
 {% block wizard_steps %}
-<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
-    <div class="wizard-step active"><div class="wizard-step-dot">1</div><span class="wizard-step-label">Temel Bilgiler</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">2</div><span class="wizard-step-label">Soru Seçimi</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Gözden Geçir</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">4</div><span class="wizard-step-label">PDF Al</span></div>
+<div class="wizard-progress">
+    <div class="wiz-step active">
+        <div class="wiz-step-dot">1</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Temel Bilgiler</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">2</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Soru Seçimi</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">3</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Gözden Geçir</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">4</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">PDF Al</span>
+    </div>
 </div>
 {% endblock %}
 
@@ -15,65 +31,149 @@
 {% block wizard_subtitle %}Sınav bilgilerini ve kullanacağınız havuzu seçin.{% endblock %}
 
 {% block wizard_body %}
+<style>
+.pool-radio { display: none; }
+.pool-card {
+    border: 2px solid var(--mh-border);
+    border-radius: 10px;
+    padding: 1rem;
+    cursor: pointer;
+    background: var(--mh-card-bg);
+    transition: all .2s;
+    height: 100%;
+    position: relative;
+}
+.pool-card:hover { border-color: var(--mh-primary); background: var(--mh-primary-light); }
+.pool-radio:checked + label .pool-card {
+    border-color: var(--mh-primary);
+    background: var(--mh-primary-light);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mh-primary) 12%, transparent);
+}
+.pool-check {
+    position: absolute;
+    top: .6rem; right: .6rem;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--mh-border);
+    font-size: .65rem; color: white;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+}
+.pool-radio:checked + label .pool-check { background: var(--mh-primary); border-color: var(--mh-primary); }
+.pool-radio:checked + label .pool-check::after { content: '✓'; }
+.pool-name { font-weight: 700; font-size: .9rem; margin-bottom: .3rem; padding-right: 1.5rem; color: var(--mh-text-main); }
+.pool-meta { font-size: .78rem; color: var(--mh-text-muted); }
+.pool-count { font-size: .75rem; font-weight: 600; padding: .15rem .5rem; border-radius: 20px; background: var(--mh-primary-light); color: var(--mh-primary-text); display: inline-block; margin-top: .4rem; }
+
+.course-radio { display: none; }
+.course-card {
+    border: 2px solid var(--mh-border);
+    border-radius: 8px;
+    padding: .6rem .85rem;
+    cursor: pointer;
+    background: var(--mh-card-bg);
+    transition: all .15s;
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--mh-text-main);
+}
+.course-card:hover { border-color: var(--mh-primary); background: var(--mh-primary-light); }
+.course-radio:checked + label.course-card { border-color: var(--mh-primary); background: var(--mh-primary-light); }
+.course-card-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--mh-border);
+    flex-shrink: 0;
+    transition: all .15s;
+}
+.course-radio:checked + label.course-card .course-card-dot { background: var(--mh-primary); border-color: var(--mh-primary); }
+</style>
+
 <form method="post">
     {% csrf_token %}
 
-    <div class="mb-3">
+    {# Sınav adı #}
+    <div class="mb-4">
         <label class="form-label fw-semibold">Sınav Adı <span class="text-danger">*</span></label>
-        <input type="text" name="name" class="form-control" placeholder="Örn: BİL 201 — 2024 Vize Sınavı" required
-               value="{{ request.POST.name|default:'' }}">
-        <div class="form-text">Sınavı tanımlamak için anlamlı bir isim verin.</div>
+        <input type="text" name="name" class="form-control" placeholder="Örn: BİL 201 — 2025 Güz Vize Sınavı"
+               value="{{ request.POST.name|default:'' }}" required autofocus>
+        <div class="form-text">Anlamlı bir isim girin — sonradan değiştirilebilir.</div>
     </div>
 
-    <div class="mb-3">
+    {# Havuz seçimi #}
+    <div class="mb-4">
         <label class="form-label fw-semibold">Madde Havuzu <span class="text-danger">*</span></label>
         {% if pools %}
         <div class="row g-2">
             {% for pool in pools %}
-            <div class="col-md-6">
-                <label class="d-block cursor-pointer">
-                    <input type="radio" name="pool_id" value="{{ pool.pk }}" class="d-none pool-radio" required>
-                    <div class="border rounded-3 p-3 pool-card h-100">
-                        <div class="fw-semibold">{{ pool.name }}</div>
-                        <div class="text-muted small mt-1">
-                            {% if pool.course %}<span class="me-2">📚 {{ pool.course }}</span>{% endif %}
-                            {% if pool.semester %}<span>📅 {{ pool.semester }}</span>{% endif %}
+            <div class="col-sm-6">
+                <input type="radio" name="pool_id" value="{{ pool.pk }}" class="pool-radio"
+                       id="pool-{{ pool.pk }}" required
+                       {% if request.POST.pool_id == pool.pk|stringformat:"s" %}checked{% endif %}>
+                <label for="pool-{{ pool.pk }}" class="d-block h-100">
+                    <div class="pool-card">
+                        <div class="pool-check"></div>
+                        <div class="pool-name">{{ pool.name }}</div>
+                        <div class="pool-meta">
+                            {% if pool.description %}{{ pool.description|truncatechars:60 }}{% else %}Açıklama yok{% endif %}
                         </div>
-                        <div class="mt-2">
-                            <span class="badge bg-light text-dark">{{ pool.item_instances.count }} soru</span>
-                        </div>
+                        <span class="pool-count">{{ pool.item_instances.count }} soru</span>
                     </div>
                 </label>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            Henüz aktif madde havuzunuz yok.
-            <a href="{% url 'itempool:wizard_pool_step1' %}" class="alert-link">Havuz oluşturun →</a>
+        <div class="alert alert-warning d-flex align-items-center gap-2" style="font-size:.875rem;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>Henüz aktif madde havuzunuz yok.
+                <a href="{% url 'itempool:wizard_pool_step1' %}" class="alert-link fw-semibold">Havuz oluşturun →</a>
+            </span>
         </div>
         {% endif %}
     </div>
 
+    {# Ders bağlantısı (opsiyonel) #}
+    {% if courses %}
+    <div class="mb-4">
+        <label class="form-label fw-semibold">
+            Ders Bağlantısı
+            <span class="badge bg-light text-muted fw-normal ms-1" style="font-size:.7rem;">İsteğe Bağlı</span>
+        </label>
+        <div class="form-text mb-2">
+            Dersi seçerseniz, sınav kaydedildiğinde ders geçmişine işlenir ve daha önce kullanılan sorular bir sonraki sınavda otomatik hariç tutulabilir.
+        </div>
+        <div class="row g-2">
+            <div class="col-auto">
+                <input type="radio" name="course_id" value="" class="course-radio" id="course-none"
+                       {% if not request.POST.course_id %}checked{% endif %}>
+                <label for="course-none" class="course-card">
+                    <div class="course-card-dot"></div>
+                    <span class="text-muted">Ders bağlama</span>
+                </label>
+            </div>
+            {% for c in courses %}
+            <div class="col-auto">
+                <input type="radio" name="course_id" value="{{ c.pk }}" class="course-radio" id="course-{{ c.pk }}"
+                       {% if request.POST.course_id == c.pk|stringformat:"s" %}checked{% endif %}>
+                <label for="course-{{ c.pk }}" class="course-card">
+                    <div class="course-card-dot"></div>
+                    <span class="fw-semibold">{{ c.name }}</span>
+                    <span class="text-muted" style="font-size:.75rem;">{{ c.semester }}</span>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="wizard-nav">
-        <a href="{% url 'itempool:wizard_landing' %}" class="btn-wizard-back btn">← Geri</a>
+        <a href="{% url 'itempool:wizard_landing' %}" class="btn-wiz-back">← Geri</a>
         {% if pools %}
-        <button type="submit" class="btn-wizard-next btn">Devam →</button>
+        <button type="submit" class="btn-wiz-next">Devam →</button>
         {% endif %}
     </div>
 </form>
-
-<script>
-document.querySelectorAll('.pool-radio').forEach(radio => {
-    radio.addEventListener('change', () => {
-        document.querySelectorAll('.pool-card').forEach(c => c.classList.remove('border-primary','bg-primary','bg-opacity-10'));
-        if (radio.checked) radio.closest('label').querySelector('.pool-card').classList.add('border-primary','bg-opacity-10','bg-primary');
-    });
-});
-</script>
-<style>
-.pool-card { transition: all .2s; cursor: pointer; }
-.pool-card:hover { border-color: #1e5cff !important; background: #f0f4ff; }
-</style>
 {% endblock %}

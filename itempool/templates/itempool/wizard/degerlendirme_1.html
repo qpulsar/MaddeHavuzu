@@ -3,10 +3,22 @@
 {% block title %}Değerlendirme — Adım 1{% endblock %}
 
 {% block wizard_steps %}
-<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
-    <div class="wizard-step active"><div class="wizard-step-dot">1</div><span class="wizard-step-label">Form Seç</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">2</div><span class="wizard-step-label">Cevap Anahtarı</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Sonuçlar</span></div>
+<div class="wizard-progress">
+    <div class="wiz-step active">
+        <div class="wiz-step-dot">1</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Form Seç</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">2</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Cevap Anahtarı</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">3</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Sonuçlar</span>
+    </div>
 </div>
 {% endblock %}
 
@@ -14,60 +26,134 @@
 {% block wizard_subtitle %}Değerlendirmek istediğiniz sınav formunu seçin.{% endblock %}
 
 {% block wizard_body %}
+<style>
+.form-radio { display: none; }
+.form-sel-card {
+    border: 2px solid var(--mh-border);
+    border-radius: 10px;
+    padding: .875rem 1rem;
+    cursor: pointer;
+    background: var(--mh-card-bg);
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: .875rem;
+}
+.form-sel-card:hover { border-color: var(--mh-primary); background: var(--mh-primary-light); }
+.form-radio:checked + label .form-sel-card {
+    border-color: var(--mh-primary);
+    background: var(--mh-primary-light);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mh-primary) 12%, transparent);
+}
+.form-check-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--mh-border);
+    flex-shrink: 0;
+    transition: all .15s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .65rem; color: white;
+}
+.form-radio:checked + label .form-check-dot { background: var(--mh-primary); border-color: var(--mh-primary); }
+.form-radio:checked + label .form-check-dot::after { content: '✓'; }
+.form-sel-name { font-weight: 700; font-size: .9rem; color: var(--mh-text-main); }
+.form-sel-meta { font-size: .75rem; color: var(--mh-text-muted); margin-top: .15rem; display: flex; gap: .6rem; flex-wrap: wrap; }
+.form-sel-badge {
+    font-size: .7rem; font-weight: 600; padding: .15rem .45rem;
+    border-radius: 4px; background: var(--mh-primary-light); color: var(--mh-primary-text);
+}
+
+#search-forms {
+    border-radius: 8px;
+    border: 1.5px solid var(--mh-border);
+    background: var(--mh-input-bg);
+    color: var(--mh-input-color);
+    font-size: .875rem;
+    padding: .5rem .875rem;
+    transition: border-color .15s;
+}
+#search-forms:focus { border-color: var(--mh-primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--mh-primary) 12%, transparent); }
+#search-forms::placeholder { color: var(--mh-text-muted); }
+.badge-green  { background: rgba(22,163,74,.12); color: #166534; }
+.badge-yellow { background: rgba(234,179,8,.12); color: #92400e; }
+[data-theme="dark"] .badge-green  { background: rgba(22,163,74,.15); color: #4ade80; }
+[data-theme="dark"] .badge-yellow { background: rgba(234,179,8,.15); color: #fde047; }
+</style>
+
+{% if forms %}
 <form method="post">
     {% csrf_token %}
 
-    {% if forms %}
+    {# Arama kutusu #}
+    {% if forms|length > 5 %}
     <div class="mb-3">
-        <label class="form-label fw-semibold">Sınav Formu <span class="text-danger">*</span></label>
-        <div class="row g-2">
-            {% for f in forms %}
-            <div class="col-md-6">
-                <label class="d-block cursor-pointer">
-                    <input type="radio" name="form_id" value="{{ f.pk }}" class="d-none form-radio" required>
-                    <div class="border rounded-3 p-3 form-card h-100">
-                        <div class="fw-semibold">{{ f.name }}</div>
-                        <div class="text-muted small mt-1">
-                            {{ f.form_items.count }} soru
-                        </div>
-                        <div class="mt-2 d-flex gap-2 flex-wrap">
-                            <span class="badge bg-light text-dark">{{ f.form_items.count }}</span>
-                            {% if f.created_at %}
-                            <span class="badge bg-light text-dark">{{ f.created_at|date:"d.m.Y" }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </label>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% else %}
-    <div class="alert alert-warning">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        Henüz sınav formunuz yok.
-        <a href="{% url 'itempool:wizard_exam_step1' %}" class="alert-link">Sınav formu oluşturun →</a>
+        <input type="text" id="search-forms" class="form-control"
+               placeholder="Form adına göre ara..." autocomplete="off">
     </div>
     {% endif %}
 
+    <div id="forms-list" class="mb-3" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: .4rem;">
+        {% for f in forms %}
+        <div class="form-item" data-name="{{ f.name|lower }}">
+            <input type="radio" name="form_id" value="{{ f.pk }}"
+                   class="form-radio" id="frm-{{ f.pk }}" required>
+            <label for="frm-{{ f.pk }}" class="d-block">
+                <div class="form-sel-card">
+                    <div class="form-check-dot"></div>
+                    <div class="flex-grow-1">
+                        <div class="form-sel-name">{{ f.name }}</div>
+                        <div class="form-sel-meta">
+                            <span>{{ f.form_items.count }} soru</span>
+                            {% if f.created_at %}<span>{{ f.created_at|date:"d.m.Y" }}</span>{% endif %}
+                            {% if f.course %}<span class="form-sel-badge">{{ f.course.name }}</span>{% endif %}
+                            <span class="form-sel-badge
+                                {% if f.status == 'ACTIVE' %}badge-green
+                                {% elif f.status == 'APPLIED' %}badge-yellow
+                                {% else %}{% endif %}">
+                                {{ f.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </label>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="no-results" class="text-center text-muted py-3" style="display:none; font-size:.875rem;">
+        Arama ile eşleşen form bulunamadı.
+    </div>
+
     <div class="wizard-nav">
-        <a href="{% url 'itempool:wizard_landing' %}" class="btn-wizard-back btn">← Geri</a>
-        {% if forms %}
-        <button type="submit" class="btn-wizard-next btn">Devam →</button>
-        {% endif %}
+        <a href="{% url 'itempool:wizard_landing' %}" class="btn-wiz-back">← Geri</a>
+        <button type="submit" class="btn-wiz-next">Devam →</button>
     </div>
 </form>
 
+{% if forms|length > 5 %}
 <script>
-document.querySelectorAll('.form-radio').forEach(radio => {
-    radio.addEventListener('change', () => {
-        document.querySelectorAll('.form-card').forEach(c => c.classList.remove('border-primary','bg-primary','bg-opacity-10'));
-        if (radio.checked) radio.closest('label').querySelector('.form-card').classList.add('border-primary','bg-opacity-10','bg-primary');
+document.getElementById('search-forms').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    let visible = 0;
+    document.querySelectorAll('.form-item').forEach(el => {
+        const match = !q || el.dataset.name.includes(q);
+        el.style.display = match ? '' : 'none';
+        if (match) visible++;
     });
+    document.getElementById('no-results').style.display = visible === 0 ? '' : 'none';
 });
 </script>
-<style>
-.form-card { transition: all .2s; cursor: pointer; }
-.form-card:hover { border-color: #1e5cff !important; background: #f0f4ff; }
-</style>
+{% endif %}
+
+{% else %}
+<div class="alert alert-warning d-flex align-items-center gap-2" style="font-size:.875rem;">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>Henüz sınav formunuz yok.
+        <a href="{% url 'itempool:wizard_exam_step1' %}" class="alert-link fw-semibold">Sınav formu oluşturun →</a>
+    </span>
+</div>
+<div class="wizard-nav">
+    <a href="{% url 'itempool:wizard_landing' %}" class="btn-wiz-back">← Geri</a>
+</div>
+{% endif %}
 {% endblock %}

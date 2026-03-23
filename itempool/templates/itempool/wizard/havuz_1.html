@@ -3,44 +3,56 @@
 {% block title %}Havuz Kur — Adım 1{% endblock %}
 
 {% block wizard_steps %}
-<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
-    <div class="wizard-step active"><div class="wizard-step-dot">1</div><span class="wizard-step-label">Temel Bilgiler</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">2</div><span class="wizard-step-label">Öğrenme Çıktıları</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Soru Ekleme</span></div>
+<div class="wizard-progress">
+    <div class="wiz-step active">
+        <div class="wiz-step-dot">1</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Temel Bilgiler</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">2</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Öğrenme Çıktıları</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">3</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Soru Ekleme</span>
+    </div>
 </div>
 {% endblock %}
 
 {% block wizard_title %}📁 Yeni Madde Havuzu{% endblock %}
-{% block wizard_subtitle %}Hangi ders için soru bankası oluşturuyorsunuz?{% endblock %}
+{% block wizard_subtitle %}Soru bankanız için temel bilgileri doldurun.{% endblock %}
 
 {% block wizard_body %}
 <form method="post">
     {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Havuz Adı <span class="text-danger">*</span></label>
+        {{ form.name }}
+        <div class="form-text">Örn: Eğitim Psikolojisi — Öğrenme Teorileri</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Açıklama</label>
+        {{ form.description }}
+        <div class="form-text">Havuzun hangi konuya ait olduğunu kısaca açıklayın.</div>
+    </div>
+
     <div class="row g-3">
-        <div class="col-12">
-            <label class="form-label fw-semibold">Havuz Adı <span class="text-danger">*</span></label>
-            {{ form.name }}
-            <div class="form-text">Örn: Eğitim Psikolojisi — Öğrenme Teorileri</div>
-        </div>
         <div class="col-md-6">
-            <label class="form-label fw-semibold">Ders <span class="text-danger">*</span></label>
-            {{ form.course }}
-            <div class="form-text">Örn: EĞT 201</div>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label fw-semibold">Dönem <span class="text-danger">*</span></label>
-            {{ form.semester }}
-            <div class="form-text">Örn: 2024-Güz</div>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label fw-semibold">Seviye</label>
+            <label class="form-label fw-semibold">Eğitim Düzeyi</label>
             {{ form.level }}
+            <div class="form-text">Örn: Lisans 1, Yüksek Lisans</div>
         </div>
         <div class="col-md-6">
             <label class="form-label fw-semibold">Durum</label>
             {{ form.status }}
         </div>
     </div>
+
     {% if form.errors %}
     <div class="alert alert-danger mt-3">
         {% for field, errors in form.errors.items %}
@@ -48,9 +60,10 @@
         {% endfor %}
     </div>
     {% endif %}
+
     <div class="wizard-nav">
-        <a href="{% url 'itempool:wizard_landing' %}" class="btn-wizard-back btn">← Geri</a>
-        <button type="submit" class="btn-wizard-next btn">Devam →</button>
+        <a href="{% url 'itempool:wizard_landing' %}" class="btn-wiz-back">← Geri</a>
+        <button type="submit" class="btn-wiz-next">Devam →</button>
     </div>
 </form>
 {% endblock %}

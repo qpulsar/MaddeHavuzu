@@ -3,85 +3,146 @@
 {% block title %}Değerlendirme — Adım 2{% endblock %}
 
 {% block wizard_steps %}
-<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
-    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Form Seç</span></div>
-    <div class="wizard-step active"><div class="wizard-step-dot">2</div><span class="wizard-step-label">Cevap Anahtarı</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Sonuçlar</span></div>
+<div class="wizard-progress">
+    <div class="wiz-step done">
+        <div class="wiz-step-dot">✓</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Form Seç</span>
+    </div>
+    <div class="wiz-step active">
+        <div class="wiz-step-dot">2</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Cevap Anahtarı</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">3</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Sonuçlar</span>
+    </div>
 </div>
 {% endblock %}
 
 {% block wizard_title %}🔑 Cevap Anahtarını Doğrulayın{% endblock %}
-{% block wizard_subtitle %}{{ tf.name }} — Optik okuma için yükleyin{% endblock %}
+{% block wizard_subtitle %}{{ tf.name }}{% endblock %}
 
 {% block wizard_body %}
+<style>
+.answer-table th { font-size: .78rem; font-weight: 600; background: var(--mh-nav-hover); color: var(--mh-text-muted); }
+.answer-table td { font-size: .82rem; vertical-align: middle; }
+.answer-table .stem-cell {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.upload-box {
+    background: var(--mh-primary-light);
+    border: 2px dashed var(--mh-primary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+}
+.upload-box h6 { font-weight: 700; color: var(--mh-primary); margin-bottom: .4rem; }
+.upload-box p  { font-size: .82rem; color: var(--mh-text-muted); margin-bottom: 1rem; }
+
+.session-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .65rem 1rem;
+    border: 1px solid var(--mh-border);
+    border-radius: 8px;
+    text-decoration: none;
+    background: var(--mh-card-bg);
+    color: var(--mh-text-main);
+    transition: all .15s;
+    margin-bottom: .35rem;
+}
+.session-item:hover { border-color: var(--mh-primary); background: var(--mh-primary-light); color: var(--mh-text-main); }
+.session-name { font-weight: 600; font-size: .875rem; }
+.session-date { font-size: .75rem; color: var(--mh-text-muted); }
+.session-arrow { color: var(--mh-primary); font-size: .875rem; font-weight: 700; }
+</style>
 
 {# Cevap anahtarı önizlemesi #}
 {% if answer_key %}
 <div class="mb-4">
-    <h6 class="fw-semibold mb-2">Cevap Anahtarı Önizlemesi</h6>
-    <div class="table-responsive" style="max-height:260px; overflow-y:auto;">
-        <table class="table table-sm table-bordered">
-            <thead class="table-light sticky-top">
-                <tr><th style="width:50px;">#</th><th>Soru</th><th>Doğru Cevap</th><th>Puan</th></tr>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-semibold mb-0" style="font-size:.9rem;">Cevap Anahtarı Önizlemesi</h6>
+        <a href="{% url 'itempool:test_form_answer_key' pk=tf.pk %}" class="btn btn-sm btn-outline-secondary" target="_blank">
+            <i class="bi bi-download me-1"></i> Tam liste
+        </a>
+    </div>
+    <div style="max-height: 240px; overflow-y: auto; border-radius: 8px; border: 1px solid var(--mh-border);">
+        <table class="table table-sm table-bordered answer-table mb-0">
+            <thead>
+                <tr>
+                    <th style="width:40px;">#</th>
+                    <th>Soru</th>
+                    <th style="width:90px;">Cevap</th>
+                    <th style="width:70px;">Puan</th>
+                </tr>
             </thead>
             <tbody>
                 {% for entry in answer_key %}
                 <tr>
-                    <td>{{ entry.order }}</td>
-                    <td class="small text-truncate" style="max-width:320px;">{{ entry.stem|truncatechars:80 }}</td>
-                    <td><code>{{ entry.answer }}</code></td>
-                    <td>{{ entry.points }}</td>
+                    <td class="text-center fw-semibold">{{ entry.order }}</td>
+                    <td class="stem-cell" title="{{ entry.stem }}">{{ entry.stem|truncatechars:80 }}</td>
+                    <td><code style="font-size:.8rem;">{{ entry.answer }}</code></td>
+                    <td class="text-center">{{ entry.points }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    <div class="text-end mt-1">
-        <a href="{% url 'itempool:test_form_answer_key' pk=tf.pk %}" class="btn btn-sm btn-outline-secondary" target="_blank">
-            <i class="bi bi-download me-1"></i> Tam Cevap Anahtarı
-        </a>
-    </div>
 </div>
 {% endif %}
 
 {# Optik okuma yönlendirmesi #}
-<div class="card border-0 bg-light p-3 mb-4">
-    <h6 class="fw-semibold mb-2">📤 Optik Okuyucu Dosyasını Yükle</h6>
-    <p class="text-muted small mb-3">
-        Optik okuyucudan aldığınız dosyayı (CSV, XLSX) aşağıdaki Optik Okuma sayfasından yükleyin.
-        Yükleme tamamlandıktan sonra oturumu seçerek sonuçları görüntüleyebilirsiniz.
+<div class="upload-box mb-4">
+    <div style="font-size:2rem; margin-bottom:.5rem;">📤</div>
+    <h6>Optik Okuyucu Dosyasını Yükle</h6>
+    <p>
+        Optik okuyucudan aldığınız dosyayı (CSV, XLSX) Optik Okuma sayfasına yükleyin.<br>
+        Yükleme tamamlandığında aşağıdaki oturumlar listesinde belirecek.
     </p>
-    <a href="{% url 'new_upload' %}?form_id={{ tf.pk }}" class="btn btn-primary btn-sm w-auto d-inline-block">
+    <a href="{% url 'new_upload' %}?form_id={{ tf.pk }}"
+       class="btn btn-primary btn-sm px-4" target="_blank" rel="noopener">
         <i class="bi bi-upload me-1"></i> Optik Okuma Sayfasına Git
     </a>
 </div>
 
 {# Mevcut oturumlar #}
 {% if existing_sessions %}
-<div class="mb-4">
-    <h6 class="fw-semibold mb-2">📂 Bu Forma Ait Mevcut Oturumlar</h6>
-    <div class="list-group">
-        {% for sess in existing_sessions %}
-        <a href="{% url 'itempool:wizard_eval_step3' session_id=sess.pk %}"
-           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-            <div>
-                <div class="fw-semibold small">Oturum #{{ sess.pk }}</div>
-                <div class="text-muted" style="font-size:.75rem;">{{ sess.created_at|date:"d.m.Y H:i" }}</div>
-            </div>
-            <span class="badge bg-primary rounded-pill">Sonuçları Gör →</span>
-        </a>
-        {% endfor %}
-    </div>
+<div class="mb-3">
+    <h6 class="fw-semibold mb-2" style="font-size:.9rem;">
+        Bu Forma Ait Mevcut Oturumlar
+        <span class="badge bg-light text-muted fw-normal ms-1">{{ existing_sessions|length }}</span>
+    </h6>
+    {% for sess in existing_sessions %}
+    <a href="{% url 'itempool:wizard_eval_step3' session_id=sess.pk %}" class="session-item">
+        <div>
+            <div class="session-name">Oturum #{{ sess.pk }}</div>
+            <div class="session-date">{{ sess.created_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        <span class="session-arrow">Sonuçları Gör →</span>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-light border d-flex align-items-center gap-2 mb-3" style="font-size:.82rem;">
+    <i class="bi bi-info-circle text-primary"></i>
+    Henüz bu forma ait yükleme oturumu yok. Yukarıdaki bağlantıdan dosyanızı yükleyin.
 </div>
 {% endif %}
 
 <div class="wizard-nav">
-    <a href="{% url 'itempool:wizard_eval_step1' %}" class="btn-wizard-back btn">← Geri</a>
+    <a href="{% url 'itempool:wizard_eval_step1' %}" class="btn-wiz-back">← Geri</a>
     {% if existing_sessions %}
-    <a href="{% url 'itempool:wizard_eval_step3' session_id=existing_sessions.0.pk %}" class="btn-wizard-next btn">
+    <a href="{% url 'itempool:wizard_eval_step3' session_id=existing_sessions.0.pk %}" class="btn-wiz-next">
         Son Oturumu Görüntüle →
     </a>
     {% endif %}
 </div>
-
 {% endblock %}

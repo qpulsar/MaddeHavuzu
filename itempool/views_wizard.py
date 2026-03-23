@@ -27,11 +27,15 @@ def wizard_landing(request):
     has_forms = TestForm.objects.filter(created_by=request.user).exists()
     pool_count = ItemPool.objects.filter(owner=request.user).count()
     form_count = TestForm.objects.filter(created_by=request.user).count()
+    course_count = Course.objects.filter(created_by=request.user).count()
+    has_courses = course_count > 0
     return render(request, 'itempool/wizard/landing.html', {
         'has_pools': has_pools,
         'has_forms': has_forms,
+        'has_courses': has_courses,
         'pool_count': pool_count,
         'form_count': form_count,
+        'course_count': course_count,
     })
 
 
@@ -124,12 +128,14 @@ def wizard_pool_step3(request, pool_id):
 
 @login_required
 def wizard_exam_step1(request):
-    """Adım 1: Sınav adı ve havuz seç."""
+    """Adım 1: Sınav adı, havuz ve ders seç."""
     pools = ItemPool.objects.filter(owner=request.user, status=ItemPool.Status.ACTIVE)
+    courses = Course.objects.filter(created_by=request.user).prefetch_related('pools')
 
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         pool_id = request.POST.get('pool_id')
+        course_id = request.POST.get('course_id') or None
         if not name:
             messages.error(request, 'Sınav adı zorunludur.')
         elif not pool_id:
@@ -139,12 +145,15 @@ def wizard_exam_step1(request):
             tf = TestForm.objects.create(
                 name=name,
                 created_by=request.user,
+                course_id=course_id,
                 generation_metadata={'source_pool_id': pool.pk}
             )
+            tf.pools.add(pool)
             return redirect('itempool:wizard_exam_step2', form_id=tf.pk)
 
     return render(request, 'itempool/wizard/sinav_1.html', {
         'pools': pools,
+        'courses': courses,
         'step': 1,
     })
 
@@ -159,7 +168,7 @@ def wizard_exam_step2(request, form_id):
         messages.error(request, 'Bu form için kaynak havuz bilgisi bulunamadı.')
         return redirect('itempool:test_form_list_all')
     outcomes = LearningOutcome.objects.filter(pool=pool, is_active=True).order_by('order')
-    groups = Course.objects.filter(created_by=request.user)
+    courses = Course.objects.filter(created_by=request.user)
 
     # Her türden mevcut soru sayısı
     def avail(itype):
@@ -181,15 +190,15 @@ def wizard_exam_step2(request, form_id):
         pts_tf   = max(1, int(request.POST.get('pts_tf', 5) or 5))
         pts_sa   = max(1, int(request.POST.get('pts_sa', 10) or 10))
         pts_open = max(1, int(request.POST.get('pts_open', 20) or 20))
-        group_id = request.POST.get('group_id')
+        course_id = request.POST.get('course_id')
 
         if n_mcq + n_tf + n_sa + n_open == 0:
             messages.error(request, 'En az bir soru türü için sayı giriniz.')
         else:
             exclude_ids = set()
-            if group_id:
-                group = get_object_or_404(Course, pk=group_id, created_by=request.user)
-                exclude_ids = group.get_applied_item_instance_ids()
+            if course_id:
+                course = get_object_or_404(Course, pk=course_id, created_by=request.user)
+                exclude_ids = course.get_applied_item_instance_ids()
 
             tf.form_items.all().delete()
             order = 1
@@ -223,7 +232,8 @@ def wizard_exam_step2(request, form_id):
         'pool': pool,
         'outcomes': outcomes,
         'available': available,
-        'groups': groups,
+        'courses': courses,
+        'default_course': tf.course,
         'step': 2,
     })
 

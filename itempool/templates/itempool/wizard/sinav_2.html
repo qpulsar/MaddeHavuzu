@@ -3,11 +3,27 @@
 {% block title %}Sınav Oluştur — Adım 2{% endblock %}
 
 {% block wizard_steps %}
-<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
-    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Temel Bilgiler</span></div>
-    <div class="wizard-step active"><div class="wizard-step-dot">2</div><span class="wizard-step-label">Soru Seçimi</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Gözden Geçir</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">4</div><span class="wizard-step-label">PDF Al</span></div>
+<div class="wizard-progress">
+    <div class="wiz-step done">
+        <div class="wiz-step-dot">✓</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Temel Bilgiler</span>
+    </div>
+    <div class="wiz-step active">
+        <div class="wiz-step-dot">2</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Soru Seçimi</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">3</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Gözden Geçir</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">4</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">PDF Al</span>
+    </div>
 </div>
 {% endblock %}
 
@@ -15,99 +31,278 @@
 {% block wizard_subtitle %}{{ tf.name }} — Havuz: {{ pool.name }}{% endblock %}
 
 {% block wizard_body %}
-<form method="post">
+<style>
+.type-row {
+    display: grid;
+    grid-template-columns: 1fr 90px 110px 110px;
+    gap: .75rem;
+    align-items: center;
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--mh-border);
+    margin-bottom: .5rem;
+    background: var(--mh-card-bg);
+    transition: border-color .15s, background .15s;
+}
+.type-row:has(input.n-input:not([value="0"])):has(input.n-input:focus-within),
+.type-row.active-row { border-color: var(--mh-primary); background: var(--mh-primary-light); }
+.type-badge { font-size: .72rem; font-weight: 700; padding: .2rem .55rem; border-radius: 4px; }
+.type-label { font-weight: 600; font-size: .9rem; color: var(--mh-text-main); }
+.type-avail { font-size: .75rem; color: var(--mh-text-muted); margin-top: .1rem; }
+.avail-zero { color: #ef4444; }
+
+.live-summary {
+    background: var(--mh-primary-light);
+    border: 1px solid var(--mh-border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+.live-stat { text-align: center; }
+.live-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--mh-primary); line-height: 1; }
+.live-stat-lbl { font-size: .72rem; color: var(--mh-text-muted); margin-top: .2rem; }
+
+.exclude-section {
+    background: var(--mh-nav-hover);
+    border: 1px solid var(--mh-border);
+    border-radius: 10px;
+    padding: 1rem;
+}
+.exclude-section h6 { font-size: .85rem; font-weight: 700; color: var(--mh-text-main); margin-bottom: .75rem; }
+</style>
+
+<form method="post" id="step2Form">
     {% csrf_token %}
 
-    <div class="table-responsive mb-3">
-        <table class="table table-bordered align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Soru Türü</th>
-                    <th>Havuzda Mevcut</th>
-                    <th style="width:110px;">Soru Sayısı</th>
-                    <th style="width:110px;">Puan/Soru</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><span class="badge bg-primary">MCQ</span> Çoktan Seçmeli</td>
-                    <td><span class="badge bg-light text-dark">{{ available.MCQ }} soru</span></td>
-                    <td>
-                        <input type="number" name="n_mcq" class="form-control form-control-sm"
-                               min="0" max="{{ available.MCQ }}" value="0">
-                    </td>
-                    <td>
-                        <input type="number" name="pts_mcq" class="form-control form-control-sm"
-                               min="1" value="5">
-                    </td>
-                </tr>
-                <tr>
-                    <td><span class="badge bg-success">TF</span> Doğru / Yanlış</td>
-                    <td><span class="badge bg-light text-dark">{{ available.TF }} soru</span></td>
-                    <td>
-                        <input type="number" name="n_tf" class="form-control form-control-sm"
-                               min="0" max="{{ available.TF }}" value="0">
-                    </td>
-                    <td>
-                        <input type="number" name="pts_tf" class="form-control form-control-sm"
-                               min="1" value="5">
-                    </td>
-                </tr>
-                <tr>
-                    <td><span class="badge bg-warning text-dark">SA</span> Kısa Cevaplı</td>
-                    <td><span class="badge bg-light text-dark">{{ available.SHORT_ANSWER }} soru</span></td>
-                    <td>
-                        <input type="number" name="n_sa" class="form-control form-control-sm"
-                               min="0" max="{{ available.SHORT_ANSWER }}" value="0">
-                    </td>
-                    <td>
-                        <input type="number" name="pts_sa" class="form-control form-control-sm"
-                               min="1" value="10">
-                    </td>
-                </tr>
-                <tr>
-                    <td><span class="badge bg-danger">OE</span> Açık Uçlu</td>
-                    <td><span class="badge bg-light text-dark">{{ available.OPEN }} soru</span></td>
-                    <td>
-                        <input type="number" name="n_open" class="form-control form-control-sm"
-                               min="0" max="{{ available.OPEN }}" value="0">
-                    </td>
-                    <td>
-                        <input type="number" name="pts_open" class="form-control form-control-sm"
-                               min="1" value="20">
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    {# Canlı özet #}
+    <div class="live-summary mb-3">
+        <div class="live-stat">
+            <div class="live-stat-val" id="total-q">0</div>
+            <div class="live-stat-lbl">Toplam Soru</div>
+        </div>
+        <div class="live-stat">
+            <div class="live-stat-val" id="total-pts">0</div>
+            <div class="live-stat-lbl">Toplam Puan</div>
+        </div>
+        <div style="flex-grow:1; font-size:.8rem; color:var(--mh-text-muted);">
+            Aşağıdan soru sayısı ve puan değerlerini girin — toplam otomatik hesaplanır.
+        </div>
     </div>
 
-    {% if groups %}
-    <div class="card border-0 bg-light p-3 mb-3">
-        <h6 class="fw-semibold mb-2">🎓 Daha Önce Kullanılan Soruları Hariç Tut (İsteğe Bağlı)</h6>
-        <select name="group_id" class="form-select form-select-sm">
-            <option value="">— Hariç tutma uygulama —</option>
-            {% for g in groups %}
-            <option value="{{ g.pk }}">{{ g.name }}</option>
+    {# Soru türü satırları #}
+    {% with types_data="MCQ:Çoktan Seçmeli:bg-primary:5,TF:Doğru / Yanlış:bg-success:5,SHORT_ANSWER:Kısa Cevaplı:bg-warning text-dark:10,OPEN:Açık Uçlu:bg-danger:20" %}
+
+    <div class="mb-3">
+        {# MCQ #}
+        <div class="type-row" id="row-MCQ">
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="type-badge bg-primary text-white">MCQ</span>
+                    <span class="type-label">Çoktan Seçmeli</span>
+                </div>
+                <div class="type-avail {% if not available.MCQ %}avail-zero{% endif %}">
+                    Havuzda: <strong>{{ available.MCQ }}</strong> soru
+                    {% if not available.MCQ %}<span class="ms-1">(bu türde soru yok)</span>{% endif %}
+                </div>
+            </div>
+            <div>
+                <label class="form-label form-label-sm mb-1 text-muted">Sayı</label>
+                <input type="number" name="n_mcq" id="n_mcq"
+                       class="form-control form-control-sm n-input" data-type="MCQ"
+                       min="0" max="{{ available.MCQ }}" value="0"
+                       {% if not available.MCQ %}disabled{% endif %}>
+            </div>
+            <div>
+                <label class="form-label form-label-sm mb-1 text-muted">Puan/Soru</label>
+                <input type="number" name="pts_mcq" id="pts_mcq"
+                       class="form-control form-control-sm pts-input" data-type="MCQ"
+                       min="1" value="5">
+            </div>
+            <div style="text-align:right;">
+                <div class="text-muted" style="font-size:.72rem; margin-bottom:.1rem;">Ara Toplam</div>
+                <div class="fw-bold text-primary" id="sub-MCQ">0 pts</div>
+            </div>
+        </div>
+
+        {# TF #}
+        <div class="type-row" id="row-TF">
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="type-badge bg-success text-white">TF</span>
+                    <span class="type-label">Doğru / Yanlış</span>
+                </div>
+                <div class="type-avail {% if not available.TF %}avail-zero{% endif %}">
+                    Havuzda: <strong>{{ available.TF }}</strong> soru
+                    {% if not available.TF %}<span class="ms-1">(bu türde soru yok)</span>{% endif %}
+                </div>
+            </div>
+            <div>
+                <label class="form-label form-label-sm mb-1 text-muted">Sayı</label>
+                <input type="number" name="n_tf" id="n_tf"
+                       class="form-control form-control-sm n-input" data-type="TF"
+                       min="0" max="{{ available.TF }}" value="0"
+                       {% if not available.TF %}disabled{% endif %}>
+            </div>
+            <div>
+                <label class="form-label form-label-sm mb-1 text-muted">Puan/Soru</label>
+                <input type="number" name="pts_tf" id="pts_tf"
+                       class="form-control form-control-sm pts-input" data-type="TF"
+                       min="1" value="5">
+            </div>
+            <div style="text-align:right;">
+                <div class="text-muted" style="font-size:.72rem; margin-bottom:.1rem;">Ara Toplam</div>
+                <div class="fw-bold text-success" id="sub-TF">0 pts</div>
+            </div>
+        </div>
+
+        {# Short Answer #}
+        <div class="type-row" id="row-SA">
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="type-badge bg-warning text-dark">SA</span>
+                    <span class="type-label">Kısa Cevaplı</span>
+                </div>
+                <div class="type-avail {% if not available.SHORT_ANSWER %}avail-zero{% endif %}">
+                    Havuzda: <strong>{{ available.SHORT_ANSWER }}</strong> soru
+                    {% if not available.SHORT_ANSWER %}<span class="ms-1">(bu türde soru yok)</span>{% endif %}
+                </div>
+            </div>
+            <div>
+                <label class="form-label form-label-sm mb-1 text-muted">Sayı</label>
+                <input type="number" name="n_sa" id="n_sa"
+                       class="form-control form-control-sm n-input" data-type="SA"
+                       min="0" max="{{ available.SHORT_ANSWER }}" value="0"
+                       {% if not available.SHORT_ANSWER %}disabled{% endif %}>
+            </div>
+            <div>
+                <label class="form-label form-label-sm mb-1 text-muted">Puan/Soru</label>
+                <input type="number" name="pts_sa" id="pts_sa"
+                       class="form-control form-control-sm pts-input" data-type="SA"
+                       min="1" value="10">
+            </div>
+            <div style="text-align:right;">
+                <div class="text-muted" style="font-size:.72rem; margin-bottom:.1rem;">Ara Toplam</div>
+                <div class="fw-bold text-warning" id="sub-SA">0 pts</div>
+            </div>
+        </div>
+
+        {# Open Ended #}
+        <div class="type-row" id="row-OE">
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="type-badge bg-danger text-white">OE</span>
+                    <span class="type-label">Açık Uçlu</span>
+                </div>
+                <div class="type-avail {% if not available.OPEN %}avail-zero{% endif %}">
+                    Havuzda: <strong>{{ available.OPEN }}</strong> soru
+                    {% if not available.OPEN %}<span class="ms-1">(bu türde soru yok)</span>{% endif %}
+                </div>
+            </div>
+            <div>
+                <label class="form-label form-label-sm mb-1 text-muted">Sayı</label>
+                <input type="number" name="n_open" id="n_open"
+                       class="form-control form-control-sm n-input" data-type="OE"
+                       min="0" max="{{ available.OPEN }}" value="0"
+                       {% if not available.OPEN %}disabled{% endif %}>
+            </div>
+            <div>
+                <label class="form-label form-label-sm mb-1 text-muted">Puan/Soru</label>
+                <input type="number" name="pts_open" id="pts_open"
+                       class="form-control form-control-sm pts-input" data-type="OE"
+                       min="1" value="20">
+            </div>
+            <div style="text-align:right;">
+                <div class="text-muted" style="font-size:.72rem; margin-bottom:.1rem;">Ara Toplam</div>
+                <div class="fw-bold text-danger" id="sub-OE">0 pts</div>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+
+    {# Ders bazlı hariç tutma #}
+    {% if courses %}
+    <div class="exclude-section mb-3">
+        <h6>🎓 Daha Önce Kullanılan Soruları Hariç Tut <span class="fw-normal text-muted">(İsteğe Bağlı)</span></h6>
+        <select name="course_id" class="form-select form-select-sm">
+            <option value="">— Hariç tutma uygulanmasın —</option>
+            {% for c in courses %}
+            <option value="{{ c.pk }}"
+                {% if default_course and default_course.pk == c.pk %}selected{% endif %}>
+                {{ c.name }} ({{ c.semester }})
+            </option>
             {% endfor %}
         </select>
-        <div class="form-text">Seçilen öğrenci grubuna daha önce uygulanmış sorular seçime dahil edilmez.</div>
+        <div class="form-text mt-1">
+            Seçilen derse daha önce uygulanmış sorular bu sınavda yer almaz.
+        </div>
     </div>
     {% endif %}
 
+    {# Öğrenme çıktıları (gizlenebilir) #}
     {% if outcomes %}
-    <details class="mb-3">
-        <summary class="text-muted small cursor-pointer">🎯 Öğrenme çıktılarını görüntüle ({{ outcomes|length }})</summary>
-        <ul class="mt-2 small text-muted">
+    <details class="mb-3" style="font-size:.85rem;">
+        <summary class="text-muted cursor-pointer" style="list-style:none; display:flex; align-items:center; gap:.4rem;">
+            <span>▶</span> Havuzun öğrenme çıktılarını görüntüle ({{ outcomes|length }})
+        </summary>
+        <div class="mt-2 ps-2 border-start border-2" style="border-color:#c7d2fe !important;">
             {% for oc in outcomes %}
-            <li><code>{{ oc.code }}</code> {{ oc.description }} <span class="badge bg-light text-dark">{{ oc.get_level_display }}</span></li>
+            <div class="mb-1">
+                <code style="font-size:.78rem;">{{ oc.code }}</code>
+                <span class="text-muted ms-1">{{ oc.description }}</span>
+                <span class="badge bg-light text-dark ms-1" style="font-size:.65rem;">{{ oc.get_level_display }}</span>
+            </div>
             {% endfor %}
-        </ul>
+        </div>
     </details>
     {% endif %}
 
     <div class="wizard-nav">
-        <a href="{% url 'itempool:wizard_exam_step1' %}" class="btn-wizard-back btn">← Geri</a>
-        <button type="submit" class="btn-wizard-next btn">Soruları Seç →</button>
+        <a href="{% url 'itempool:wizard_exam_step1' %}" class="btn-wiz-back">← Geri</a>
+        <button type="submit" class="btn-wiz-next" id="submitBtn">Soruları Seç →</button>
     </div>
 </form>
+
+<script>
+(function() {
+    const pairs = [
+        { n: 'n_mcq',  p: 'pts_mcq',  sub: 'sub-MCQ' },
+        { n: 'n_tf',   p: 'pts_tf',   sub: 'sub-TF'  },
+        { n: 'n_sa',   p: 'pts_sa',   sub: 'sub-SA'  },
+        { n: 'n_open', p: 'pts_open', sub: 'sub-OE'  },
+    ];
+
+    function update() {
+        let totalQ = 0, totalPts = 0;
+        pairs.forEach(({ n, p, sub }) => {
+            const nv  = parseInt(document.getElementById(n)?.value) || 0;
+            const pts = parseInt(document.getElementById(p)?.value) || 0;
+            const subtotal = nv * pts;
+            totalQ   += nv;
+            totalPts += subtotal;
+            const el = document.getElementById(sub);
+            if (el) el.textContent = subtotal + ' pts';
+        });
+        document.getElementById('total-q').textContent   = totalQ;
+        document.getElementById('total-pts').textContent = totalPts;
+        document.getElementById('submitBtn').disabled = totalQ === 0;
+    }
+
+    document.querySelectorAll('.n-input, .pts-input').forEach(el => {
+        el.addEventListener('input', update);
+    });
+    update();
+
+    // details summary arrow toggle
+    document.querySelectorAll('details').forEach(d => {
+        d.addEventListener('toggle', () => {
+            const arrow = d.querySelector('summary span');
+            if (arrow) arrow.textContent = d.open ? '▼' : '▶';
+        });
+    });
+})();
+</script>
 {% endblock %}

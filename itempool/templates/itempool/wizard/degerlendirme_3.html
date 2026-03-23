@@ -3,10 +3,22 @@
 {% block title %}Değerlendirme — Adım 3{% endblock %}
 
 {% block wizard_steps %}
-<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
-    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Form Seç</span></div>
-    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Cevap Anahtarı</span></div>
-    <div class="wizard-step active"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Sonuçlar</span></div>
+<div class="wizard-progress">
+    <div class="wiz-step done">
+        <div class="wiz-step-dot">✓</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Form Seç</span>
+    </div>
+    <div class="wiz-step done">
+        <div class="wiz-step-dot">✓</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Cevap Anahtarı</span>
+    </div>
+    <div class="wiz-step active">
+        <div class="wiz-step-dot">3</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Sonuçlar</span>
+    </div>
 </div>
 {% endblock %}
 
@@ -14,105 +26,154 @@
 {% block wizard_subtitle %}Oturum #{{ session.pk }} — {{ session.created_at|date:"d.m.Y H:i" }}{% endblock %}
 
 {% block wizard_body %}
+<style>
+.result-stats {
+    display: flex;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.result-stat {
+    flex: 1;
+    min-width: 90px;
+    background: var(--mh-nav-hover);
+    border: 1px solid var(--mh-border);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    text-align: center;
+}
+.result-stat-val { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.result-stat-lbl { font-size: .72rem; color: var(--mh-text-muted); margin-top: .25rem; }
+
+.outcome-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 160px 80px;
+    gap: .75rem;
+    align-items: center;
+    padding: .6rem .875rem;
+    border-radius: 8px;
+    border: 1px solid var(--mh-border);
+    background: var(--mh-card-bg);
+    margin-bottom: .4rem;
+    transition: border-color .15s, background-color .25s;
+}
+.outcome-row:hover { border-color: var(--mh-primary); }
+.outcome-code { font-family: monospace; font-size: .82rem; font-weight: 700; color: var(--mh-text-main); }
+.outcome-desc { font-size: .82rem; color: var(--mh-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.outcome-bar { display: flex; align-items: center; gap: .5rem; }
+.outcome-bar-track { flex: 1; height: 8px; border-radius: 4px; background: var(--mh-border); overflow: hidden; }
+.outcome-bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+.outcome-pct { font-size: .78rem; font-weight: 700; min-width: 36px; text-align: right; }
+.status-badge { font-size: .72rem; font-weight: 700; padding: .2rem .5rem; border-radius: 20px; white-space: nowrap; }
+.status-good  { background: rgba(22,163,74,.12); color: #166534; }
+.status-mid   { background: rgba(234,179,8,.12); color: #92400e; }
+.status-bad   { background: rgba(239,68,68,.12); color: #991b1b; }
+[data-theme="dark"] .status-good { background: rgba(22,163,74,.15); color: #4ade80; }
+[data-theme="dark"] .status-mid  { background: rgba(234,179,8,.15); color: #fde047; }
+[data-theme="dark"] .status-bad  { background: rgba(239,68,68,.15); color: #fca5a5; }
+
+.done-banner {
+    background: linear-gradient(135deg, rgba(22,163,74,.08), rgba(22,163,74,.04));
+    border: 1px solid rgba(22,163,74,.3);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+}
+.done-banner-icon { font-size: 1.6rem; flex-shrink: 0; }
+.done-banner h6 { font-weight: 700; color: #15803d; margin: 0 0 .15rem; }
+.done-banner p  { font-size: .82rem; color: var(--mh-text-muted); margin: 0; }
+[data-theme="dark"] .done-banner h6 { color: #4ade80; }
+</style>
+
+{# Tamamlandı bildirimi #}
+<div class="done-banner">
+    <div class="done-banner-icon">✅</div>
+    <div>
+        <h6>Değerlendirme tamamlandı!</h6>
+        <p>Aşağıda öğrenme çıktısı başarı raporu ve özet istatistikler yer almaktadır.</p>
+    </div>
+</div>
 
 {# Özet istatistikler #}
 {% if session.student_count %}
-<div class="row g-2 mb-4">
-    <div class="col-4 text-center">
-        <div class="border rounded-3 p-3">
-            <div class="fw-bold fs-4 text-primary">{{ session.student_count }}</div>
-            <div class="text-muted small">Öğrenci</div>
-        </div>
+<div class="result-stats">
+    <div class="result-stat">
+        <div class="result-stat-val text-primary">{{ session.student_count }}</div>
+        <div class="result-stat-lbl">Öğrenci</div>
     </div>
     {% if session.avg_score %}
-    <div class="col-4 text-center">
-        <div class="border rounded-3 p-3">
-            <div class="fw-bold fs-4 text-success">{{ session.avg_score|floatformat:1 }}</div>
-            <div class="text-muted small">Ortalama Puan</div>
-        </div>
+    <div class="result-stat">
+        <div class="result-stat-val text-success">{{ session.avg_score|floatformat:1 }}</div>
+        <div class="result-stat-lbl">Ortalama Puan</div>
     </div>
     {% endif %}
     {% if session.pass_rate %}
-    <div class="col-4 text-center">
-        <div class="border rounded-3 p-3">
-            <div class="fw-bold fs-4 text-info">%{{ session.pass_rate|floatformat:0 }}</div>
-            <div class="text-muted small">Geçme Oranı</div>
-        </div>
+    <div class="result-stat">
+        <div class="result-stat-val text-info">%{{ session.pass_rate|floatformat:0 }}</div>
+        <div class="result-stat-lbl">Geçme Oranı</div>
     </div>
     {% endif %}
 </div>
 {% endif %}
 
-{# Öğrenme çıktısı performansı #}
+{# Öğrenme çıktısı başarı raporu #}
 {% if performance %}
 <div class="mb-4">
-    <h6 class="fw-semibold mb-3">🎯 Öğrenme Çıktısı Başarı Raporu</h6>
-    <div class="table-responsive">
-        <table class="table table-bordered table-sm align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Kod</th>
-                    <th>Açıklama</th>
-                    <th>Başarı Oranı</th>
-                    <th>Durum</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in performance %}
-                <tr>
-                    <td><code>{{ row.code }}</code></td>
-                    <td class="small">{{ row.description }}</td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="progress flex-grow-1" style="height:8px;">
-                                <div class="progress-bar
-                                    {% if row.rate >= 70 %}bg-success
-                                    {% elif row.rate >= 50 %}bg-warning
-                                    {% else %}bg-danger{% endif %}"
-                                    style="width:{{ row.rate }}%"></div>
-                            </div>
-                            <span class="small fw-semibold" style="min-width:40px;">%{{ row.rate|floatformat:0 }}</span>
-                        </div>
-                    </td>
-                    <td>
-                        {% if row.rate >= 70 %}
-                            <span class="badge bg-success">İyi</span>
-                        {% elif row.rate >= 50 %}
-                            <span class="badge bg-warning text-dark">Orta</span>
-                        {% else %}
-                            <span class="badge bg-danger">Geliştirilmeli</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="fw-semibold mb-0" style="font-size:.9rem;">
+            🎯 Öğrenme Çıktısı Başarı Raporu
+        </h6>
+        <a href="{% url 'itempool:outcome_performance_report' session_pk=session.pk %}"
+           class="btn btn-sm btn-outline-primary" target="_blank">
+            <i class="bi bi-file-earmark-bar-graph me-1"></i> Detaylı Rapor
+        </a>
     </div>
+
+    {# Başlık satırı #}
+    <div style="display:grid; grid-template-columns:70px 1fr 160px 80px; gap:.75rem; padding:.3rem .875rem; font-size:.72rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.04em;">
+        <span>Kod</span><span>Açıklama</span><span>Başarı</span><span>Durum</span>
+    </div>
+
+    {% for row in performance %}
+    <div class="outcome-row">
+        <span class="outcome-code">{{ row.code }}</span>
+        <span class="outcome-desc" title="{{ row.description }}">{{ row.description }}</span>
+        <div class="outcome-bar">
+            <div class="outcome-bar-track">
+                <div class="outcome-bar-fill"
+                     style="width:{{ row.rate }}%;
+                            background:{% if row.rate >= 70 %}#22c55e{% elif row.rate >= 50 %}#f59e0b{% else %}#ef4444{% endif %};">
+                </div>
+            </div>
+            <span class="outcome-pct"
+                  style="color:{% if row.rate >= 70 %}#16a34a{% elif row.rate >= 50 %}#d97706{% else %}#dc2626{% endif %};">
+                %{{ row.rate|floatformat:0 }}
+            </span>
+        </div>
+        <div>
+            {% if row.rate >= 70 %}
+            <span class="status-badge status-good">İyi</span>
+            {% elif row.rate >= 50 %}
+            <span class="status-badge status-mid">Orta</span>
+            {% else %}
+            <span class="status-badge status-bad">Geliştirilmeli</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% else %}
-<div class="alert alert-light border mb-4">
-    <i class="bi bi-info-circle me-2 text-primary"></i>
+<div class="alert alert-light border d-flex align-items-center gap-2 mb-4" style="font-size:.82rem;">
+    <i class="bi bi-info-circle text-primary"></i>
     Bu oturum için henüz öğrenme çıktısı raporu oluşturulmamış.
 </div>
 {% endif %}
 
-{# Detaylı rapor linki #}
-<div class="mb-4">
-    <a href="{% url 'itempool:outcome_performance_report' session_pk=session.pk %}"
-       class="btn btn-outline-primary btn-sm" target="_blank">
-        <i class="bi bi-file-earmark-bar-graph me-1"></i> Detaylı Çıktı Raporunu Görüntüle
-    </a>
-</div>
-
-<div class="alert alert-success">
-    <i class="bi bi-check-circle me-2"></i>
-    Değerlendirme tamamlandı.
-    <a href="{% url 'itempool:wizard_landing' %}" class="alert-link">Sihirbaza Dön →</a>
-</div>
-
 <div class="wizard-nav">
-    <a href="{% url 'itempool:wizard_eval_step2' form_id=session.test_form.pk %}" class="btn-wizard-back btn">← Geri</a>
-    <a href="{% url 'itempool:wizard_landing' %}" class="btn-wizard-next btn">Tamamla ✓</a>
+    <a href="{% url 'itempool:wizard_eval_step2' form_id=session.test_form.pk %}" class="btn-wiz-back">← Geri</a>
+    <a href="{% url 'itempool:wizard_landing' %}" class="btn-wiz-next">Tamamla ✓</a>
 </div>
-
 {% endblock %}

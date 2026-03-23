@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Madde Seçimi - {{ form.name }}{% endblock %}
 
@@ -7,7 +8,11 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_detail' form.pool.id %}">{{ form.pool.name }}</a></li>
+            {% if pool %}
+            <li class="breadcrumb-item"><a href="{% url 'itempool:pool_detail' pool.id %}">{{ pool.name }}</a></li>
+            {% elif form.course %}
+            <li class="breadcrumb-item"><a href="{% url 'itempool:course_detail' form.course.id %}">{{ form.course.name }}</a></li>
+            {% endif %}
             <li class="breadcrumb-item active">{{ form.name }} - Madde Seçimi</li>
         </ol>
     </nav>
@@ -20,7 +25,7 @@
     <!-- Sol Kolon: Havuzdaki Maddeler -->
     <div class="col-md-7">
         <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Havuzdaki Maddeler</h5>
                 <span class="badge bg-secondary">{{ available_items.count }} Müsait</span>
             </div>
@@ -74,12 +79,5 @@
     </div>
 </div>
 
-<style>
-    .item-row:hover {
-        background-color: #f8f9fa;
-    }
-    .x-small {
-        font-size: 0.75rem;
-    }
-</style>
+<link href="{% static 'css/itempool/test_form_edit_items.css' %}" rel="stylesheet">
 {% endblock %}

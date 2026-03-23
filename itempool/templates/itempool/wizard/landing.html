@@ -4,114 +4,298 @@
 
 {% block extra_css %}
 <style>
-.wizard-hero {
-    background: linear-gradient(135deg,#1e5cff 0%,#7c3aed 100%);
-    border-radius:16px; color:white; padding:2.5rem 2rem; margin-bottom:2rem; text-align:center;
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+.wiz-hero {
+    background: var(--mh-gradient);
+    border-radius: 16px;
+    color: white;
+    padding: 2.5rem 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
-.wizard-hero h1 { color:white; font-size:1.9rem; }
-.wizard-hero p  { color:rgba(255,255,255,.8); max-width:520px; margin:0 auto; }
+.wiz-hero::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 220px; height: 220px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.wiz-hero h1 { color: white; font-size: 1.9rem; font-weight: 800; margin-bottom: .4rem; }
+.wiz-hero p  { color: rgba(255,255,255,.82); max-width: 480px; margin: 0 auto; font-size: .9rem; }
+.wiz-hero-icon { font-size: 2.8rem; margin-bottom: .6rem; display: block; }
+
+/* ── Kart ─────────────────────────────────────────────────────────────── */
 .wiz-card {
-    background:white; border:1px solid #e5e7eb; border-radius:14px;
-    padding:2rem; height:100%; cursor:pointer; text-decoration:none; color:inherit;
-    transition:transform .2s, box-shadow .2s;
-    display:block;
+    background: var(--mh-card-bg);
+    border: 2px solid var(--mh-border);
+    border-radius: 14px;
+    padding: 1.4rem 1.25rem;
+    text-decoration: none;
+    color: var(--mh-text-main);
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    transition: transform .2s, box-shadow .2s, border-color .2s, background-color .25s;
+    height: 100%;
 }
-.wiz-card:hover { transform:translateY(-4px); box-shadow:0 12px 24px rgba(0,0,0,.1); color:inherit; }
-.wiz-card .wiz-icon {
-    width:60px; height:60px; border-radius:14px;
-    display:flex; align-items:center; justify-content:center;
-    font-size:1.6rem; margin-bottom:1.25rem;
+.wiz-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,.12);
+    border-color: var(--mh-primary-light);
+    color: var(--mh-text-main);
 }
-.wiz-card h5 { font-weight:700; margin-bottom:.5rem; }
-.wiz-card p  { color:#6b7280; font-size:.9rem; margin-bottom:1rem; }
-.wiz-card ul { padding-left:1.2rem; color:#6b7280; font-size:.85rem; }
-.wiz-card ul li { margin-bottom:.25rem; }
+.wiz-card.disabled {
+    opacity: .52;
+    pointer-events: none;
+    filter: grayscale(.3);
+}
+
+.wiz-card-icon {
+    width: 50px; height: 50px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
 .wiz-badge {
-    font-size:.7rem; font-weight:600; padding:.25rem .6rem;
-    border-radius:20px; display:inline-block; margin-bottom:.75rem;
+    font-size: .68rem; font-weight: 700;
+    padding: .18rem .55rem; border-radius: 20px;
+    display: inline-block; align-self: flex-start;
 }
-.stat-mini { font-size:.8rem; color:#9ca3af; margin-top:1rem; }
-.stat-mini strong { color:#374151; }
+/* Badge & icon color variants that respond to dark mode */
+.wiz-icon-blue   { background: var(--mh-primary-light); }
+.wiz-icon-yellow { background: rgba(234,179,8,.12); }
+.wiz-icon-green  { background: rgba(22,163,74,.12); }
+.wiz-icon-pink   { background: rgba(236,72,153,.1); }
+.wiz-badge-blue   { background: var(--mh-primary-light); color: var(--mh-primary-text); }
+.wiz-badge-yellow { background: rgba(234,179,8,.12); color: #92400e; }
+.wiz-badge-green  { background: rgba(22,163,74,.12); color: #166534; }
+.wiz-badge-pink   { background: rgba(236,72,153,.1); color: #9d174d; }
+[data-theme="dark"] .wiz-icon-yellow  { background: rgba(234,179,8,.15); }
+[data-theme="dark"] .wiz-icon-green   { background: rgba(22,163,74,.15); }
+[data-theme="dark"] .wiz-icon-pink    { background: rgba(236,72,153,.15); }
+[data-theme="dark"] .wiz-badge-yellow { background: rgba(234,179,8,.15); color: #fde047; }
+[data-theme="dark"] .wiz-badge-green  { background: rgba(22,163,74,.15); color: #86efac; }
+[data-theme="dark"] .wiz-badge-pink   { background: rgba(236,72,153,.15); color: #f9a8d4; }
+.wiz-card h5 { font-weight: 700; font-size: .95rem; margin: 0; color: var(--mh-text-main); }
+.wiz-card-desc { font-size: .82rem; color: var(--mh-text-muted); margin: 0; }
+.wiz-steps-list {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: .28rem;
+}
+.wiz-steps-list li {
+    font-size: .78rem; color: var(--mh-text-muted);
+    display: flex; align-items: center; gap: .4rem;
+}
+.wiz-steps-list li::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--mh-border);
+    flex-shrink: 0;
+}
+.wiz-stat {
+    font-size: .75rem; color: var(--mh-text-muted);
+    margin-top: auto;
+    padding-top: .7rem;
+    border-top: 1px solid var(--mh-border);
+    display: flex; align-items: center; gap: .3rem;
+}
+.wiz-stat strong { color: var(--mh-text-main); }
+.wiz-stat.warn { color: #dc2626; }
+
+/* ── Ok ─────────────────────────────────────────────────────────────── */
+.wiz-arrow-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 2.5rem;   /* kart stat alanını dengele */
+}
+.wiz-arrow-col span {
+    font-size: 1.6rem;
+    color: var(--mh-border);
+    line-height: 1;
+}
+
+/* ── Ders kartı (yatay) ──────────────────────────────────────────────── */
+.wiz-course-card {
+    background: var(--mh-card-bg);
+    border: 2px solid var(--mh-border);
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    color: var(--mh-text-main);
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    transition: transform .2s, box-shadow .2s, border-color .2s, background-color .25s;
+    margin-bottom: 1rem;
+}
+.wiz-course-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.1);
+    border-color: var(--mh-primary-light);
+    color: var(--mh-text-main);
+}
+.wiz-course-card .wiz-card-icon { width: 44px; height: 44px; font-size: 1.2rem; }
+.wiz-course-arrow { margin-left: auto; color: var(--mh-text-muted); font-size: 1.2rem; }
+
+/* ── Hızlı erişim ───────────────────────────────────────────────────── */
+.wiz-quick {
+    background: var(--mh-nav-hover);
+    border: 1px solid var(--mh-border);
+    border-radius: 10px;
+    padding: .75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+.wiz-quick-label {
+    font-size: .75rem; font-weight: 700;
+    color: var(--mh-text-muted); text-transform: uppercase;
+    letter-spacing: .05em; white-space: nowrap;
+}
+.wiz-quick a {
+    font-size: .82rem; color: var(--mh-text-main);
+    text-decoration: none;
+    padding: .3rem .75rem;
+    border-radius: 6px;
+    border: 1px solid var(--mh-border);
+    background: var(--mh-card-bg);
+    transition: all .15s;
+    display: inline-flex; align-items: center; gap: .3rem;
+}
+.wiz-quick a:hover { border-color: var(--mh-primary); color: var(--mh-primary); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-4" style="max-width: 880px;">
 
-    <div class="wizard-hero">
-        <div style="font-size:2.5rem; margin-bottom:.75rem;">🪄</div>
+    <!-- Hero -->
+    <div class="wiz-hero">
+        <span class="wiz-hero-icon">🪄</span>
         <h1>Sihirbaz ile Başla</h1>
-        <p class="mt-2">Tecrübesiz kullanıcılar için adım adım rehberli akış.
-           Hangi işlemi yapmak istediğinizi seçin.</p>
+        <p>Adım adım rehberli akış. Aşağıdan ne yapmak istediğinizi seçin.</p>
     </div>
 
-    <div class="row g-3">
+    <!-- Ana 3 kart: Bootstrap col sistemi -->
+    <div class="row g-3 mb-3 align-items-stretch">
 
-        {# ── Kart 1: Havuz ── #}
-        <div class="col-md-4">
+        <!-- Kart 1: Havuz -->
+        <div class="col-12 col-md">
             <a href="{% url 'itempool:wizard_pool_step1' %}" class="wiz-card">
-                <div class="wiz-icon" style="background:#e0e7ff;">📁</div>
-                <span class="wiz-badge" style="background:#e0e7ff; color:#1e5cff;">3 Adım</span>
+                <div class="wiz-card-icon wiz-icon-blue">📁</div>
+                <span class="wiz-badge wiz-badge-blue">3 Adım</span>
                 <h5>Madde Havuzu Kur</h5>
-                <p>Ders için yeni bir soru bankası oluşturun.</p>
-                <ul>
-                    <li>Havuz bilgilerini gir</li>
+                <p class="wiz-card-desc">Ders için yeni bir soru bankası oluşturun.</p>
+                <ul class="wiz-steps-list">
+                    <li>Havuz adı ve bilgileri</li>
                     <li>Öğrenme çıktılarını tanımla</li>
-                    <li>Sorularını ekle (elle veya Word'den)</li>
+                    <li>Sorularını ekle</li>
                 </ul>
-                {% if pool_count %}
-                <div class="stat-mini">Mevcut havuz: <strong>{{ pool_count }}</strong></div>
-                {% endif %}
+                <div class="wiz-stat">
+                    {% if pool_count %}
+                    Mevcut havuz: <strong>{{ pool_count }}</strong>
+                    {% else %}
+                    Henüz havuz yok — buradan başlayın
+                    {% endif %}
+                </div>
             </a>
         </div>
 
-        {# ── Kart 2: Sınav ── #}
-        <div class="col-md-4">
-            <a href="{% url 'itempool:wizard_exam_step1' %}" class="wiz-card {% if not has_pools %}opacity-50 pe-none{% endif %}">
-                <div class="wiz-icon" style="background:#fef9c3;">📝</div>
-                <span class="wiz-badge" style="background:#fef9c3; color:#ca8a04;">4 Adım</span>
+        <!-- Ok 1 (sadece md+) -->
+        <div class="col-auto wiz-arrow-col d-none d-md-flex">
+            <span>›</span>
+        </div>
+
+        <!-- Kart 2: Sınav -->
+        <div class="col-12 col-md">
+            <a href="{% url 'itempool:wizard_exam_step1' %}"
+               class="wiz-card {% if not has_pools %}disabled{% endif %}">
+                <div class="wiz-card-icon wiz-icon-yellow">📝</div>
+                <span class="wiz-badge wiz-badge-yellow">4 Adım</span>
                 <h5>Sınav Formu Oluştur</h5>
-                <p>Havuzunuzdan otomatik soru seçerek sınav formu oluşturun.</p>
-                <ul>
-                    <li>Sınav adını ve havuzu seç</li>
-                    <li>Soru türü ve sayılarını belirle</li>
+                <p class="wiz-card-desc">Havuzdan otomatik soru seçerek form oluşturun ve PDF alın.</p>
+                <ul class="wiz-steps-list">
+                    <li>Sınav adı ve havuz seç</li>
+                    <li>Soru türü ve sayıları belirle</li>
                     <li>Soruları gözden geçir</li>
-                    <li>Baskı şablonu seç ve PDF al</li>
+                    <li>Baskı şablonu seç, PDF indir</li>
                 </ul>
-                {% if not has_pools %}
-                <div class="stat-mini" style="color:#dc2626;">⚠ Önce bir havuz oluşturun.</div>
-                {% elif form_count %}
-                <div class="stat-mini">Mevcut form: <strong>{{ form_count }}</strong></div>
-                {% endif %}
+                <div class="wiz-stat {% if not has_pools %}warn{% endif %}">
+                    {% if not has_pools %}
+                    ⚠ Önce bir madde havuzu oluşturun
+                    {% elif form_count %}
+                    Mevcut form: <strong>{{ form_count }}</strong>
+                    {% else %}
+                    Hazır — oluşturmaya başlayın
+                    {% endif %}
+                </div>
             </a>
         </div>
 
-        {# ── Kart 3: Değerlendirme ── #}
-        <div class="col-md-4">
-            <a href="{% url 'itempool:wizard_eval_step1' %}" class="wiz-card {% if not has_forms %}opacity-50 pe-none{% endif %}">
-                <div class="wiz-icon" style="background:#dcfce7;">📊</div>
-                <span class="wiz-badge" style="background:#dcfce7; color:#16a34a;">3 Adım</span>
+        <!-- Ok 2 (sadece md+) -->
+        <div class="col-auto wiz-arrow-col d-none d-md-flex">
+            <span>›</span>
+        </div>
+
+        <!-- Kart 3: Değerlendirme -->
+        <div class="col-12 col-md">
+            <a href="{% url 'itempool:wizard_eval_step1' %}"
+               class="wiz-card {% if not has_forms %}disabled{% endif %}">
+                <div class="wiz-card-icon wiz-icon-green">📊</div>
+                <span class="wiz-badge wiz-badge-green">3 Adım</span>
                 <h5>Sınavı Değerlendir</h5>
-                <p>Optik okuyucu çıktısını yükleyip sonuçları analiz edin.</p>
-                <ul>
+                <p class="wiz-card-desc">Optik okuyucu çıktısını yükleyip sonuçları analiz edin.</p>
+                <ul class="wiz-steps-list">
                     <li>Sınav formunu seç</li>
-                    <li>Optik okuyucu dosyasını yükle</li>
-                    <li>Öğrenme çıktısı raporunu görüntüle</li>
+                    <li>Optik dosyayı yükle</li>
+                    <li>Öğrenme çıktısı raporunu gör</li>
                 </ul>
-                {% if not has_forms %}
-                <div class="stat-mini" style="color:#dc2626;">⚠ Önce bir sınav formu oluşturun.</div>
-                {% endif %}
+                <div class="wiz-stat {% if not has_forms %}warn{% endif %}">
+                    {% if not has_forms %}
+                    ⚠ Önce bir sınav formu oluşturun
+                    {% else %}
+                    Hazır — değerlendirmeye başlayın
+                    {% endif %}
+                </div>
             </a>
         </div>
 
     </div>
 
-    {# Hızlı erişim linkleri #}
-    <div class="mt-4 text-center text-muted" style="font-size:.875rem;">
-        Doğrudan erişim:
-        <a href="{% url 'itempool:pool_list' %}" class="ms-2">Havuzlarım</a> ·
-        <a href="{% url 'itempool:test_form_list_all' %}" class="ms-2">Sınav Formlarım</a> ·
-        <a href="{% url 'new_upload' %}" class="ms-2">Optik Okuma</a>
+    <!-- Ders yönetim kartı (yatay, tam genişlik) -->
+    <a href="{% url 'itempool:course_list' %}" class="wiz-course-card">
+        <div class="wiz-card-icon wiz-icon-pink">🎓</div>
+        <div>
+            <div class="fw-bold" style="font-size:.95rem;">Derslerimi Yönet</div>
+            <div class="text-muted" style="font-size:.8rem; margin-top:.15rem;">
+                Soru tekrarını önlemek için ders — sınav bağlantısı kurun ve belirtke tablosu oluşturun.
+            </div>
+        </div>
+        <div class="ms-auto d-flex align-items-center gap-2 flex-shrink-0">
+            {% if course_count %}
+            <span class="wiz-badge wiz-badge-pink">{{ course_count }} ders</span>
+            {% else %}
+            <span class="text-muted" style="font-size:.8rem;">Henüz ders yok</span>
+            {% endif %}
+            <span class="wiz-course-arrow">›</span>
+        </div>
+    </a>
+
+    <!-- Hızlı erişim -->
+    <div class="wiz-quick">
+        <span class="wiz-quick-label">Hızlı erişim</span>
+        <a href="{% url 'itempool:pool_list' %}">📁 Havuzlarım</a>
+        <a href="{% url 'itempool:test_form_list_all' %}">📝 Sınav Formlarım</a>
+        <a href="{% url 'itempool:course_list' %}">🎓 Derslerim</a>
+        <a href="{% url 'new_upload' %}">📤 Optik Okuma</a>
     </div>
 
 </div>

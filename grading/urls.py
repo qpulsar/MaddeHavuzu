@@ -9,7 +9,7 @@ from grading.views.admin_dashboard import (
     FileFormatListView, FileFormatCreateView, FileFormatEditView, FileFormatDeleteView,
     AllUploadsView
 )
-from grading.views.profile import ProfileView, ChangePasswordView
+from grading.views.profile import ProfileView, ChangePasswordView, SetThemeView
 from grading.views.analysis import CheatingAnalysisView
 
 urlpatterns = [
@@ -24,6 +24,7 @@ urlpatterns = [
     # Profile
     path('profil/', ProfileView.as_view(), name='profile'),
     path('profil/sifre-degistir/', ChangePasswordView.as_view(), name='change_password'),
+    path('profil/tema/', SetThemeView.as_view(), name='set_theme'),
     
     # Dashboard
     path('panel/', DashboardView.as_view(), name='dashboard'),

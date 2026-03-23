@@ -1,0 +1,171 @@
+/* ── Sayfa düzeni ─────────────────────────────────────────────────── */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 900px) { .profile-grid { grid-template-columns: 1fr; } }
+
+.profile-section {
+    background: var(--mh-card-bg);
+    border: 1px solid var(--mh-border);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+}
+.profile-section-header {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--mh-border);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--mh-text-main);
+}
+.profile-section-header i { color: var(--mh-primary); font-size: 1.1rem; }
+.profile-section-body { padding: 1.5rem; }
+
+/* ── Renk Paleti seçici ────────────────────────────────────────────── */
+.palette-radio { display: none; }
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .75rem;
+}
+
+.palette-card {
+    border: 2px solid var(--mh-border);
+    border-radius: 12px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color .2s, box-shadow .2s, transform .15s;
+    position: relative;
+}
+.palette-card:hover {
+    border-color: var(--mh-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,.12);
+}
+.palette-radio:checked + label .palette-card {
+    border-color: var(--mh-primary);
+    box-shadow: 0 0 0 3px rgba(var(--mh-primary-rgb, 30 92 255),.18), 0 4px 12px rgba(0,0,0,.12);
+}
+
+.palette-preview {
+    height: 60px;
+    position: relative;
+    overflow: hidden;
+}
+.palette-sidebar-strip {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 28px;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding-top: 8px;
+    gap: 4px;
+}
+.palette-logo-dot {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+}
+.palette-nav-dot {
+    width: 10px; height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,.4);
+}
+.palette-content-area {
+    position: absolute; left: 28px; top: 0; right: 0; bottom: 0;
+    padding: 6px;
+    display: flex; flex-direction: column; gap: 3px;
+}
+.palette-btn-preview {
+    height: 12px; border-radius: 3px; width: 40px;
+}
+.palette-line { height: 4px; border-radius: 2px; width: 100%; opacity: .3; }
+
+.palette-name {
+    padding: .4rem .75rem .5rem;
+    font-size: .75rem; font-weight: 700;
+    color: var(--mh-text-main);
+    text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: .4rem;
+}
+
+.palette-check {
+    position: absolute; top: .35rem; right: .35rem;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.7);
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .6rem; color: white;
+    transition: all .2s;
+}
+.palette-radio:checked + label .palette-check {
+    background: white;
+    border-color: white;
+    color: var(--mh-primary);
+}
+.palette-radio:checked + label .palette-check::after { content: '✓'; }
+
+/* ── Tema modu seçici ──────────────────────────────────────────────── */
+.theme-radio { display: none; }
+.theme-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+
+.theme-opt-card {
+    border: 2px solid var(--mh-border);
+    border-radius: 12px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color .2s, transform .15s;
+}
+.theme-opt-card:hover { border-color: var(--mh-primary); transform: translateY(-2px); }
+.theme-radio:checked + label .theme-opt-card {
+    border-color: var(--mh-primary);
+    box-shadow: 0 0 0 3px rgba(30,92,255,.15);
+}
+
+.theme-preview {
+    height: 52px;
+    display: flex;
+    overflow: hidden;
+    border-radius: 10px 10px 0 0;
+}
+.theme-preview-sidebar { width: 22px; flex-shrink: 0; }
+.theme-preview-content { flex: 1; padding: 5px; display: flex; flex-direction: column; gap: 3px; }
+.theme-preview-topbar { height: 8px; border-radius: 2px; }
+.theme-preview-card { flex: 1; border-radius: 3px; }
+
+/* Aydınlık önizleme */
+.theme-light .theme-preview-sidebar { background: #ffffff; border-right: 1px solid #e5e7eb; }
+.theme-light .theme-preview-content { background: #f5f7f9; }
+.theme-light .theme-preview-topbar { background: #e0e7ff; }
+.theme-light .theme-preview-card { background: #ffffff; border: 1px solid #e5e7eb; }
+/* Karanlık önizleme */
+.theme-dark .theme-preview-sidebar { background: #161b22; border-right: 1px solid #30363d; }
+.theme-dark .theme-preview-content { background: #0f1117; }
+.theme-dark .theme-preview-topbar { background: #21262d; }
+.theme-dark .theme-preview-card { background: #1c2128; border: 1px solid #30363d; }
+/* Sistem önizleme */
+.theme-system .theme-preview { background: linear-gradient(135deg, #f5f7f9 50%, #0f1117 50%); }
+.theme-system .theme-preview-sidebar { background: linear-gradient(180deg, #ffffff 50%, #161b22 50%); }
+.theme-system .theme-preview-content { background: transparent; }
+.theme-system .theme-preview-topbar { background: rgba(255,255,255,.3); }
+.theme-system .theme-preview-card { background: rgba(255,255,255,.2); }
+
+.theme-opt-name {
+    padding: .4rem; font-size: .75rem; font-weight: 700;
+    text-align: center;
+    color: var(--mh-text-main);
+    display: flex; align-items: center; justify-content: center; gap: .3rem;
+}
+
+/* ── Submit buton alanı ──────────────────────────────────────────── */
+.form-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 1.25rem; border-top: 1px solid var(--mh-border);
+    margin-top: 1.25rem;
+}

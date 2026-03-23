@@ -3,10 +3,22 @@
 {% block title %}Havuz Kur — Adım 2{% endblock %}
 
 {% block wizard_steps %}
-<div class="wizard-steps mb-3" style="max-width:720px; margin:0 auto 1.5rem;">
-    <div class="wizard-step done"><div class="wizard-step-dot">✓</div><span class="wizard-step-label">Temel Bilgiler</span></div>
-    <div class="wizard-step active"><div class="wizard-step-dot">2</div><span class="wizard-step-label">Öğrenme Çıktıları</span></div>
-    <div class="wizard-step"><div class="wizard-step-dot">3</div><span class="wizard-step-label">Soru Ekleme</span></div>
+<div class="wizard-progress">
+    <div class="wiz-step done">
+        <div class="wiz-step-dot">✓</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Temel Bilgiler</span>
+    </div>
+    <div class="wiz-step active">
+        <div class="wiz-step-dot">2</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Öğrenme Çıktıları</span>
+    </div>
+    <div class="wiz-step">
+        <div class="wiz-step-dot">3</div>
+        <div class="wiz-step-line"></div>
+        <span class="wiz-step-label">Soru Ekleme</span>
+    </div>
 </div>
 {% endblock %}
 
@@ -14,61 +26,91 @@
 {% block wizard_subtitle %}{{ pool.name }} — Hangi bilgi ve becerileri ölçmek istiyorsunuz?{% endblock %}
 
 {% block wizard_body %}
+<style>
+.outcome-row {
+    display: grid;
+    grid-template-columns: 80px 1fr auto auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    background: var(--mh-nav-hover);
+    border: 1px solid var(--mh-border);
+    margin-bottom: 0.5rem;
+    transition: background-color .15s, border-color .15s;
+}
+.outcome-row:hover { border-color: var(--mh-primary); background: var(--mh-primary-light); }
+.outcome-code { font-family: monospace; font-size: .85rem; color: var(--mh-text-main); font-weight: 600; }
+.outcome-desc { font-size: .875rem; color: var(--mh-text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bloom-chip {
+    font-size: .7rem; font-weight: 600;
+    padding: .15rem .5rem; border-radius: 20px;
+    background: var(--mh-primary-light); color: var(--mh-primary-text);
+    white-space: nowrap;
+}
+.add-outcome-form {
+    background: var(--mh-primary-light);
+    border: 1px dashed var(--mh-primary);
+    border-radius: 10px;
+    padding: 1rem;
+}
+.add-outcome-form h6 { font-size: .85rem; font-weight: 700; color: var(--mh-primary); margin-bottom: .75rem; }
+</style>
 
 {# Mevcut çıktılar #}
 {% if outcomes %}
 <div class="mb-3">
-    <table class="table table-sm">
-        <thead><tr><th>Kod</th><th>Açıklama</th><th>Bloom Düzeyi</th><th></th></tr></thead>
-        <tbody>
-        {% for oc in outcomes %}
-        <tr>
-            <td><code>{{ oc.code }}</code></td>
-            <td>{{ oc.description }}</td>
-            <td><span class="badge bg-light text-dark">{{ oc.get_level_display }}</span></td>
-            <td>
-                <form method="post" class="d-inline" onsubmit="return confirm('Silinsin mi?')">
-                    {% csrf_token %}
-                    <input type="hidden" name="delete_outcome" value="1">
-                    <input type="hidden" name="outcome_id" value="{{ oc.pk }}">
-                    <button class="btn btn-sm btn-outline-danger py-0 px-1">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-semibold" style="font-size:.9rem;">
+            Tanımlanan çıktılar
+            <span class="badge bg-primary ms-1">{{ outcomes|length }}</span>
+        </span>
+    </div>
+    {% for oc in outcomes %}
+    <div class="outcome-row">
+        <span class="outcome-code">{{ oc.code }}</span>
+        <span class="outcome-desc" title="{{ oc.description }}">{{ oc.description }}</span>
+        <span class="bloom-chip">{{ oc.get_level_display }}</span>
+        <form method="post" class="d-inline" onsubmit="return confirm('Bu çıktıyı silmek istiyor musunuz?')">
+            {% csrf_token %}
+            <input type="hidden" name="delete_outcome" value="1">
+            <input type="hidden" name="outcome_id" value="{{ oc.pk }}">
+            <button class="btn btn-sm btn-outline-danger py-0 px-1" style="font-size:.75rem;" title="Sil">✕</button>
+        </form>
+    </div>
+    {% endfor %}
 </div>
 {% else %}
-<div class="alert alert-light border mb-3">
+<div class="alert alert-light border mb-3" style="font-size:.875rem;">
     <i class="bi bi-info-circle me-2 text-primary"></i>
-    Henüz çıktı eklenmedi. Aşağıdaki formdan ekleyin veya atlayarak devam edin.
+    Henüz öğrenme çıktısı eklenmedi. Aşağıdaki formdan ekleyin veya atlayarak devam edin.
 </div>
 {% endif %}
 
-{# Yeni çıktı ekleme formu #}
-<div class="card border-0 bg-light p-3 mb-3">
-    <h6 class="fw-semibold mb-3">➕ Yeni Öğrenme Çıktısı Ekle</h6>
+{# Yeni çıktı ekleme #}
+<div class="add-outcome-form mb-3">
+    <h6>➕ Yeni Öğrenme Çıktısı Ekle</h6>
     <form method="post">
         {% csrf_token %}
-        <div class="row g-2">
-            <div class="col-md-2">
-                <input type="text" name="code" class="form-control form-control-sm" placeholder="ÖÇ-1" required>
+        <div class="row g-2 align-items-end">
+            <div class="col-sm-2">
+                <label class="form-label form-label-sm mb-1">Kod</label>
+                <input type="text" name="code" class="form-control form-control-sm" placeholder="ÖÇ-1">
             </div>
-            <div class="col-md-6">
-                <input type="text" name="description" class="form-control form-control-sm" placeholder="Öğrenme çıktısı açıklaması..." required>
+            <div class="col-sm-5">
+                <label class="form-label form-label-sm mb-1">Açıklama</label>
+                <input type="text" name="description" class="form-control form-control-sm" placeholder="Öğrenme çıktısı açıklaması...">
             </div>
-            <div class="col-md-3">
+            <div class="col-sm-3">
+                <label class="form-label form-label-sm mb-1">Bloom Düzeyi</label>
                 <select name="level" class="form-select form-select-sm">
                     {% for val, label in bloom_levels %}
                     <option value="{{ val }}">{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-1">
-                <button type="submit" name="add" class="btn btn-primary btn-sm w-100">+</button>
+            <div class="col-sm-2">
+                <button type="submit" name="add" class="btn btn-primary btn-sm w-100">Ekle</button>
             </div>
         </div>
     </form>
@@ -77,11 +119,10 @@
 <form method="post">
     {% csrf_token %}
     <div class="wizard-nav">
-        <a href="{% url 'itempool:wizard_pool_step1' %}" class="btn-wizard-back btn">← Geri</a>
-        <button type="submit" name="next" class="btn-wizard-next btn">
+        <a href="{% url 'itempool:wizard_pool_step1' %}" class="btn-wiz-back">← Geri</a>
+        <button type="submit" name="next" class="btn-wiz-next">
             {% if outcomes %}Devam →{% else %}Atla →{% endif %}
         </button>
     </div>
 </form>
-
 {% endblock %}
