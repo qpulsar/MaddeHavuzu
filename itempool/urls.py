@@ -75,6 +75,7 @@ urlpatterns = [
     path('dersler/<int:course_pk>/belirtke/yeni/', views.course_spec_table_create, name='course_spec_table_create'),
     path('belirtke/<int:pk>/sil/', views.course_spec_table_delete, name='course_spec_table_delete'),
     path('dersler/<int:course_pk>/sinav/yeni/', views.course_test_form_create, name='course_test_form_create'),
+    path('dersler/<int:course_pk>/sinav/<int:tf_pk>/uygula/', views.exam_application_quick, name='exam_application_quick'),
     path('dersler/<int:course_pk>/uygulama/yeni/', views.exam_application_create, name='exam_application_create'),
     path('uygulama/yeni/', views.exam_application_create, name='exam_application_create_general'),
     path('uygulama/<int:pk>/sil/', views.exam_application_delete, name='exam_application_delete'),

@@ -174,7 +174,19 @@
                                 <form hx-post="{% url 'itempool:outcome_add' pool.id %}"
                                       hx-target="#outcomes-tbody"
                                       hx-swap="beforeend"
-                                      hx-on::after-request="if(event.detail.successful) { this.reset(); bootstrap.Collapse.getInstance(document.getElementById('addOutcomeForm')).hide(); }">
+                                      hx-include="[name='code'], [name='description'], [name='level'], [name='order']"
+                                      hx-on::after-request="
+                                          var errDiv = document.getElementById('outcome-add-error');
+                                          if(event.detail.successful) {
+                                              this.reset();
+                                              if(errDiv) errDiv.innerHTML = '';
+                                              var col = bootstrap.Collapse.getInstance(document.getElementById('addOutcomeForm'));
+                                              if(col) col.hide();
+                                              var thead = document.getElementById('outcomes-thead');
+                                              if(thead) thead.classList.remove('d-none');
+                                              var empty = document.getElementById('outcomes-empty');
+                                              if(empty) empty.remove();
+                                          }">
                                     {% csrf_token %}
                                     <div class="row g-2">
                                         <div class="col-md-2">
@@ -189,6 +201,7 @@
                                         <div class="col-md-2">
                                             {{ outcome_form.order }}
                                         </div>
+                                        <div class="col-12" id="outcome-add-error"></div>
                                         <div class="col-12 text-end mt-2">
                                             <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#addOutcomeForm">İptal</button>
                                             <button type="submit" class="btn btn-sm btn-success">Kaydet</button>
@@ -198,11 +211,10 @@
                             </div>
                         </div>
 
-                        <!-- Çıktılar Tablosu -->
-                        {% if outcomes %}
+                        <!-- Çıktılar Tablosu — tablo her zaman DOM'da olmalı (HTMX #outcomes-tbody hedefi için) -->
                         <div class="table-responsive">
                             <table class="table table-sm table-hover align-middle">
-                                <thead>
+                                <thead {% if not outcomes %}class="d-none"{% endif %} id="outcomes-thead">
                                     <tr>
                                         <th style="width: 5%">#</th>
                                         <th style="width: 10%">Kod</th>
@@ -218,8 +230,8 @@
                                 </tbody>
                             </table>
                         </div>
-                        {% else %}
-                        <div class="text-center py-4 text-muted bg-light rounded border">
+                        {% if not outcomes %}
+                        <div id="outcomes-empty" class="text-center py-4 text-muted rounded border" style="background:var(--mh-nav-hover);">
                             <i class="bi bi-bullseye fs-3 d-block mb-1"></i>
                             <p class="mb-0">Henüz öğrenme çıktısı tanımlanmamış.</p>
                         </div>

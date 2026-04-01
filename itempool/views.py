@@ -108,10 +108,16 @@ def add_learning_outcome(request, pool_id):
             messages.success(request, 'Öğrenme çıktısı eklendi.')
         else:
             if request.headers.get('HX-Request') == 'true':
-                # Hatalı formu geri dönerek kullanıcının görmesini sağlayalım.
-                # Basitlik için sadece hata mesajı da dönebiliriz ama formu dönmek daha iyidir.
                 error_msg = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
-                return HttpResponse(f'<div class="alert alert-danger py-1 small mb-0">{error_msg}</div>', status=200)
+                resp = HttpResponse(
+                    f'<div class="alert alert-danger alert-dismissible py-1 small mb-0 fade show">'
+                    f'{error_msg}'
+                    f'<button type="button" class="btn-close py-1" data-bs-dismiss="alert"></button></div>',
+                    status=200
+                )
+                resp['HX-Retarget'] = '#outcome-add-error'
+                resp['HX-Reswap'] = 'innerHTML'
+                return resp
             messages.error(request, 'Form hatalı.')
     return redirect('itempool:pool_detail', pk=pool.id)
 
@@ -814,15 +820,20 @@ def course_update(request, pk):
 
 @login_required
 def course_detail(request, pk):
+    from datetime import date
     course = get_object_or_404(Course, pk=pk, created_by=request.user)
     test_forms = course.test_forms.prefetch_related('form_items').order_by('-created_at')
     spec_tables = course.spec_tables.all().order_by('-created_at')
     applications = course.exam_applications.select_related('test_form').order_by('-applied_at')
+    applications_by_form = {app.test_form_id: app for app in applications}
+    tf_with_app = [(tf, applications_by_form.get(tf.pk)) for tf in test_forms]
     return render(request, 'itempool/course_detail.html', {
         'course': course,
         'test_forms': test_forms,
+        'tf_with_app': tf_with_app,
         'spec_tables': spec_tables,
         'applications': applications,
+        'today': date.today().isoformat(),
     })
 
 
@@ -1010,6 +1021,30 @@ def exam_application_create(request, course_pk=None):
         'course': course,
         'title': 'Sınav Uygulaması Kaydet'
     })
+
+
+@login_required
+def exam_application_quick(request, course_pk, tf_pk):
+    """Inline 'mark as applied' from the course detail page — no separate form page needed."""
+    from datetime import date as date_cls
+    course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+    tf = get_object_or_404(TestForm, pk=tf_pk)
+    if request.method == 'POST':
+        applied_at_str = request.POST.get('applied_at') or str(date_cls.today())
+        notes = request.POST.get('notes', '')
+        try:
+            applied_at = date_cls.fromisoformat(applied_at_str)
+        except (ValueError, TypeError):
+            applied_at = date_cls.today()
+        app, created = ExamApplication.objects.get_or_create(
+            test_form=tf, course=course,
+            defaults={'applied_at': applied_at, 'notes': notes, 'created_by': request.user},
+        )
+        if created:
+            messages.success(request, f'"{tf.name}" uygulandı olarak işaretlendi.')
+        else:
+            messages.info(request, 'Bu sınav formu zaten uygulandı olarak kaydedilmiş.')
+    return redirect('itempool:course_detail', pk=course_pk)
 
 
 @login_required

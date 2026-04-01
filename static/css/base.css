@@ -99,10 +99,7 @@
     /* ═══════════════════════════════════════════════════════════════════
        3. KARANLIK MOD değişkenleri
     ═══════════════════════════════════════════════════════════════════ */
-    [data-theme="dark"],
-    @media (prefers-color-scheme: dark) { [data-theme="system"] } {
-        /* Bu blok aşağıda ayrı ayrı yazılıyor */
-    }
+
 
     [data-theme="dark"],
     [data-theme="system"]:where(.os-dark) {
@@ -111,7 +108,7 @@
         --mh-card-bg:       #1c2128;
         --mh-topbar-bg:     #161b22;
         --mh-text-main:     #e6edf3;
-        --mh-text-muted:    #8b949e;
+        --mh-text-muted:    #a1abb5;
         --mh-border:        #30363d;
         --mh-nav-hover:     #21262d;
         --mh-input-bg:      #21262d;
@@ -120,6 +117,15 @@
         --mh-dropdown-bg:   #1c2128;
         --mh-code-bg:       #21262d;
         --card-shadow:      0 4px 16px rgba(0,0,0,.4);
+
+        /* Native Bootstrap 5 Dark Mode Overrides */
+        --bs-body-bg:       #0f1117;
+        --bs-body-color:    #e6edf3;
+        --bs-secondary-color: #a1abb5;
+        --bs-border-color:  #30363d;
+        --bs-card-bg:       #1c2128;
+        --bs-card-color:    #e6edf3;
+        --bs-heading-color: #e6edf3;
     }
 
     /* Sistem teması — OS karanlık moddaysa uygula */
@@ -130,7 +136,7 @@
             --mh-card-bg:       #1c2128;
             --mh-topbar-bg:     #161b22;
             --mh-text-main:     #e6edf3;
-            --mh-text-muted:    #8b949e;
+            --mh-text-muted:    #a1abb5;
             --mh-border:        #30363d;
             --mh-nav-hover:     #21262d;
             --mh-input-bg:      #21262d;
@@ -139,6 +145,15 @@
             --mh-dropdown-bg:   #1c2128;
             --mh-code-bg:       #21262d;
             --card-shadow:      0 4px 16px rgba(0,0,0,.4);
+
+            /* Native Bootstrap 5 Dark Mode Overrides */
+            --bs-body-bg:       #0f1117;
+            --bs-body-color:    #e6edf3;
+            --bs-secondary-color: #a1abb5;
+            --bs-border-color:  #30363d;
+            --bs-card-bg:       #1c2128;
+            --bs-card-color:    #e6edf3;
+            --bs-heading-color: #e6edf3;
         }
     }
 
@@ -208,7 +223,7 @@
     .nav-pills .nav-link {
         border-radius: 8px;
         padding: 0.75rem 1.1rem;
-        color: var(--mh-text-muted);
+        color: var(--mh-text-muted) !important;
         font-weight: 500;
         margin: 0 1rem 0.2rem 1rem;
         display: flex; align-items: center;
@@ -224,12 +239,12 @@
     }
     .nav-pills .nav-link:hover {
         background-color: var(--mh-nav-hover);
-        color: var(--mh-text-main);
+        color: var(--mh-text-main) !important;
     }
     .nav-pills .nav-link:hover i { color: var(--mh-text-main); }
     .nav-pills .nav-link.active {
         background-color: var(--mh-primary-light);
-        color: var(--mh-primary);
+        color: var(--mh-primary) !important;
         font-weight: 600;
     }
     .nav-pills .nav-link.active i { color: var(--mh-primary); }
