@@ -208,7 +208,7 @@ erDiagram
 | Alan | Tip | Açıklama |
 |------|-----|----------|
 | `stem` | TextField | Madde kökü |
-| `item_type` | CharField(20) | MCQ / TF / MATCHING / OPEN |
+| `item_type` | CharField(20) | MCQ / TF / SHORT_ANSWER / OPEN |
 | `difficulty_intended` | CharField(20) | Kolay/Orta/Zor (yazarın tahmini) |
 | `author` | FK(User) | |
 | `version` | IntegerField | Sürüm no |
@@ -272,7 +272,7 @@ erDiagram
 │  └──────────────────────────────────────────────────┘│
 │  ┌──────────────────────────────────────────────────┐│
 │  │ External Integrations                            ││
-│  │ • LLMClient (OpenAI / local)                     ││
+│  │ • LLMClient (GeminiClient / soyut arayüz)        ││
 │  │ • python-docx parser                             ││
 │  └──────────────────────────────────────────────────┘│
 ├─────────────────────────────────────────────────────┤
@@ -432,7 +432,7 @@ flowchart LR
 | Frontend | Bootstrap 5 | 5.3 | CSS framework |
 | JS | Vanilla JS + HTMX | — | Dinamik UI |
 | Docx | python-docx | latest | Word parse |
-| AI/LLM | OpenAI API (soyut) | — | Öğrenme çıktısı önerisi |
+| AI/LLM | Google Gemini API (GeminiClient) | — | Öğrenme çıktısı önerisi |
 | Excel | openpyxl | ≥3.1 | Excel export |
 | Env | python-dotenv | ≥1.0 | Ortam değişkenleri |
 | DB Driver | psycopg2-binary | ≥2.9 | PostgreSQL bağlantısı |

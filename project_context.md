@@ -53,65 +53,25 @@
 
 ## 3. Özellik Listesi ve Durum Takibi
 
-### Faz 0: Altyapı
-| Özellik | Durum | Not |
-|---------|-------|-----|
-| Proje iskeleti | 🔴 Başlanmadı | Fork + refactor |
-| requirements.txt | 🔴 Başlanmadı | python-docx, DRF, openai eklenmeli |
-| Yeni app: itempool | 🔴 Başlanmadı | |
-| Test altyapısı | 🔴 Başlanmadı | pytest + pytest-django |
+> **Not:** Faz 0–13 tamamlanmıştır. Ayrıntılı görev takibi için `tasklist.md` dosyasına bakın.
 
-### Faz 1: Madde Havuzu Çekirdek
-| Özellik | Durum | Not |
-|---------|-------|-----|
-| ItemPool CRUD | 🔴 Başlanmadı | |
-| LearningOutcome CRUD | 🔴 Başlanmadı | Havuz detayında inline |
-| Item + ItemChoice model | 🔴 Başlanmadı | |
-| ItemInstance (referans/fork) | 🔴 Başlanmadı | Kritik tasarım kararı |
-| Madde oluşturma formu | 🔴 Başlanmadı | ÖÇ seçimi → kök → şıklar |
-| Madde listeleme/arama | 🔴 Başlanmadı | |
-
-### Faz 2: Word Import
-| Özellik | Durum | Not |
-|---------|-------|-----|
-| Docx parser servisi | 🔴 Başlanmadı | python-docx |
-| DraftItem / ImportBatch model | 🔴 Başlanmadı | |
-| Dosya yükleme UI | 🔴 Başlanmadı | |
-| Önizleme & düzenleme UI | 🔴 Başlanmadı | |
-| Commit (taslak → gerçek) | 🔴 Başlanmadı | |
-
-### Faz 3: AI Eşleme
-| Özellik | Durum | Not |
-|---------|-------|-----|
-| LLMClient arayüzü | 🔴 Başlanmadı | Soyut base class |
-| OutcomeSuggestion model | 🔴 Başlanmadı | |
-| Öneri servisi | 🔴 Başlanmadı | |
-| AI paneli UI | 🔴 Başlanmadı | |
-
-### Faz 4: Madde Analizi
-| Özellik | Durum | Not |
-|---------|-------|-----|
-| ItemAnalysisResult model | 🔴 Başlanmadı | |
-| risk_score() fonksiyonu | 🔴 Başlanmadı | 0-30🔴 31-60🟡 61-100🟢 |
-| Renk skalası CSS | 🔴 Başlanmadı | |
-| Analiz dashboard | 🔴 Başlanmadı | |
-
-### Faz 5: Test Formu
-| Özellik | Durum | Not |
-|---------|-------|-----|
-| TestForm/FormItem model | 🔴 Başlanmadı | |
-| Blueprint model | 🔴 Başlanmadı | |
-| SpecificationTable model | 🔴 Başlanmadı | |
-| Form wizard UI | 🔴 Başlanmadı | 4 adımlı sihirbaz |
-| "Dışarıda bırak" filtresi | 🔴 Başlanmadı | Geliştirilmiş form maddeleri |
-
-### Faz 6: Analiz Entegrasyonu
-| Özellik | Durum | Not |
-|---------|-------|-----|
-| Havuz→Form ilişkilendirme | 🔴 Başlanmadı | |
-| Yanıt anahtarı eşleme | 🔴 Başlanmadı | |
-| Analizi DB'ye aktarma | 🔴 Başlanmadı | |
-| Madde yanında analiz göst. | 🔴 Başlanmadı | |
+### Tamamlanan Fazlar (Özet)
+| Faz | Özellik | Durum |
+|-----|---------|-------|
+| Faz 0 | Proje iskeleti, altyapı, CI/CD | ✅ Tamamlandı |
+| Faz 1 | ItemPool, LearningOutcome, Item, ItemChoice, ItemInstance CRUD | ✅ Tamamlandı |
+| Faz 2 | Word (.docx) import, DraftItem, ImportBatch | ✅ Tamamlandı |
+| Faz 3 | AI öğrenme çıktısı eşleme (GeminiClient), OutcomeSuggestion | ✅ Tamamlandı |
+| Faz 4 | ItemAnalysisResult, risk_score(), renk skalası, analiz dashboard | ✅ Tamamlandı |
+| Faz 5 | TestForm, FormItem, Blueprint, SpecificationTable, form wizard | ✅ Tamamlandı |
+| Faz 6 | Optik veri entegrasyonu, yanıt anahtarı, analiz DB aktarımı | ✅ Tamamlandı |
+| Faz 7 | Yetkilendirme, PoolPermission, rol bazlı erişim | ✅ Tamamlandı |
+| Faz 8 | Audit trail, performans, güvenlik | ✅ Tamamlandı |
+| Faz 9 | Deployment konfigürasyonu | ✅ Tamamlandı |
+| Faz 10 | SHORT_ANSWER tipi, max_choices, dinamik şık UI | ✅ Tamamlandı |
+| Faz 11 | StudentGroup, ExamApplication, soru tekrar önleme | ✅ Tamamlandı |
+| Faz 12 | ExamTemplate, WeasyPrint PDF üretimi, sınav kağıdı | ✅ Tamamlandı |
+| Faz 13 | TestForm↔UploadSession bağlantısı, öğrenme çıktısı başarı raporu | ✅ Tamamlandı |
 
 ---
 
@@ -175,7 +135,7 @@ python-dotenv>=1.0
 djangorestframework>=3.14
 django-filter>=23.0
 python-docx>=1.0
-openai>=1.0          # AI öğrenme çıktısı eşleme (opsiyonel)
+google-generativeai  # AI öğrenme çıktısı eşleme — GeminiClient (GEMINI_API_KEY env)
 pytest>=7.0
 pytest-django>=4.5
 ```
