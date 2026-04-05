@@ -67,10 +67,14 @@ def generate_exam_pdf(test_form, template: "ExamTemplate", with_answer_key: bool
         'total_pages': '<span class="total-pages"></span>',
     }
 
-    # Özel HTML başlık varsa çöz (resolve)
+    # Özel HTML başlık/altbilgi varsa çöz (resolve)
     header_html_resolved = None
     if tpl.header_html:
         header_html_resolved = _resolve_variable(tpl.header_html, var_context)
+
+    footer_html_resolved = None
+    if tpl.footer_html:
+        footer_html_resolved = _resolve_variable(tpl.footer_html, var_context)
 
     header_ctx = {
         'left': _resolve_variable(tpl.header_left, var_context),
@@ -84,6 +88,7 @@ def generate_exam_pdf(test_form, template: "ExamTemplate", with_answer_key: bool
         'center': _resolve_variable(tpl.footer_center, var_context),
         'right': _resolve_variable(tpl.footer_right, var_context),
         'show_line': tpl.show_footer_line,
+        'html': footer_html_resolved,
     }
 
     form_items = test_form.form_items.select_related(

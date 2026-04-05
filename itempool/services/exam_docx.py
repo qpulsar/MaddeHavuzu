@@ -65,22 +65,42 @@ def generate_exam_docx(test_form, template: "ExamTemplate", with_answer_key: boo
     font.name = 'Times New Roman'
     font.size = Pt(template.font_size)
 
-    # Başlık Tablosu
-    header_table = doc.add_table(rows=1, cols=3)
-    header_table.width = section.page_width - section.left_margin - section.right_margin
-    
-    cells = header_table.rows[0].cells
-    p_left = cells[0].paragraphs[0]
-    p_left.text = _resolve_variable(template.header_left, var_context)
-    p_left.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    
-    p_center = cells[1].paragraphs[0]
-    p_center.text = _resolve_variable(template.header_center, var_context)
-    p_center.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
-    p_right = cells[2].paragraphs[0]
-    p_right.text = _resolve_variable(template.header_right, var_context)
-    p_right.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    # Başlık Tablosu veya Özel HTML
+    import re
+    def clean_html(html):
+        if not html: return ""
+        # Remove <style> and <script> content
+        html = re.sub(r'<(style|script)[^>]*>.*?</\1>', '', html, flags=re.DOTALL)
+        # Replace common tags with newlines
+        html = re.sub(r'<(p|br|div|tr|h[1-6])[^>]*>', '\n', html)
+        # Strip remaining tags
+        text = re.sub(r'<[^>]+>', '', html)
+        # Decode common entities
+        text = text.replace('&nbsp;', ' ').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+        return "\n".join([line.strip() for line in text.split('\n') if line.strip()])
+
+    if template.header_html:
+        # Resolve variables in HTML
+        resolved_html = _resolve_variable(template.header_html, var_context)
+        header_text = clean_html(resolved_html)
+        p_header = doc.add_paragraph(header_text)
+        p_header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    else:
+        header_table = doc.add_table(rows=1, cols=3)
+        header_table.width = section.page_width - section.left_margin - section.right_margin
+        
+        cells = header_table.rows[0].cells
+        p_left = cells[0].paragraphs[0]
+        p_left.text = _resolve_variable(template.header_left, var_context)
+        p_left.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        
+        p_center = cells[1].paragraphs[0]
+        p_center.text = _resolve_variable(template.header_center, var_context)
+        p_center.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        p_right = cells[2].paragraphs[0]
+        p_right.text = _resolve_variable(template.header_right, var_context)
+        p_right.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
     if template.show_header_line:
         doc.add_paragraph().add_run("_" * 80).bold = True # Simple separator

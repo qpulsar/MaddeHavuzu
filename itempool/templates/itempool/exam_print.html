@@ -17,9 +17,13 @@
     @top-right  { content: "{{ header.right }}"; font-family: {{ template.font_family }}; font-size: 9pt; }
     {% endif %}
 
+    {% if not footer.html %}
     @bottom-left   { content: "{{ footer.left }}"; font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
     @bottom-center { content: counter(page) " / " counter(pages); font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
     @bottom-right  { content: "{{ footer.right }}"; font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
+    {% else %}
+    @bottom-center { content: element(footer); }
+    {% endif %}
 }
 
 * { box-sizing: border-box; }
@@ -169,6 +173,27 @@ body {
 
 .answer-key-item .ak-no { font-weight: bold; }
 .answer-key-item .ak-ans { color: #c00; font-weight: bold; }
+
+.footer {
+    position: running(footer);
+    width: 100%;
+    font-size: 9pt;
+    color: #666;
+    {% if template.show_footer_line %}
+    border-top: 0.5pt solid #ccc;
+    padding-top: 5pt;
+    {% endif %}
+}
+.footer-table {
+    display: table;
+    width: 100%;
+}
+.footer-col {
+    display: table-cell;
+    width: 33.3%;
+}
+.footer-col.center { text-align: center; }
+.footer-col.right { text-align: right; }
 </style>
 </head>
 <body>
@@ -268,5 +293,18 @@ body {
 </div>
 {% endif %}
 
+    <div class="footer">
+        {% if footer.html %}
+            <div class="footer-content-html">
+                {{ footer.html|safe }}
+            </div>
+        {% else %}
+            <div class="footer-table">
+                <div class="footer-col">{{ footer.left|default:"" }}</div>
+                <div class="footer-col center">{{ footer.center|default:"" }}</div>
+                <div class="footer-col right">{{ footer.right|default:"" }}</div>
+            </div>
+        {% endif %}
+    </div>
 </body>
 </html>

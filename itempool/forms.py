@@ -220,6 +220,7 @@ class ExamTemplateForm(forms.ModelForm):
             'header_left', 'header_center', 'header_right', 'show_header_line',
             'footer_left', 'footer_center', 'footer_right', 'show_footer_line',
             'show_student_info_box', 'show_question_points',
+            'header_html', 'footer_html',
         ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -246,4 +247,6 @@ class ExamTemplateForm(forms.ModelForm):
             'show_footer_line': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'show_student_info_box': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'show_question_points': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'header_html': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'footer_html': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
         }
