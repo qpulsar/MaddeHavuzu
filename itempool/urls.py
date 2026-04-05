@@ -48,9 +48,17 @@ urlpatterns = [
     path('import/<int:batch_id>/preview/', views.import_preview, name='import_preview'),
     path('import/<int:batch_id>/commit/', views.import_commit, name='import_commit'),
 
-    # AI Öneri Rotaları
+    # AI Öneri ve Üretim Rotaları
     path('items/<int:pk>/AI/suggest-outcomes/', views.item_suggest_outcomes, name='item_suggest_outcomes'),
     path('items/<int:pk>/AI/assign-outcome/<int:outcome_id>/', views.item_assign_outcome, name='item_assign_outcome'),
+    path('outcomes/<int:pk>/AI/generate/', views.item_generate_ai, name='item_generate_ai'),
+    path('AI/suggest-distractors/', views.item_suggest_distractors, name='item_suggest_distractors'),
+    path('AI/check-duplicate/', views.item_check_duplicate, name='item_check_duplicate'),
+    path('pools/<int:pool_id>/AI/semantic-search/', views.pool_semantic_search, name='pool_semantic_search'),
+    path('pools/<int:pool_id>/AI/vectorize-confirm/', views.pool_vectorize_confirm, name='pool_vectorize_confirm'),
+    path('pools/<int:pool_id>/AI/vectorize-start/', views.pool_vectorize_start, name='pool_vectorize_start'),
+    path('items/<int:pk>/AI/clone-variation/', views.item_clone_variation, name='item_clone_variation'),
+    path('items/<int:pk>/AI/suggest-improvements/', views.item_suggest_improvements, name='item_suggest_improvements'),
 
     # Madde Detay Düzenleme (HTMX)
     path('items/instance/<int:pk>/edit/<str:section>/', views.item_detail_edit, name='item_detail_edit'),
@@ -87,6 +95,7 @@ urlpatterns = [
     path('sablonlar/<int:pk>/duzenle/', views.exam_template_update, name='exam_template_update'),
     path('sablonlar/<int:pk>/onizleme/', views.exam_template_preview, name='exam_template_preview'),
     path('formlar/<int:pk>/pdf/', views.test_form_pdf, name='test_form_pdf'),
+    path('formlar/<int:pk>/AI/auto-balance/', views.test_form_auto_balance, name='test_form_auto_balance'),
 
     # Faz 13 — Değerlendirme Entegrasyonu
     path('formlar/<int:pk>/cevap-anahtari/', views.test_form_answer_key, name='test_form_answer_key'),

@@ -4,6 +4,12 @@
         <span><i class="bi bi-question-circle text-primary"></i> Madde Kökü</span>
         <div>
             <span class="badge bg-light text-dark me-2">Sürüm {{ instance.item.version }}</span>
+            <button class="btn btn-sm btn-outline-info py-0 me-2"
+                    hx-get="{% url 'itempool:item_suggest_improvements' instance.id %}"
+                    hx-target="#stem-card .card-body"
+                    hx-swap="beforeend">
+                <i class="bi bi-robot"></i> AI İyileştirme
+            </button>
             <button class="btn btn-sm btn-outline-primary py-0" 
                     hx-get="{% url 'itempool:item_detail_edit' instance.id 'stem' %}" 
                     hx-target="#stem-card" hx-swap="outerHTML">

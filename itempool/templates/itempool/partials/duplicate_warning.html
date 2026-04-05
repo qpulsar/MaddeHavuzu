@@ -1,0 +1,61 @@
+<div class="alert alert-warning border-warning shadow-sm mb-3" id="duplicate-warning">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Benzer Sorular Tespit Edildi!</h6>
+        <button type="button" class="btn-close btn-sm" onclick="document.getElementById('duplicate-warning').remove()"></button>
+    </div>
+    <div class="small mb-3 text-dark">
+        Mevcut eşik değeri (<strong>%{{ threshold_percent }}</strong>) üzerinde <strong>{{ similar_items|length }}</strong> adet benzer soru bulundu.
+    </div>
+
+    <div class="list-group list-group-flush border rounded bg-white mb-3" style="max-height: 200px; overflow-y: auto;">
+        {% for res in similar_items %}
+        {# ItemInstance ID'si gerekiyor, Item'dan ItemInstance'a ulaşıyoruz #}
+        <a href="{% url 'itempool:item_detail' res.item.instances.first.id %}" target="_blank" class="list-group-item list-group-item-action py-2">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-primary small">Madde #{{ res.item.id }}</span>
+                <span class="badge bg-{% if res.score >= 90 %}danger{% elif res.score >= 80 %}warning{% else %}primary{% endif %}">
+                    %{{ res.score }} {{ res.label }}
+                </span>
+            </div>
+            <div class="text-truncate small text-muted">{{ res.item.stem }}</div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="border-top border-warning-subtle pt-2">
+        <label class="form-label small fw-bold mb-1 text-dark">Benzerlik Hassasiyeti (Threshold)</label>
+        <div class="row align-items-center g-2">
+            <div class="col">
+                <input type="range" class="form-range" min="50" max="95" step="5" 
+                       id="threshold-slider" value="{{ threshold_percent }}"
+                       oninput="updateThresholdLabel(this.value)"
+                       hx-get="{% url 'itempool:item_check_duplicate' %}"
+                       hx-vals='js:{stem: document.getElementById("id_stem").value, threshold: document.getElementById("threshold-slider").value}'
+                       hx-target="#duplicate-check-container"
+                       hx-trigger="change delay:500ms">
+            </div>
+            <div class="col-auto">
+                <span class="badge bg-dark py-2 px-2" id="threshold-label" style="min-width: 180px;">
+                    %{{ threshold_percent }}: {% if threshold_percent >= 90 %}Mükerrer veya çok yakın{% elif threshold_percent >= 80 %}Yüksek benzerlik{% elif threshold_percent >= 70 %}Orta benzerlik{% else %}Düşük benzerlik{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateThresholdLabel(val) {
+    let label = "";
+    val = parseInt(val);
+    if (val >= 90) label = "Mükerrer veya çok yakın";
+    else if (val >= 80) label = "Yüksek benzerlik";
+    else if (val >= 70) label = "Orta benzerlik";
+    else if (val >= 60) label = "Düşük benzerlik";
+    else label = "Anlamsal fark";
+    
+    const labelEl = document.getElementById('threshold-label');
+    if (labelEl) {
+        labelEl.innerHTML = `%${val}: ${label}`;
+    }
+}
+</script>

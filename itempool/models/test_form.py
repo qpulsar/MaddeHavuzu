@@ -72,6 +72,10 @@ class FormItem(models.Model):
     )
     order = models.PositiveIntegerField(verbose_name='Soru Sırası')
     points = models.DecimalField(max_digits=5, decimal_places=2, default=1.0, verbose_name='Puan')
+    
+    # Sınav formundaki şık düzenlemeleri (shuffling/balancıng sonucu)
+    # Format: [{"label": "A", "text": "...", "is_correct": bool}, ...]
+    choice_overrides = models.JSONField(null=True, blank=True, verbose_name='Şık Düzenlemeleri')
 
     class Meta:
         verbose_name = 'Form Maddesi'

@@ -24,6 +24,7 @@ class ExamTemplate(models.Model):
     class ChoiceLayout(models.TextChoices):
         VERTICAL = 'vertical', 'Dikey (alt alta)'
         HORIZONTAL = 'horizontal', 'Yatay (yan yana)'
+        AUTO = 'auto', 'Otomatik (Uzunluğa göre)'
 
     name = models.CharField(
         max_length=200,
@@ -154,6 +155,14 @@ class ExamTemplate(models.Model):
         default=True,
         verbose_name='Öğrenci Bilgi Kutusu',
         help_text='Ad Soyad, No, Tarih için boş alan'
+    )
+
+    # Word'den aktarılan karmaşık başlık HTML içeriği
+    header_html = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Özel Başlık (HTML)',
+        help_text='Word dosyasından dönüştürülen karmaşık başlık içeriği'
     )
 
     class Meta:

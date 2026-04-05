@@ -11,9 +11,11 @@
     margin-left: {{ template.margin_left }}mm;
     margin-right: {{ template.margin_right }}mm;
 
+    {% if not header.html %}
     @top-left   { content: "{{ header.left }}"; font-family: {{ template.font_family }}; font-size: 9pt; }
     @top-center { content: "{{ header.center }}"; font-family: {{ template.font_family }}; font-size: 10pt; font-weight: bold; }
     @top-right  { content: "{{ header.right }}"; font-family: {{ template.font_family }}; font-size: 9pt; }
+    {% endif %}
 
     @bottom-left   { content: "{{ footer.left }}"; font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
     @bottom-center { content: counter(page) " / " counter(pages); font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
@@ -95,10 +97,10 @@ body {
 }
 
 .choices-list {
-    {% if template.choice_layout == 'horizontal' %}
+    {% if template.choice_layout == 'horizontal' or template.choice_layout == 'auto' %}
     display: flex;
     flex-wrap: wrap;
-    gap: 6pt 16pt;
+    gap: 4pt 10pt;
     margin-top: 4pt;
     {% else %}
     list-style: none;
@@ -107,8 +109,12 @@ body {
     {% endif %}
 }
 
+.choices-list.grid-2 .choice-item { width: 48%; }
+.choices-list.grid-3 .choice-item { width: 31%; }
+.choices-list.vertical .choice-item { width: 100%; margin-bottom: 2pt; }
+
 .choice-item {
-    {% if template.choice_layout == 'horizontal' %}
+    {% if template.choice_layout == 'horizontal' or template.choice_layout == 'auto' %}
     min-width: 80pt;
     {% else %}
     margin-bottom: 2pt;
@@ -167,6 +173,15 @@ body {
 </head>
 <body>
 
+{% if header.html %}
+    <div class="custom-header">
+        {{ header.html|safe }}
+    </div>
+    {% if header.show_line %}
+    <div class="header-line"></div>
+    {% endif %}
+{% endif %}
+
 {% if template.show_student_info_box %}
 <div class="student-info-box">
     <div class="info-field">
@@ -195,13 +210,21 @@ body {
         </div>
 
         {% if item.item_type == 'MCQ' or item.item_type == 'TF' %}
-        <{% if template.choice_layout == 'horizontal' %}div{% else %}ul{% endif %} class="choices-list">
-            {% for choice in item.choices.all %}
-            <{% if template.choice_layout == 'horizontal' %}div{% else %}li{% endif %} class="choice-item">
-                <span class="choice-label">{{ choice.label }})</span> {{ choice.text }}
-            </{% if template.choice_layout == 'horizontal' %}div{% else %}li{% endif %}>
-            {% endfor %}
-        </{% if template.choice_layout == 'horizontal' %}div{% else %}ul{% endif %}>
+        <div class="choices-list {{ fi.layout_class }}">
+            {% if fi.choice_overrides %}
+                {% for choice in fi.choice_overrides %}
+                <div class="choice-item">
+                    <span class="choice-label">{{ choice.label }})</span> {{ choice.text }}
+                </div>
+                {% endfor %}
+            {% else %}
+                {% for choice in item.choices.all %}
+                <div class="choice-item">
+                    <span class="choice-label">{{ choice.label }})</span> {{ choice.text }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
 
         {% elif item.item_type == 'SHORT_ANSWER' %}
         <div class="short-answer-line"></div>
@@ -225,8 +248,11 @@ body {
             <span class="ak-no">{{ fi.order }}.</span>
             <span class="ak-ans">
                 {% if item.item_type == 'MCQ' or item.item_type == 'TF' %}
-                    {{ item.choices.filter.is_correct|first }}
-                    {% for c in item.choices.all %}{% if c.is_correct %}{{ c.label }}{% endif %}{% endfor %}
+                    {% if fi.choice_overrides %}
+                        {% for c in fi.choice_overrides %}{% if c.is_correct %}{{ c.label }}{% endif %}{% endfor %}
+                    {% else %}
+                        {% for c in item.choices.all %}{% if c.is_correct %}{{ c.label }}{% endif %}{% endfor %}
+                    {% endif %}
                 {% elif item.item_type == 'SHORT_ANSWER' %}
                     {{ item.expected_answer|truncatechars:15|default:"—" }}
                 {% else %}

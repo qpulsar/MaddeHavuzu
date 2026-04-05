@@ -183,3 +183,28 @@ class ItemInstance(models.Model):
 
     def __str__(self):
         return f"Havuz: {self.pool.name} - Madde: {self.item.id}"
+
+
+class ItemEmbedding(models.Model):
+    """
+    Madde metninin vektör karşılığı (Embedding). 
+    Anlamsal arama ve benzerlik analizi için kullanılır.
+    """
+    item = models.OneToOneField(
+        Item,
+        on_delete=models.CASCADE,
+        related_name='embedding',
+        verbose_name='Madde'
+    )
+    vector = models.JSONField(
+        verbose_name='Vektör Verisi',
+        help_text='Gemini embedding modelinden gelen sayısal dizi'
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Madde Vektörü'
+        verbose_name_plural = 'Madde Vektörleri'
+
+    def __str__(self):
+        return f"Embedding - Item #{self.item.id}"

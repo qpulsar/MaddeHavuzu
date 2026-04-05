@@ -5,6 +5,14 @@
     <td><span class="badge bg-info text-dark">{{ oc.get_level_display }}</span></td>
     <td>
         <div class="btn-group">
+            <button class="btn btn-sm btn-light border py-0 px-1 text-info"
+                    title="AI ile Soru Üret"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#aiGenerateModal"
+                    data-outcome-id="{{ oc.id }}"
+                    data-outcome-code="{{ oc.code }}">
+                <i class="bi bi-robot small"></i>
+            </button>
             <button class="btn btn-sm btn-light border py-0 px-1"
                     hx-get="{% url 'itempool:outcome_edit' oc.id %}"
                     hx-target="#outcome-{{ oc.id }}"

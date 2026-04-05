@@ -79,19 +79,56 @@
 
                     <!-- Maddeler Sekmesi -->
                     <div class="tab-pane fade show active" id="items-pane" role="tabpanel" aria-labelledby="items-tab">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="card-title mb-0">Havuzdaki Maddeler</h5>
-                            <div>
-                                <a href="{% url 'itempool:pool_bulk_suggest_outcomes' pool.id %}" class="btn btn-sm btn-outline-info me-2" onclick="return confirm('Öğrenme çıktısı atanmamış tüm maddeler için AI önerisi toplanacak. Emin misiniz?')">
-                                    <i class="bi bi-robot"></i> Toplu AI Önerisi Al
-                                </a>
-                                <a href="{% url 'itempool:import_upload' pool.id %}" class="btn btn-sm btn-outline-primary me-2">
+                        
+                        <!-- AI & Search Tools -->
+                        <div class="row align-items-center mb-3 g-2">
+                            <div class="col-md-5">
+                                <div class="input-group border rounded shadow-sm overflow-hidden border-info border-2">
+                                    <span class="input-group-text bg-info-subtle border-0 pe-2">
+                                        <i class="bi bi-robot text-info"></i>
+                                    </span>
+                                    <input type="text" class="form-control form-control-sm border-0 py-2" 
+                                           placeholder="Anlamsal olarak soru ara..." 
+                                           hx-get="{% url 'itempool:pool_semantic_search' pool.id %}"
+                                           hx-trigger="keyup changed delay:800ms"
+                                           hx-target="#semantic-search-results-container"
+                                           hx-indicator="#search-spinner"
+                                           name="q"
+                                           aria-label="Smart Search">
+                                    <span id="search-spinner" class="htmx-indicator spinner-border spinner-border-sm text-info my-auto me-2"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-7 text-end">
+                                <button class="btn btn-sm btn-outline-info me-2 shadow-sm"
+                                        hx-get="{% url 'itempool:pool_vectorize_confirm' pool.id %}"
+                                        hx-target="#vectorize-confirm-container"
+                                        data-bs-toggle="modal" data-bs-target="#vectorizeModal">
+                                    <i class="bi bi-cpu"></i> Pool Analizini Güncelle
+                                </button>
+                                <a href="{% url 'itempool:import_upload' pool.id %}" class="btn btn-sm btn-outline-primary me-1 shadow-sm">
                                     <i class="bi bi-file-earmark-word"></i> Toplu Yükle (Word)
                                 </a>
-                                <a href="{% url 'itempool:item_create' pool.id %}" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-plus"></i> Madde Ekle
+                                <a href="{% url 'itempool:item_create' pool.id %}" class="btn btn-sm btn-primary shadow-sm">
+                                    <i class="bi bi-plus-lg"></i> Madde Ekle
                                 </a>
                             </div>
+                        </div>
+
+                        <!-- AI Araç Çıktıları -->
+                        <div id="semantic-search-results-container" class="mb-3"></div>
+                        
+                        <!-- Vectorize Modal Structure -->
+                        <div class="modal fade" id="vectorizeModal" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered" id="vectorize-confirm-container">
+                                <!-- HTMX will load vectorize_confirm.html here -->
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3 pt-2 border-top">
+                            <h5 class="card-title mb-0 small text-muted uppercase letter-spacing-1">Havuzdaki Maddeler</h5>
+                            <a href="{% url 'itempool:pool_bulk_suggest_outcomes' pool.id %}" class="btn btn-xs btn-link text-decoration-none text-info small" onclick="return confirm('Öğrenme çıktısı atanmamış tüm maddeler için AI önerisi toplanacak. Emin misiniz?')">
+                                <i class="bi bi-robot"></i> Eksik Kazanım Önerisi Al
+                            </a>
                         </div>
 
                         {% if items %}
@@ -243,4 +280,79 @@
         </div>
     </div>
 </div>
+
+<!-- AI Soru Üretim Modalı -->
+<div class="modal fade" id="aiGenerateModal" tabindex="-1" aria-labelledby="aiGenerateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="aiGenerateForm" method="POST">
+            {% csrf_token %}
+            <div class="modal-content border-info shadow">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="aiGenerateModalLabel">
+                        <i class="bi bi-robot"></i> AI ile Soru Üret: <span id="modalOutcomeCode" class="badge bg-white text-info ms-2"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Zorluk Seviyesi</label>
+                        <select name="difficulty" class="form-select border-info-subtle text-info">
+                            <option value="Kolay">Kolay</option>
+                            <option value="Orta" selected>Orta</option>
+                            <option value="Zor">Zor</option>
+                        </select>
+                        <div class="form-text mt-2 text-muted small">AI, bu kazanım için seçilen zorlukta bir soru kurgulayacaktır.</div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Soru Sayısı</label>
+                            <select name="count" class="form-select border-info-subtle">
+                                <option value="1" selected>1 Adet</option>
+                                <option value="2">2 Adet</option>
+                                <option value="3">3 Adet</option>
+                                <option value="5">5 Adet</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Soru Tipi</label>
+                            <select name="item_type" class="form-select border-info-subtle">
+                                <option value="MCQ" selected>Çoktan Seçmeli</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <div class="form-text text-muted fst-italic small">
+                            <i class="bi bi-info-circle"></i> Çoklu üretim seçildiğinde işlem daha uzun sürebilir.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-info text-white px-4">
+                        <i class="bi bi-magic me-1"></i> Soruyu Üret
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var aiGenerateModal = document.getElementById('aiGenerateModal');
+    if (aiGenerateModal) {
+        aiGenerateModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var outcomeId = button.getAttribute('data-outcome-id');
+            var outcomeCode = button.getAttribute('data-outcome-code');
+            
+            var modalOutcomeCode = document.getElementById('modalOutcomeCode');
+            var aiGenerateForm = document.getElementById('aiGenerateForm');
+            
+            modalOutcomeCode.textContent = outcomeCode;
+            aiGenerateForm.action = "/havuz/outcomes/" + outcomeId + "/AI/generate/";
+        });
+    }
+});
+</script>
 {% endblock %}

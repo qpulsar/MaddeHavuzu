@@ -37,12 +37,21 @@
                                 <div class="mb-3 ps-3 border-start border-3 border-light py-1">{{ item.item_instance.item.stem|linebreaksbr }}</div>
                                 
                                 <div class="row row-cols-md-2 g-2 ps-3">
-                                    {% for choice in item.item_instance.item.choices.all %}
-                                    <div class="col small">
-                                        <span class="fw-bold {% if choice.is_correct %}text-success{% endif %}">{{ choice.label }})</span> 
-                                        {{ choice.text }}
-                                    </div>
-                                    {% endfor %}
+                                    {% if item.choice_overrides %}
+                                        {% for choice in item.choice_overrides %}
+                                        <div class="col small">
+                                            <span class="fw-bold {% if choice.is_correct %}text-success{% endif %}">{{ choice.label }})</span> 
+                                            {{ choice.text }}
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        {% for choice in item.item_instance.item.choices.all %}
+                                        <div class="col small">
+                                            <span class="fw-bold {% if choice.is_correct %}text-success{% endif %}">{{ choice.label }})</span> 
+                                            {{ choice.text }}
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -82,6 +91,38 @@
                     <span class="small text-muted">Tarih:</span>
                     <span class="small">{{ form.created_at|date:"d.m.Y" }}</span>
                 </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+                <span>Cevap Dağılımı</span>
+                <span class="badge bg-light text-dark border fw-normal">{{ items.count }} Soru</span>
+            </div>
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
+                    {% for label, count in distribution.items %}
+                    <div class="text-center p-2 border rounded bg-light" style="min-width: 42px; flex: 1;">
+                        <div class="fw-bold text-primary small">{{ label }}</div>
+                        <div class="fw-bold">{{ count }}</div>
+                    </div>
+                    {% empty %}
+                    <div class="small text-muted py-2 text-center w-100">Henüz çoktan seçmeli soru yok.</div>
+                    {% endfor %}
+                </div>
+                
+                {% if distribution %}
+                <button class="btn btn-sm btn-primary w-100 py-2" 
+                        hx-post="{% url 'itempool:test_form_auto_balance' form.id %}"
+                        hx-confirm="Tüm seçenekler karıştırılacak ve doğru cevaplar eşit (%20-%25) dağıtılacak. Mevcut düzenlemeleriniz varsa kaybolacaktır. Devam edilsin mi?">
+                    <i class="bi bi-magic"></i> AI Seçenekleri Dengele
+                </button>
+                <div class="mt-2 text-center">
+                    <small class="text-muted" style="font-size: 0.7rem;">
+                        <i class="bi bi-info-circle"></i> Şık metinleri karıştırılarak harf dağılımı eşitlenir.
+                    </small>
+                </div>
+                {% endif %}
             </div>
         </div>
 

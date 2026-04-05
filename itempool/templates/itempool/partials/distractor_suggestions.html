@@ -1,0 +1,17 @@
+<div class="card mt-2 shadow-sm border-info">
+    <div class="card-header bg-info-subtle py-1 px-2 d-flex justify-content-between align-items-center">
+        <span class="small fw-bold"><i class="bi bi-robot"></i> AI Çeldirici Önerileri</span>
+        <button type="button" class="btn-close small" onclick="this.closest('.card').remove()"></button>
+    </div>
+    <div class="card-body p-2">
+        <div class="d-flex flex-wrap gap-1">
+            {% for d in distractors %}
+            <button type="button" class="btn btn-sm btn-outline-secondary p-1 text-start d-block w-100" 
+                    onclick="addDistractorToForm('{{ d|escapejs }}')">
+                <i class="bi bi-plus-circle me-1"></i> {{ d }}
+            </button>
+            {% endfor %}
+        </div>
+        <div class="form-text x-small mt-1 text-muted">Tıklayarak boş seçeneklere aktarabilirsiniz.</div>
+    </div>
+</div>

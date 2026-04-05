@@ -1,5 +1,5 @@
 from .pool import ItemPool, LearningOutcome, PoolPermission
-from .item import Item, ItemChoice, ItemInstance
+from .item import Item, ItemChoice, ItemInstance, ItemEmbedding
 from .imports import ImportBatch, DraftItem
 from .suggestions import OutcomeSuggestion
 from .analysis import ItemAnalysisResult
@@ -28,4 +28,5 @@ __all__ = [
     'CourseSpecTable',
     'ExamApplication',
     'ExamTemplate',
+    'ItemEmbedding',
 ]

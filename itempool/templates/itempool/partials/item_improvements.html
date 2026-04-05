@@ -1,0 +1,33 @@
+<div class="card mt-3 border-warning shadow-sm">
+    <div class="card-header bg-warning-subtle fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-magic"></i> AI İyileştirme Önerisi</span>
+        <button type="button" class="btn-close small" onclick="this.closest('.card').remove()"></button>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <h6 class="fw-bold text-muted small uppercase">Önerilen Madde Kökü</h6>
+            <div class="p-2 bg-light border rounded">
+                {{ improved.improved_stem|linebreaks }}
+            </div>
+        </div>
+        
+        {% if improved.improved_choices %}
+        <div class="mb-3">
+            <h6 class="fw-bold text-muted small uppercase">Önerilen Seçenekler</h6>
+            <ul class="list-group list-group-flush border rounded">
+                {% for choice in improved.improved_choices %}
+                <li class="list-group-item py-1">
+                    <span class="badge bg-secondary me-2">{{ choice.label }}</span>
+                    {{ choice.text }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <div class="alert alert-info py-2 small mb-0">
+            <i class="bi bi-info-circle"></i> Bu önerileri uygulamak için "Düzenle" butonunu kullanarak kopyalayıp yapıştırabilirsiniz. 
+            Gelecek fazlarda "Otomatik Uygula" özelliği eklenecektir.
+        </div>
+    </div>
+</div>

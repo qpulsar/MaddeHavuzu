@@ -22,7 +22,7 @@
                 <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> {{ title }}</h5>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <div class="row mb-3">
@@ -111,9 +111,23 @@
                             <label class="form-label">Sağ</label>{{ form.header_right }}
                         </div>
                     </div>
-                    <div class="form-check mb-3">
-                        {{ form.show_header_line }}
-                        <label class="form-check-label">{{ form.show_header_line.label }}</label>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                {{ form.show_header_line }}
+                                <label class="form-check-label fw-bold">{{ form.show_header_line.label }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 border-start">
+                            <label class="form-label fw-bold text-primary"><i class="bi bi-file-earmark-word"></i> Word Başlık Şablonu</label>
+                            {{ form.docx_header_file }}
+                            <div class="form-text small">
+                                Yeni bir Word dosyası (.docx) yükleyerek yukarıdaki 3 sütunlu yapıyı geçersiz kılabilirsiniz.
+                                {% if form.instance.header_html %}
+                                <div class="badge bg-success mt-1"><i class="bi bi-check-all"></i> Özel başlık yüklü</div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
 
                     <hr>

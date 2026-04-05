@@ -1,0 +1,51 @@
+<div class="modal-content border-info border-3 shadow-lg">
+    <div class="modal-header bg-info text-white">
+        <h5 class="modal-title font-monospace"><i class="bi bi-cpu-fill"></i> TOPLU VEKTÖR ANALİZİ</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body py-4">
+        <p class="mb-4">Seçilen havuzda işlenmemiş <strong>{{ count }}</strong> adet madde tespit edildi.</p>
+        
+        <div class="card bg-light border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h6 class="card-title fw-bold text-muted small uppercase mb-3 letter-spacing-1">Maliyet Analizi (Tahmini)</h6>
+                <div class="row text-center mb-0">
+                    <div class="col-4 border-end">
+                        <div class="h5 mb-0 fw-bold">{{ count }}</div>
+                        <div class="small text-muted">Soru</div>
+                    </div>
+                    <div class="col-4 border-end">
+                        <div class="h5 mb-0 fw-bold">{{ cost_info.tokens|stringformat:"d" }}</div>
+                        <div class="small text-muted">Token</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h5 mb-0 fw-bold text-primary">{{ cost_info.cost_str }}</div>
+                        <div class="small text-muted">Maliyet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-warning border-warning-subtle small py-3 mb-0">
+            <div class="d-flex gap-3">
+                <i class="bi bi-shield-lock-fill fs-4 text-warning"></i>
+                <div>
+                    <strong>Bilinmesi Gerekenler:</strong><br>
+                    - Vektörize işlemi anlamsal (semantic) arama ve mükerrer kontrolü için zorunludur.<br>
+                    - İşlem sırasında Gemini API limitlerine göre kısa süreli gecikmeler yaşanabilir (Rate-limiting).<br>
+                    - Vektörler veritabanında güvenle saklanacak olup sadece analiz amacıyla kullanılır.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer bg-light border-top-0">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">İptal</button>
+        <button type="button" class="btn btn-primary px-4 fw-bold" 
+                hx-post="{% url 'itempool:pool_vectorize_start' pool.id %}"
+                hx-target="#vectorize-confirm-container"
+                hx-indicator="#vectorize-spinner">
+            <span id="vectorize-spinner" class="htmx-indicator spinner-border spinner-border-sm me-2"></span>
+            İşlemi Başlat
+        </button>
+    </div>
+</div>

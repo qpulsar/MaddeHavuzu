@@ -145,6 +145,9 @@
         <div class="card shadow-sm border-danger">
             <div class="card-header bg-danger text-white fw-bold">Aksiyonlar</div>
             <div class="card-body">
+                <a href="{% url 'itempool:item_clone_variation' instance.id %}" class="btn btn-outline-info w-100 mb-2">
+                    <i class="bi bi-robot"></i> AI Varyasyon Üret
+                </a>
                 <a href="{% url 'itempool:item_delete' instance.id %}" class="btn btn-outline-danger w-100 mb-2" onclick="return confirm('Bu maddeyi havuzdan kaldırmak istediğinize emin misiniz?')">
                     <i class="bi bi-trash"></i> Havuzdan Kaldır
                 </a>

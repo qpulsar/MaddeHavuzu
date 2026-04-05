@@ -29,6 +29,7 @@
                     <div class="row mb-4">
                         <div class="col-md-8">
                             <label class="form-label fw-bold">Madde Kökü (Soru)</label>
+                            <div id="duplicate-check-container" class="mb-2"></div>
                             {{ form.stem }}
                             {{ form.stem.errors }}
                         </div>
@@ -70,10 +71,20 @@
                         <hr>
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="mb-0"><i class="bi bi-list-check"></i> Seçenekler</h5>
-                            <button type="button" class="btn btn-sm btn-outline-success" id="add-choice-btn">
-                                <i class="bi bi-plus-circle"></i> Seçenek Ekle
-                            </button>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                        id="ai-suggest-distractors-btn"
+                                        hx-get="{% url 'itempool:item_suggest_distractors' %}"
+                                        hx-vals='js:{stem: document.getElementById("id_stem").value}'
+                                        hx-target="#distractor-suggestions-container">
+                                    <i class="bi bi-robot"></i> AI Çeldirici Öner
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success" id="add-choice-btn">
+                                    <i class="bi bi-plus-circle"></i> Seçenek Ekle
+                                </button>
+                            </div>
                         </div>
+                        <div id="distractor-suggestions-container" class="mb-3"></div>
                         <p class="text-muted small">En az 2, en fazla 10 seçenek ekleyebilirsiniz. Seçenek etiketi için A-J arası harfler kullanın.</p>
 
                         {{ formset.management_form }}
@@ -160,6 +171,35 @@
 
     // Dinamik seçenek ekleme
     const addBtn = document.getElementById('add-choice-btn');
+    
+    window.addDistractorToForm = function(text) {
+        const tbody = document.getElementById('choices-tbody');
+        const rows = tbody.getElementsByClassName('formset-row');
+        
+        // Önce boş bir 'text' alanı olan satır bul
+        let filled = false;
+        for (let row of rows) {
+            const textField = row.querySelector('input[name$="-text"]');
+            if (textField && !textField.value.trim()) {
+                textField.value = text;
+                filled = true;
+                break;
+            }
+        }
+        
+        // Boş satır yoksa yeni satır ekle (eğer limit aşılmadıysa)
+        if (!filled && addBtn) {
+            addBtn.click();
+            // Yeni eklenen en son satırı bul
+            const newRows = tbody.getElementsByClassName('formset-row');
+            const lastRow = newRows[newRows.length - 1];
+            const lastTextField = lastRow.querySelector('input[name$="-text"]');
+            if (lastTextField) {
+                lastTextField.value = text;
+            }
+        }
+    };
+
     if (addBtn) {
         addBtn.addEventListener('click', function() {
             const tbody = document.getElementById('choices-tbody');
@@ -184,6 +224,21 @@
             tbody.appendChild(newRow);
             totalForms.value = currentCount + 1;
         });
+    }
+
+    // Madde Kökü (Soru) için Benzerlik Kontrolü (HTMX)
+    const stem = document.getElementById('id_stem');
+    const poolId = '{{ pool.id|default:"" }}';
+    if (stem) {
+        // HTMX özniteliklerini dinamik olarak ekle
+        stem.setAttribute('hx-get', '{% url "itempool:item_check_duplicate" %}');
+        stem.setAttribute('hx-trigger', 'keyup changed delay:1.5s');
+        stem.setAttribute('hx-target', '#duplicate-check-container');
+        stem.setAttribute('hx-vals', `js:{pool_id: "${poolId}"}`);
+        // Yeni eklenen HTMX özniteliklerini işle
+        if (typeof htmx !== 'undefined') {
+            htmx.process(stem);
+        }
     }
 })();
 </script>

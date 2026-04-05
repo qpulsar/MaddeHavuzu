@@ -204,6 +204,13 @@ class ExamApplicationForm(forms.ModelForm):
 
 
 class ExamTemplateForm(forms.ModelForm):
+    docx_header_file = forms.FileField(
+        required=False,
+        label='Word Başlık Şablonu (.docx)',
+        help_text='Mevcut başlık alanlarını geçersiz kılar. Logo ve tablo içeren bir Word dosyası yükleyebilirsiniz.',
+        widget=forms.FileInput(attrs={'class': 'form-control', 'accept': '.docx'})
+    )
+
     class Meta:
         model = ExamTemplate
         fields = [

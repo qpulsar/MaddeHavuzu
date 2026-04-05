@@ -20,7 +20,11 @@ from .forms import (
 )
 from .services.import_docx import DocxImportService
 from .services.llm_client import get_llm_client
+from .services.similarity import SimilarityService
+from .services.form_service import FormService
+from django.db import transaction
 import json
+from datetime import datetime
 from .api_views import LearningOutcomeListCreateAPIView, LearningOutcomeRetrieveUpdateDestroyAPIView
 
 # Grading imports
@@ -457,6 +461,291 @@ def item_assign_outcome(request, pk, outcome_id):
     return redirect('itempool:item_detail', pk=pk)
 
 @login_required
+@transaction.atomic
+def item_generate_ai(request, pk):
+    outcome = get_object_or_404(LearningOutcome, id=pk)
+    
+    if request.method == 'POST':
+        difficulty = request.POST.get('difficulty', 'Orta')
+        item_type = request.POST.get('item_type', 'MCQ')
+        count = int(request.POST.get('count', 1))
+        
+        client = get_llm_client()
+        raw_response = client.generate_item(
+            outcome_text=outcome.description,
+            bloom_level=outcome.get_level_display(),
+            difficulty=difficulty,
+            count=count,
+            item_type=item_type
+        )
+        
+        try:
+            # JSON temizleme
+            cleaned_json = raw_response.strip()
+            if cleaned_json.startswith("```"):
+                chunks = cleaned_json.split("```")
+                if len(chunks) > 1:
+                    cleaned_json = chunks[1]
+                    if cleaned_json.startswith("json"):
+                        cleaned_json = cleaned_json[4:]
+            
+            data_list = json.loads(cleaned_json)
+            if not isinstance(data_list, list):
+                data_list = [data_list]
+            
+            # ImportBatch oluştur (AI-[Tarih] formatında)
+            now_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+            batch = ImportBatch.objects.create(
+                pool=outcome.pool,
+                original_filename=f"AI-{now_str}",
+                created_by=request.user,
+                status=ImportBatch.Status.PENDING
+            )
+            
+            for data in data_list:
+                # DraftItem oluştur
+                draft = DraftItem.objects.create(
+                    batch=batch,
+                    stem=data.get('stem'),
+                    choices_json=data.get('choices'),
+                    correct_answer=data.get('correct_answer'),
+                    status=DraftItem.Status.PENDING
+                )
+                draft.learning_outcomes.add(outcome)
+            
+            messages.success(request, f'AI tarafından {len(data_list)} yeni soru taslağı oluşturuldu.')
+            return redirect('itempool:import_preview', batch_id=batch.id)
+            
+        except Exception as e:
+            messages.error(request, f'AI soru üretirken hata oluştu: {str(e)}')
+            return redirect('itempool:pool_detail', pk=outcome.pool.id)
+            
+    return HttpResponse(status=405)
+
+@login_required
+def item_check_duplicate(request):
+    stem = request.GET.get('stem', '')
+    pool_id = request.GET.get('pool_id')
+    try:
+        threshold_val = float(request.GET.get('threshold', 85))
+    except ValueError:
+        threshold_val = 85
+        
+    threshold = threshold_val / 100.0
+    
+    if not stem or len(stem) < 20:
+        return HttpResponse('')
+        
+    similar_items = SimilarityService.find_similar_items(
+        query_text=stem, 
+        pool_id=pool_id, 
+        threshold=threshold
+    )
+    
+    if not similar_items:
+        return HttpResponse('')
+        
+    if not similar_items:
+        return HttpResponse('')
+        
+    return render(request, 'itempool/partials/duplicate_warning.html', {
+        'similar_items': similar_items,
+        'threshold_percent': int(threshold_val)
+    })
+
+@login_required
+def pool_semantic_search(request, pool_id):
+    pool = get_object_or_404(ItemPool, id=pool_id)
+    query = request.GET.get('q', '')
+    
+    if not query:
+        return HttpResponse("")
+        
+    # Aramada eşik değerini daha düşük tutarak geniş sonuç veriyoruz
+    results = SimilarityService.find_similar_items(
+        query_text=query,
+        pool_id=pool.id,
+        threshold=0.5, 
+        top_n=10
+    )
+    
+    return render(request, 'itempool/partials/semantic_search_results.html', {
+        'results': results,
+        'query': query,
+        'pool': pool
+    })
+
+@login_required
+def pool_vectorize_confirm(request, pool_id):
+    pool = get_object_or_404(ItemPool, id=pool_id)
+    
+    # Henüz vektörize edilmemiş maddeler
+    items_to_vectorize = Item.objects.filter(
+        instances__pool=pool, 
+        embedding__isnull=True
+    ).distinct()
+    
+    count = items_to_vectorize.count()
+    if count == 0:
+        return HttpResponse('''
+            <div class="alert alert-info py-2 small mb-0">
+                <i class="bi bi-check-circle"></i> Tüm maddeler zaten vektörize edilmiş.
+            </div>
+        ''')
+        
+    text_list = [SimilarityService.get_item_text(item) for item in items_to_vectorize]
+    cost_info = SimilarityService.calculate_embedding_cost(text_list)
+    
+    return render(request, 'itempool/partials/vectorize_confirm.html', {
+        'pool': pool,
+        'count': count,
+        'cost_info': cost_info
+    })
+
+@login_required
+def pool_vectorize_start(request, pool_id):
+    pool = get_object_or_404(ItemPool, id=pool_id)
+    
+    if request.method != 'POST':
+        return HttpResponseForbidden()
+        
+    items_to_vectorize = Item.objects.filter(
+        instances__pool=pool, 
+        embedding__isnull=True
+    ).distinct()
+    
+    client = get_llm_client()
+    count = 0
+    import time
+    for item in items_to_vectorize:
+        text = SimilarityService.get_item_text(item)
+        vector = client.get_embedding(text)
+        if vector:
+            ItemEmbedding.objects.update_or_create(item=item, defaults={'vector': vector})
+            count += 1
+            # Basit rate limit
+            time.sleep(0.3)
+            
+    return HttpResponse(f'''
+        <div class="alert alert-success py-2 small mb-0">
+            <i class="bi bi-check-all"></i> {count} adet madde başarıyla vektörize edildi.
+        </div>
+        <script>setTimeout(() => window.location.reload(), 2000);</script>
+    ''')
+
+@login_required
+def item_suggest_distractors(request):
+    stem = request.GET.get('stem', '')
+    correct_answer = request.GET.get('correct_answer', '')
+    
+    if not stem or len(stem) < 10:
+        return HttpResponse('<div class="alert alert-warning py-1 small mb-0">Önce geçerli bir madde kökü yazmalısınız.</div>')
+    
+    client = get_llm_client()
+    raw_response = client.suggest_distractors(stem, correct_answer)
+    
+    try:
+        # JSON temizleme
+        cleaned_json = raw_response.strip()
+        if cleaned_json.startswith("```"):
+            chunks = cleaned_json.split("```")
+            if len(chunks) > 1:
+                cleaned_json = chunks[1]
+                if cleaned_json.startswith("json"):
+                    cleaned_json = cleaned_json[4:]
+        
+        distractors = json.loads(cleaned_json)
+        if not isinstance(distractors, list):
+            distractors = [str(distractors)]
+            
+        return render(request, 'itempool/partials/distractor_suggestions.html', {'distractors': distractors})
+    except Exception as e:
+        return HttpResponse(f'<div class="alert alert-danger py-1 small mb-0">Hata: {str(e)}</div>')
+
+@login_required
+@transaction.atomic
+def item_clone_variation(request, pk):
+    item_instance = get_object_or_404(ItemInstance, id=pk)
+    item = item_instance.item
+    
+    choices = []
+    if item.item_type in ['MCQ', 'TF']:
+        choices = [{"label": c.label, "text": c.text, "is_correct": c.is_correct} for c in item.choices.all()]
+    
+    client = get_llm_client()
+    raw_response = client.generate_variation(item.stem, json.dumps(choices))
+    
+    try:
+        # JSON temizleme
+        cleaned_json = raw_response.strip()
+        if cleaned_json.startswith("```"):
+            chunks = cleaned_json.split("```")
+            if len(chunks) > 1:
+                cleaned_json = chunks[1]
+                if cleaned_json.startswith("json"):
+                    cleaned_json = cleaned_json[4:]
+        
+        data = json.loads(cleaned_json)
+        
+        # ImportBatch oluştur
+        now_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+        batch = ImportBatch.objects.create(
+            pool=item_instance.pool,
+            original_filename=f"AI-Variation-{now_str}",
+            created_by=request.user,
+            status=ImportBatch.Status.PENDING
+        )
+        
+        # DraftItem oluştur
+        draft = DraftItem.objects.create(
+            batch=batch,
+            stem=data.get('stem', 'Soru kökü alınamadı'),
+            choices_json=data.get('choices', []),
+            correct_answer=data.get('correct_answer'),
+            status=DraftItem.Status.PENDING
+        )
+        # Mevcut kazanımları kopyala
+        for outcome in item_instance.learning_outcomes.all():
+            draft.learning_outcomes.add(outcome)
+            
+        messages.success(request, 'AI tarafından sorunun bir varyasyonu oluşturuldu. Önizleyip onaylayabilirsiniz.')
+        return redirect('itempool:import_preview', batch_id=batch.id)
+        
+    except Exception as e:
+        messages.error(request, f'Varyasyon üretilirken hata oluştu: {str(e)}')
+        return redirect('itempool:item_detail', pk=pk)
+
+@login_required
+def item_suggest_improvements(request, pk):
+    instance = get_object_or_404(ItemInstance, id=pk)
+    item = instance.item
+    
+    choices = []
+    if item.item_type in ['MCQ', 'TF']:
+        choices = [{"label": c.label, "text": c.text} for c in item.choices.all()]
+    
+    client = get_llm_client()
+    raw_response = client.suggest_improvements(item.stem, json.dumps(choices))
+    
+    try:
+        # JSON temizleme
+        cleaned_json = raw_response.strip()
+        if cleaned_json.startswith("```"):
+            chunks = cleaned_json.split("```")
+            if len(chunks) > 1:
+                cleaned_json = chunks[1]
+                if cleaned_json.startswith("json"):
+                    cleaned_json = cleaned_json[4:]
+        
+        data = json.loads(cleaned_json)
+        return render(request, 'itempool/partials/item_improvements.html', {
+            'instance': instance, 
+            'improved': data
+        })
+    except Exception as e:
+        return HttpResponse(f'<div class="alert alert-danger py-1 small mb-0">Hata: {str(e)}</div>')
+
+@login_required
 def item_detail_edit(request, pk, section):
     instance = get_object_or_404(ItemInstance, id=pk)
     item = instance.item
@@ -547,12 +836,15 @@ def test_form_detail(request, pk):
     item_count = items.count()
     
     exam_templates = ExamTemplate.objects.order_by('-is_default', 'name')
+    distribution = FormService.get_choice_distribution(test_form)
+
     return render(request, 'itempool/test_form_detail.html', {
         'form': test_form,
         'items': items,
         'total_points': total_points,
         'item_count': item_count,
         'exam_templates': exam_templates,
+        'distribution': distribution,
     })
 
 @login_required
@@ -1080,10 +1372,17 @@ def exam_template_list(request):
 def exam_template_create(request):
     from .forms import ExamTemplateForm
     if request.method == 'POST':
-        form = ExamTemplateForm(request.POST)
+        form = ExamTemplateForm(request.POST, request.FILES)
         if form.is_valid():
             tpl = form.save(commit=False)
             tpl.created_by = request.user
+            
+            # Word başlık şablonu işleme
+            docx_file = request.FILES.get('docx_header_file')
+            if docx_file:
+                from .services.docx_header import DocxHeaderService
+                tpl.header_html = DocxHeaderService.convert_to_html(docx_file)
+                
             tpl.save()
             messages.success(request, 'Şablon oluşturuldu.')
             return redirect('itempool:exam_template_list')
@@ -1097,8 +1396,14 @@ def exam_template_update(request, pk):
     from .forms import ExamTemplateForm
     tpl = get_object_or_404(ExamTemplate, pk=pk)
     if request.method == 'POST':
-        form = ExamTemplateForm(request.POST, instance=tpl)
+        form = ExamTemplateForm(request.POST, request.FILES, instance=tpl)
         if form.is_valid():
+            # Word başlık şablonu işleme
+            docx_file = request.FILES.get('docx_header_file')
+            if docx_file:
+                from .services.docx_header import DocxHeaderService
+                tpl.header_html = DocxHeaderService.convert_to_html(docx_file)
+                
             form.save()
             messages.success(request, 'Şablon güncellendi.')
             return redirect('itempool:exam_template_list')
@@ -1130,6 +1435,25 @@ def exam_template_preview(request, pk):
     response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
 
+
+@login_required
+@transaction.atomic
+def test_form_auto_balance(request, pk):
+    test_form = get_object_or_404(TestForm, id=pk)
+    
+    if test_form.status == TestForm.Status.APPLIED:
+        messages.error(request, 'Uygulanmış bir sınavın seçenekleri değiştirilemez.')
+        return redirect('itempool:test_form_detail', pk=pk)
+        
+    FormService.balance_choice_distribution(test_form)
+    messages.success(request, 'Seçenekler karıştırıldı ve doğru cevap dağılımı dengelendi.')
+    
+    if request.headers.get('HX-Request') == 'true':
+        response = HttpResponse("")
+        response['HX-Refresh'] = 'true'
+        return response
+        
+    return redirect('itempool:test_form_detail', pk=pk)
 
 @login_required
 def test_form_pdf(request, pk):

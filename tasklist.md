@@ -331,6 +331,86 @@
 
 ---
 
+## Faz 14 — AI Madde Üretimi ve Geliştirme
+
+### 14.1 Kazanım Bazlı Otomatik Soru Üretimi
+- [x] **F14.1.1** `GeminiClient` genişletme: `generate_item(outcome, difficulty)` metodu
+- [x] **F14.1.2** UI: Kazanım detay sayfasında "AI ile Soru Üret" butonu ve modalı
+- [x] **F14.1.3** Üretilen sorunun `DraftItem` olarak sisteme kaydedilmesi
+- [x] **F14.1.4** Birden fazla alternatif soru üretme ve seçme arayüzü
+
+### 14.2 Çeldirici ve Varyasyon Oluşturma
+- [x] **F14.2.1** Mevcut soru köküne göre "Mantıklı Çeldirici" (Distractor) öneri servisi
+- [x] **F14.2.2** Soru varyasyon oluşturucu (Clone with variation): Sayısal verileri veya bağlamı değiştirme
+- [x] **F14.2.3** AI Redaksiyon: Dil bilgisi, netlik ve sınav tekniği kontrolü (`suggest_improvements` geliştirme)
+
+### 14.3 Prompt Mühendisliği ve Şablonlar
+- [x] **F14.3.1** Soru tipi bazlı (MCQ, Short Answer) özel prompt şablonları
+- [x] **F14.3.2** Bloom taksonomisi seviyelerine göre zorluk derecelendirme promptları
+
+---
+
+## Faz 15 — Benzerlik Analizi ve Vektör Arama
+
+### 15.1 Vektör Altyapısı (Embeddings)
+- [ ] **F15.1.1** `GeminiClient` veya `Sentence-Transformers` ile embedding üretim servisi
+- [ ] **F15.1.2** `Item` modeli için `embedding` alanı (veya PostgreSQL kullanılıyorsa `pgvector` entegrasyonu)
+- [ ] **F15.1.3** Mevcut tüm maddelerin vektörlerinin arka planda (celery/task) çıkarılması
+
+### 15.2 Mükerrer Kontrolü ve Arama
+- [ ] **F15.2.1** Soru oluşturma/import sırasında "Benzer Soru Var" uyarısı (Threshold tabanlı)
+- [ ] **F15.2.2** Anlamsal (Semantic) arama arayüzü: Anahtar kelime yerine anlama göre soru bulma
+- [ ] **F15.2.3** Benzer soruları "Grup" olarak işaretleme veya birleştirme önerisi
+
+---
+
+---
+
+## Faz 16 — Gelişmiş Görsel Analiz Dashboard
+
+### 16.1 Görselleştirme Altyapısı
+- [ ] **F16.1.1** Frontend kütüphanesi seçimi ve entegrasyonu (`Chart.js` veya `ECharts`)
+- [ ] **F16.1.2** Analiz verilerini JSON formatında dönen API endpoint'leri
+
+### 16.2 Havuz ve Sınav İstatistikleri
+- [ ] **F16.2.1** Havuz Sağlık Dashboard'u: Zorluk dağılımı (Bar), Ayırt edicilik (Scatter), Kazanım kapsama (Radar)
+- [ ] **F16.2.2** Sınav Sonrası Analiz Paneli: KR-20, Cronbach Alpha ve madde analizlerinin grafiksel gösterimi
+- [ ] **F16.2.3** Riskli soruların (çok kolay/zor veya negatif ayırt edicilik) otomatik listelenmesi
+
+### 16.3 Kazanım Bazlı Başarı Isı Haritası (Heatmap)
+- [ ] **F16.3.1** Sınıfın hangi kazanımlarda zayıf/güçlü olduğunu gösteren ısı haritası
+- [ ] **F16.3.2** Branş/Dönem bazlı karşılaştırmalı başarı grafikleri
+
+---
+
+---
+
+## Faz 18 — Word (.docx) Tabanlı Sınav Başlığı Desteği
+- [x] **F18.1.1** `ExamTemplate` modeline `header_html` eklenmesi
+- [x] **F18.2.1** `DocxHeaderService` (Word to HTML/Base64 conversion)
+- [x] **F18.3.1** UI: Word dosyası yükleme ve önbelleğe alma
+- [x] **F18.4.1** PDF Resolve: Harf duyarlı (case-sensitive) değişken desteği
+
+---
+
+## Faz 19 — Soru Onay ve Revizyon Akışı (Workflow)
+
+### 17.1 Durum Yönetimi ve Yetkilendirme
+- [ ] **F17.1.1** `Item.status` genişletme: `DRAFT`, `IN_REVIEW`, `APPROVED`, `REJECTED`, `REVISION_REQUESTED`
+- [ ] **F17.1.2** Onay yetkisi (COORDINATOR) ve Editör rolleri için özel görünümler
+
+### 17.2 İnceleme ve Geri Bildirim Sistemi
+- [ ] **F17.2.1** Soru özelinde yorum/geri bildirim bırakma sistemi (In-line feedback)
+- [ ] **F17.2.2** Değişiklik geçmişi (Diff view): Eski sürüm ile yeni sürüm arasındaki farkları görme
+- [ ] **F17.2.3** Onay/Red durumlarında yazara bildirim gönderilmesi (Dashboard alert)
+
+### 17.3 Envanter Yönetimi
+- [ ] **F17.3.1** Soru kullanım kotası ve "Soru Yorgunluğu" takibi (Son X yılda Y kez kullanıldı uyarısı)
+- [ ] **F17.3.2** Havuz bazlı revizyon raporları (Hangi sorular güncellenmeli?)
+
+---
+
+
 ## Notlar
 
 ### NefOptik'ten Devralınan Modüller
