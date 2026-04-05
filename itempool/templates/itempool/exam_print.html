@@ -109,9 +109,9 @@ body {
     {% endif %}
 }
 
-.choices-list.grid-2 .choice-item { width: 48%; }
-.choices-list.grid-3 .choice-item { width: 31%; }
-.choices-list.vertical .choice-item { width: 100%; margin-bottom: 2pt; }
+.choices-list.grid-2 .choice-item { width: calc(50% - 6pt); margin-bottom: {{ template.choice_spacing }}pt; }
+.choices-list.grid-3 .choice-item { width: calc(33.3% - 6pt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: {{ template.choice_spacing }}pt; }
+.choices-list.vertical .choice-item { width: 100%; margin-bottom: {{ template.choice_spacing }}pt; }
 
 .choice-item {
     {% if template.choice_layout == 'horizontal' or template.choice_layout == 'auto' %}
@@ -205,7 +205,9 @@ body {
     <div class="question-block">
         <div class="question-stem">
             <span class="question-number">{{ fi.order }}.</span>
+            {% if template.show_question_points %}
             <span class="question-points">({{ fi.points }} puan)</span>
+            {% endif %}
             {{ item.stem }}
         </div>
 

@@ -95,6 +95,7 @@ urlpatterns = [
     path('sablonlar/<int:pk>/duzenle/', views.exam_template_update, name='exam_template_update'),
     path('sablonlar/<int:pk>/onizleme/', views.exam_template_preview, name='exam_template_preview'),
     path('formlar/<int:pk>/pdf/', views.test_form_pdf, name='test_form_pdf'),
+    path('formlar/<int:pk>/docx/', views.test_form_docx, name='test_form_docx'),
     path('formlar/<int:pk>/AI/auto-balance/', views.test_form_auto_balance, name='test_form_auto_balance'),
 
     # Faz 13 — Değerlendirme Entegrasyonu

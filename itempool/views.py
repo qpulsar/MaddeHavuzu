@@ -1530,3 +1530,28 @@ def outcome_performance_report(request, session_pk):
         'student_count': student_count,
     })
 
+
+@login_required
+def test_form_docx(request, pk):
+    """Sınav formunu Word formatında indirir."""
+    test_form = get_object_or_404(TestForm, pk=pk)
+    
+    template_id = request.GET.get('template')
+    with_answer_key = request.GET.get('key') == '1'
+    
+    if template_id:
+        exam_template = get_object_or_404(ExamTemplate, pk=template_id)
+    else:
+        exam_template = ExamTemplate.get_default()
+
+    from .services.exam_docx import generate_exam_docx
+    docx_stream = generate_exam_docx(test_form, exam_template, with_answer_key=with_answer_key)
+    
+    filename = f"{test_form.name}.docx".replace(" ", "_")
+    response = HttpResponse(
+        docx_stream.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+

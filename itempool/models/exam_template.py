@@ -103,6 +103,12 @@ class ExamTemplate(models.Model):
         default=ChoiceLayout.VERTICAL,
         verbose_name='Seçenek Dizilimi'
     )
+    choice_spacing = models.IntegerField(
+        default=2,
+        validators=[MinValueValidator(0), MaxValueValidator(20)],
+        verbose_name='Seçenek Aralığı (pt)',
+        help_text='Şıklar arasındaki dikey boşluk'
+    )
 
     # Üst bilgi
     header_left = models.CharField(
@@ -155,6 +161,11 @@ class ExamTemplate(models.Model):
         default=True,
         verbose_name='Öğrenci Bilgi Kutusu',
         help_text='Ad Soyad, No, Tarih için boş alan'
+    )
+    show_question_points = models.BooleanField(
+        default=True,
+        verbose_name="Soru Puanlarını Göster",
+        help_text="Her sorunun yanında puanını göster"
     )
 
     # Word'den aktarılan karmaşık başlık HTML içeriği

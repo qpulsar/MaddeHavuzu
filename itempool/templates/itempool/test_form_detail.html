@@ -130,12 +130,20 @@
             <div class="card-header bg-white fw-bold">İşlemler</div>
             <div class="card-body">
                 {% if items.count > 0 %}
-                <div class="d-grid gap-2 mb-2">
+                <div class="d-grid gap-2 mb-3">
                     <a href="{% url 'itempool:test_form_pdf' form.id %}" target="_blank" class="btn btn-primary btn-sm">
-                        <i class="bi bi-printer"></i> Sınav Kağıdı (PDF)
+                        <i class="bi bi-file-earmark-pdf"></i> Sınav Kağıdı (PDF)
                     </a>
-                    <a href="{% url 'itempool:test_form_pdf' form.id %}?answer_key=1" target="_blank" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-key"></i> Cevap Anahtarı ile PDF
+                    <a href="{% url 'itempool:test_form_docx' form.id %}" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-file-earmark-word"></i> Sınav Kağıdı (Word)
+                    </a>
+                </div>
+                <div class="d-grid gap-2 mb-2">
+                    <a href="{% url 'itempool:test_form_pdf' form.id %}?answer_key=1" target="_blank" class="btn btn-light btn-sm border text-muted" style="font-size: 0.75rem;">
+                        <i class="bi bi-key"></i> Cevap Anahtarlı PDF
+                    </a>
+                    <a href="{% url 'itempool:test_form_docx' form.id %}?key=1" target="_blank" class="btn btn-light btn-sm border text-muted" style="font-size: 0.75rem;">
+                        <i class="bi bi-key"></i> Cevap Anahtarlı Word
                     </a>
                 </div>
                 <div class="mb-2">
@@ -163,11 +171,14 @@
 
 <script>
 function updatePdfLinks(templateId) {
-    const base = "{% url 'itempool:test_form_pdf' form.id %}";
-    document.querySelectorAll('a[href*="/pdf/"]').forEach(a => {
-        const url = new URL(a.href);
-        url.searchParams.set('template', templateId);
-        a.href = url.toString();
+    // PDF ve Word linklerini güncelle
+    const selectors = ['a[href*="/pdf/"]', 'a[href*="/docx/"]'];
+    document.querySelectorAll(selectors.join(',')).forEach(a => {
+        try {
+            const url = new URL(a.href, window.location.origin);
+            url.searchParams.set('template', templateId);
+            a.href = url.toString();
+        } catch(e) { console.error(e); }
     });
 }
 // Sayfa yüklenince varsayılan şablonu setle

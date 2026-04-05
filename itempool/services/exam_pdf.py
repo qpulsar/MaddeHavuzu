@@ -14,8 +14,9 @@ def _resolve_variable(text: str, context: dict) -> str:
     return text
 
 
-def _get_choice_layout_class(fi, template_layout: str) -> str:
+def _get_choice_layout_class(fi, template) -> str:
     """Soru seçeneklerinin uzunluğuna göre en uygun CSS sınıfını döner."""
+    template_layout = template.choice_layout
     if template_layout != 'auto':
         return template_layout
 
@@ -33,10 +34,15 @@ def _get_choice_layout_class(fi, template_layout: str) -> str:
         return 'vertical'
 
     max_len = max(len(t) for t in texts)
+    
+    # Sayfa sütun sayısına göre eşik değerleri daralt
+    # 1 sütun: 22/55, 2 sütun: 12/30, 3 sütun: 8/20
+    col_factor = template.column_count
+    t3 = 22 if col_factor == 1 else (12 if col_factor == 2 else 8)
+    t2 = 55 if col_factor == 1 else (30 if col_factor == 2 else 20)
 
-    # Eşik değerlere göre layout seçimi (User images refer to 3 columns for short items)
-    if max_len < 20:     return 'grid-3'
-    elif max_len < 50:   return 'grid-2'
+    if max_len < t3:     return 'grid-3'
+    elif max_len < t2:   return 'grid-2'
     else:                return 'vertical'
 
 
@@ -86,7 +92,7 @@ def generate_exam_pdf(test_form, template: "ExamTemplate", with_answer_key: bool
 
     # Her soru için layout sınıfını hesapla
     for fi in form_items:
-        fi.layout_class = _get_choice_layout_class(fi, tpl.choice_layout)
+        fi.layout_class = _get_choice_layout_class(fi, template)
 
     html_string = render_to_string('itempool/exam_print.html', {
         'test_form': test_form,

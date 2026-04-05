@@ -216,10 +216,10 @@ class ExamTemplateForm(forms.ModelForm):
         fields = [
             'name', 'is_default', 'page_size', 'column_count', 'column_divider',
             'margin_top', 'margin_bottom', 'margin_left', 'margin_right',
-            'font_family', 'font_size', 'question_spacing', 'choice_layout',
+            'font_family', 'font_size', 'question_spacing', 'choice_spacing', 'choice_layout',
             'header_left', 'header_center', 'header_right', 'show_header_line',
             'footer_left', 'footer_center', 'footer_right', 'show_footer_line',
-            'show_student_info_box',
+            'show_student_info_box', 'show_question_points',
         ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -234,6 +234,7 @@ class ExamTemplateForm(forms.ModelForm):
             'font_family': forms.Select(attrs={'class': 'form-select'}),
             'font_size': forms.NumberInput(attrs={'class': 'form-control', 'min': 8, 'max': 16}),
             'question_spacing': forms.NumberInput(attrs={'class': 'form-control', 'min': 4, 'max': 30}),
+            'choice_spacing': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 20}),
             'choice_layout': forms.Select(attrs={'class': 'form-select'}),
             'header_left': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '{course}'}),
             'header_center': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '{form_name}'}),
@@ -244,4 +245,5 @@ class ExamTemplateForm(forms.ModelForm):
             'footer_right': forms.TextInput(attrs={'class': 'form-control'}),
             'show_footer_line': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'show_student_info_box': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'show_question_points': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

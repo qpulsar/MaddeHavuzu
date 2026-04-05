@@ -60,6 +60,10 @@
                                 {{ form.show_student_info_box }}
                                 <label class="form-check-label">{{ form.show_student_info_box.label }}</label>
                             </div>
+                            <div class="form-check mb-2 ms-3">
+                                {{ form.show_question_points }}
+                                <label class="form-check-label">{{ form.show_question_points.label }}</label>
+                            </div>
                         </div>
                     </div>
                     <div class="row g-3 mb-3">
@@ -92,7 +96,11 @@
                             <label class="form-label">Soru Aralığı</label>
                             {{ form.question_spacing }}
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
+                            <label class="form-label">Seçenek Aralığı</label>
+                            {{ form.choice_spacing }}
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label">{{ form.choice_layout.label }}</label>
                             {{ form.choice_layout }}
                         </div>
