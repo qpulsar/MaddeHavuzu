@@ -2,7 +2,9 @@
 URL configuration for grading app.
 """
 from django.urls import path
-from grading.views.auth import LandingView, RegisterView, CustomLoginView, CustomLogoutView
+from grading.views.auth import (
+    LandingView, RegisterView, CustomLoginView, CustomLogoutView, FeaturesView
+)
 from grading.views.dashboard import DashboardView, NewUploadView, UploadDetailView, DownloadExcelView, UploadSessionDeleteView, UploadStatisticsView, UpdatePenaltyView, KR20StatisticsView, AlphaStatisticsView
 from grading.views.admin_dashboard import (
     AdminDashboardView, UserManagementView, UserApproveView, UserRejectView, UserSuspendView,
@@ -15,6 +17,7 @@ from grading.views.analysis import CheatingAnalysisView
 urlpatterns = [
     # Landing
     path('', LandingView.as_view(), name='landing'),
+    path('ozellikler/', FeaturesView.as_view(), name='features'),
     
     # Authentication
     path('kayit/', RegisterView.as_view(), name='register'),

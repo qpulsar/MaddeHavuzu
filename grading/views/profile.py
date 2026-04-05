@@ -17,11 +17,21 @@ class ProfileView(LoginRequiredMixin, View):
     """View to display and update user profile + appearance settings."""
 
     def get(self, request):
+        # Enforce profile existence on GET too
+        from grading.models import UserProfile, UserStatus
+        UserProfile.objects.get_or_create(
+            user=request.user, 
+            defaults={'status': UserStatus.APPROVED if request.user.is_superuser else UserStatus.PENDING}
+        )
         return render(request, 'grading/profile.html')
 
     def post(self, request):
         user    = request.user
-        profile = user.profile
+        from grading.models import UserProfile, UserStatus
+        profile, _ = UserProfile.objects.get_or_create(
+            user=user,
+            defaults={'status': UserStatus.APPROVED if user.is_superuser else UserStatus.PENDING}
+        )
 
         first_name = request.POST.get('first_name', '').strip()
         last_name  = request.POST.get('last_name', '').strip()
@@ -79,7 +89,11 @@ class SetThemeView(LoginRequiredMixin, View):
     def post(self, request):
         try:
             data    = json.loads(request.body)
-            profile = request.user.profile
+            from grading.models import UserProfile, UserStatus
+            profile, _ = UserProfile.objects.get_or_create(
+                user=request.user,
+                defaults={'status': UserStatus.APPROVED if request.user.is_superuser else UserStatus.PENDING}
+            )
             changed = []
             if 'theme' in data and data['theme'] in VALID_THEMES:
                 profile.theme = data['theme']

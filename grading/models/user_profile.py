@@ -111,3 +111,20 @@ class UserProfile(models.Model):
     def can_login(self):
         """Check if user can log in."""
         return self.status == UserStatus.APPROVED
+
+
+# Signals to create profile automatically
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        # Default to APPROVED for superusers so they can login immediately
+        status = UserStatus.APPROVED if instance.is_superuser else UserStatus.PENDING
+        UserProfile.objects.get_or_create(user=instance, defaults={'status': status})
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'profile'):
+        instance.profile.save()

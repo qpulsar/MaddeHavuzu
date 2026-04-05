@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Özellikler - Madde Havuzum{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feature-header {
+        background: var(--mh-gradient);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+        border-radius: 0 0 2rem 2rem;
+    }
+    .feature-card {
+        border: none;
+        border-radius: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        background: var(--mh-card-bg);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .category-title {
+        position: relative;
+        padding-bottom: 10px;
+        margin-bottom: 2rem;
+        font-weight: 700;
+        color: var(--mh-primary);
+    }
+    .category-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 4px;
+        background: var(--mh-gradient);
+        border-radius: 2px;
+    }
+    .check-list {
+        list-style: none;
+        padding-left: 0;
+    }
+    .check-list li {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+        color: var(--mh-text-muted);
+    }
+    .check-list li::before {
+        content: '\F272';
+        font-family: 'bootstrap-icons';
+        position: absolute;
+        left: 0;
+        color: var(--mh-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="feature-header text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-3 text-white">Güçlü Özellikler, Akıllı Çözümler</h1>
+        <p class="lead mb-0 text-white-50">Madde Havuzum ile soru bankası yönetimi ve sınav süreçleri hiç olmadığı kadar kolay.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- 1. Soru Havuzu Yönetimi -->
+    <div class="mb-5">
+        <h3 class="category-title">Soru ve Havuz Yönetimi</h3>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-collection"></i>
+                    </div>
+                    <h5>Merkezi Soru Bankası</h5>
+                    <p class="text-muted small">Ders ve konu bazlı organize edilmiş soru havuzu ile tüm sorularınıza tek merkezden ulaşın.</p>
+                    <ul class="check-list">
+                        <li>Sınırsız havuz oluşturma</li>
+                        <li>Dinamik konu ağacı</li>
+                        <li>Gelişmiş etiketleme</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon bg-success-subtle text-success">
+                        <i class="bi bi-git"></i>
+                    </div>
+                    <h5>Versiyonlama & Dallanma</h5>
+                    <p class="text-muted small">Soruların gelişimini takip edin, mevcut bir soruyu "fork" ederek hızla yeni varyasyonlar üretin.</p>
+                    <ul class="check-list">
+                        <li>Değişiklik geçmişi (Audit Log)</li>
+                        <li>Soru klonlama & türetme</li>
+                        <li>Onay mekanizması</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon bg-info-subtle text-info">
+                        <i class="bi bi-filter-square"></i>
+                    </div>
+                    <h5>Zengin Soru Tipleri</h5>
+                    <p class="text-muted small">Her ihtiyaca uygun soru formatları ile kapsamlı değerlendirmeler yapın.</p>
+                    <ul class="check-list">
+                        <li>Çoktan Seçmeli (A-J arası)</li>
+                        <li>Doğru / Yanlış</li>
+                        <li>Kısa Cevap & Açık Uçlu</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Akıllı İçe Aktarma -->
+    <div class="mb-5">
+        <h3 class="category-title">Akıllı İçe Aktarma</h3>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="feature-card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="feature-icon bg-warning-subtle text-warning mb-0 me-3">
+                            <i class="bi bi-file-earmark-word"></i>
+                        </div>
+                        <h5 class="mb-0">Word'den (.docx) Soru Bankası Yükleme</h5>
+                    </div>
+                    <p class="text-muted">Mevcut soru bankalarınızı toplu halde sisteme aktarabilme. Akıllı ayrıştırma motoru soru kökü, seçenekler ve doğru cevabı otomatik tanır.</p>
+                    <div class="row">
+                        <div class="col-6">
+                            <ul class="check-list">
+                                <li>Toplu import</li>
+                                <li>Resim desteği</li>
+                            </ul>
+                        </div>
+                        <div class="col-6">
+                            <ul class="check-list">
+                                <li>Taslak önizleme</li>
+                                <li>Hızlı düzenleme</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="feature-card p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="feature-icon bg-danger-subtle text-danger mb-0 me-3">
+                            <i class="bi bi-magic"></i>
+                        </div>
+                        <h5 class="mb-0">Otomatik Soru Sihirbazı</h5>
+                    </div>
+                    <p class="text-muted">Adım adım yönlendirmelerle dakikalar içinde yeni bir soru havuzu veya sınav formu oluşturun.</p>
+                    <ul class="check-list">
+                        <li>Sürükle-bırak mizanpaj</li>
+                        <li>Hazır şablon kütüphanesi</li>
+                        <li>Hızlı dağıtım</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Yapay Zeka Desteği -->
+    <div class="mb-5 py-4 bg-primary-subtle rounded-4 p-4 shadow-sm">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h3 class="category-title text-primary"><i class="bi bi-stars"></i> Yapay Zeka (AI) Destekli Araçlar</h3>
+                <p class="lead">Google Gemini entegrasyonu ile sorularınızı yapay zeka ile güçlendirin.</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-robot me-2 text-primary"></i>
+                            <div>
+                                <h6 class="mb-1">Otomatik Kazanım Önerisi</h6>
+                                <p class="small text-muted">Soru içeriğini analiz ederek en uygun öğrenme çıktılarını önerir.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-lightbulb me-2 text-primary"></i>
+                            <div>
+                                <h6 class="mb-1">AI Çeldirici Üretimi</h6>
+                                <p class="small text-muted">Soru köküne uygun mantıklı ve etkili çeldiriciler (şıklar) üretir.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-translate me-2 text-primary"></i>
+                            <div>
+                                <h6 class="mb-1">Soru İyileştirme</h6>
+                                <p class="small text-muted">AI ile soru dilini sadeleştirir ve kalite kontrolü yapar.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-search me-2 text-primary"></i>
+                            <div>
+                                <h6 class="mb-1">Anlamsal Arama</h6>
+                                <p class="small text-muted">Sadece anahtar kelime değil, anlam bazlı soru arama.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 text-center d-none d-lg-block">
+                <i class="bi bi-cpu display-1 text-primary-emphasis opacity-25"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Baskı ve Mizanpaj -->
+    <div class="mb-5">
+        <h3 class="category-title">Baskı ve Mizanpaj Dünyası</h3>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="feature-card p-4">
+                    <h5>Profesyonel PDF & Word Çıktıları</h5>
+                    <p class="text-muted">Mizanpajı bozulmayan, kurumsal kimliğinize uygun sınav kağıtları üretin.</p>
+                    <ul class="check-list">
+                        <li>**PDF Çıktısı:** Kenar boşluğu, font ve sayfa yapısı ayarlanabilir.</li>
+                        <li>**Word (.docx) Çıktısı:** Tamamen düzenlenebilir ve mizanpajı korunmuş dosyalar.</li>
+                        <li>**Cevap Anahtarlı Çıktı:** Tek tıkla soruların altına cevapları ekleyen özel format.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="feature-card p-4">
+                    <h5>Esnek Şablon Sistemi</h5>
+                    <p class="text-muted">Her sınav için farklı görünüm ayarlayabilir, şablonlarınızı kaydedebilirsiniz.</p>
+                    <ul class="check-list">
+                        <li>**Aralık Ayarı:** Soru ve Seçenek (şık) aralıklarını pt cinsinden ayarlama.</li>
+                        <li>**Otomatik Hizalama:** Şık uzunluğuna göre 1, 2 veya 3 sütunlu akıllı dizilim.</li>
+                        <li>**Özel Antet:** Word üzerinden yüklenen karmaşık antetleri PDF'e yansıtma.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Optik Okuma ve Analiz -->
+    <div class="mb-5">
+        <h3 class="category-title">Optik Okuma ve Analiz</h3>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-upc-scan"></i>
+                    </div>
+                    <h5>Hızlı Optik Okuma</h5>
+                    <p class="text-muted small">TXT formatındaki optik okuyucu dosyalarını saniyeler içinde analiz edin.</p>
+                    <ul class="check-list">
+                        <li>Çoklu dosya formatı</li>
+                        <li>Otomatik öğrenci eşleme</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon bg-danger-subtle text-danger">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h5>Madde Analizi (Item Analysis)</h5>
+                    <p class="text-muted small">Sorularınızın kalitesini bilimsel metotlarla ölçün.</p>
+                    <ul class="check-list">
+                        <li>Güçlük (p) İndeksi</li>
+                        <li>Ayırıcılık (r) Katsayısı</li>
+                        <li>Riskli soru tespiti</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon bg-secondary-subtle text-secondary">
+                        <i class="bi bi-file-earmark-excel"></i>
+                    </div>
+                    <h5>Kapsamlı Excel Raporları</h5>
+                    <p class="text-muted small">Tüm sonuçları ve istatistikleri profesyonel Excel tabloları olarak alın.</p>
+                    <ul class="check-list">
+                        <li>Öğrenci karneleri</li>
+                        <li>Kazanım performans raporu</li>
+                        <li>Güvenirlik (KR-20, Alpha)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="py-5 text-center mt-4">
+        <h2 class="fw-bold mb-4">Geleceğin Sınav Sistemini Bugün Deneyin</h2>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-5">Ücretsiz Başlayın</a>
+            <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg px-5">Giriş Yap</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

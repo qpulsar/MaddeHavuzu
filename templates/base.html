@@ -96,6 +96,11 @@
         {% else %}
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
+                    <a href="{% url 'features' %}" class="nav-link {% if request.resolver_match.url_name == 'features' %}active{% endif %}">
+                        <i class="bi bi-stars"></i> Özellikler
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{% url 'login' %}" class="nav-link">
                         <i class="bi bi-box-arrow-in-right"></i> Giriş Yap
                     </a>

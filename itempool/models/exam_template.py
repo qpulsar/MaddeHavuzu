@@ -168,12 +168,17 @@ class ExamTemplate(models.Model):
         help_text="Her sorunun yanında puanını göster"
     )
 
-    # Word'den aktarılan karmaşık başlık HTML içeriği
     header_html = models.TextField(
         null=True,
         blank=True,
         verbose_name='Özel Başlık (HTML)',
-        help_text='Word dosyasından dönüştürülen karmaşık başlık içeriği'
+        help_text='Zengin metin editörü veya Word dosyasından aktarılan başlık içeriği'
+    )
+    footer_html = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Özel Alt Bilgi (HTML)',
+        help_text='Zengin metin editörü ile oluşturulan alt bilgi içeriği'
     )
 
     class Meta:

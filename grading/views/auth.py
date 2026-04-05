@@ -19,6 +19,13 @@ class LandingView(View):
         return render(request, 'grading/landing.html')
 
 
+class FeaturesView(View):
+    """Comprehensive features showcase page."""
+    
+    def get(self, request):
+        return render(request, 'grading/features.html')
+
+
 class RegisterView(View):
     """User registration view."""
     
@@ -113,17 +120,17 @@ class CustomLoginView(View):
             messages.error(request, 'Kullanıcı adı veya şifre hatalı.')
             return render(request, 'registration/login.html', {'username': username})
         
+        # Ensure profile exists (especially for superusers or legacy users)
+        profile, _ = UserProfile.objects.get_or_create(
+            user=user,
+            defaults={'status': UserStatus.APPROVED if user.is_superuser else UserStatus.PENDING}
+        )
+        
         # Superuser can always login
         if user.is_superuser:
             login(request, user, backend='grading.backends.ApprovedUserBackend')
             return redirect('dashboard')
         
-        # Check profile status
-        if not hasattr(user, 'profile'):
-            messages.error(request, 'Hesap durumu geçersiz. Lütfen yönetici ile iletişime geçin.')
-            return render(request, 'registration/login.html', {'username': username})
-        
-        profile = user.profile
         status_messages = {
             UserStatus.PENDING: 'Hesabınız henüz onaylanmadı. Lütfen admin onayını bekleyin.',
             UserStatus.REJECTED: 'Hesabınız reddedildi. Daha fazla bilgi için yönetici ile iletişime geçin.',
