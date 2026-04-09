@@ -1,0 +1,454 @@
+{% extends "itempool/base.html" %}
+{% load static %}
+
+{% block title %}Değerlendirme Paneli — {{ test_form.name }}{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+.nav-sessions .nav-link { font-size: 0.8rem; padding: 0.3rem 0.6rem; }
+.risk-green  { background: #d1fae5; color: #065f46; }
+.risk-yellow { background: #fef3c7; color: #92400e; }
+.risk-red    { background: #fee2e2; color: #991b1b; }
+.tab-content { min-height: 400px; }
+.stat-card { border-left: 4px solid; }
+.stat-card.primary { border-color: #3b82f6; }
+.stat-card.success { border-color: #10b981; }
+.stat-card.warning { border-color: #f59e0b; }
+.stat-card.danger  { border-color: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'itempool:test_form_list_all' %}">Sınav Formları</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'itempool:test_form_detail' pk=test_form.pk %}">{{ test_form.name }}</a></li>
+      <li class="breadcrumb-item active">Değerlendirme Paneli</li>
+    </ol>
+  </nav>
+
+  <!-- Başlık -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h2 class="h4 mb-1 fw-bold">
+        <i class="bi bi-bar-chart-line-fill text-primary me-2"></i>
+        Değerlendirme Paneli
+      </h2>
+      <p class="text-muted mb-0">{{ test_form.name }}{% if test_form.course %} — {{ test_form.course.name }}{% endif %}</p>
+    </div>
+    <a href="{% url 'itempool:exam_form_upload' pk=test_form.pk %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle me-1"></i>Yeni Yükleme
+    </a>
+  </div>
+
+  {% if not sessions %}
+  <!-- Henüz oturum yok -->
+  <div class="card border-0 shadow-sm text-center py-5">
+    <div class="card-body">
+      <i class="bi bi-inbox display-3 text-muted d-block mb-3"></i>
+      <h5 class="text-muted">Henüz Değerlendirme Yüklenmemiş</h5>
+      <p class="text-muted">Bu sınav formuna bağlı hiç optik okuma dosyası yüklenmemiş.</p>
+      <a href="{% url 'itempool:exam_form_upload' pk=test_form.pk %}" class="btn btn-primary mt-2">
+        <i class="bi bi-upload me-1"></i>İlk Değerlendirmeyi Yükle
+      </a>
+    </div>
+  </div>
+  {% else %}
+
+  <div class="row g-4">
+
+    <!-- SOL: Oturum Sekmesi -->
+    <div class="col-lg-3 col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light py-2">
+          <h6 class="mb-0 text-muted small"><i class="bi bi-layers me-1"></i>Değerlendirme Oturumları</h6>
+        </div>
+        <div class="list-group list-group-flush nav nav-sessions" id="sessionTabs" role="tablist">
+          {% for session in sessions %}
+          <a href="{% url 'itempool:exam_grading_hub_session' pk=test_form.pk session_pk=session.pk %}?tab={{ active_tab }}"
+             class="list-group-item list-group-item-action py-2 px-3 {% if session == active_session %}active{% endif %}">
+            <div class="fw-semibold small text-truncate">{{ session.original_filename }}</div>
+            <div class="text-muted" style="font-size:0.72rem;">
+              {{ session.created_at|date:"d.m.Y H:i" }}
+              {% if session.student_count %}<br><i class="bi bi-people me-1"></i>{{ session.student_count }} öğrenci{% endif %}
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- SAĞ: Analiz Paneli -->
+    <div class="col-lg-9 col-md-8">
+
+      {% if not active_session %}
+      <div class="alert alert-info">Analiz için bir oturum seçin.</div>
+      {% elif not active_session.is_processed %}
+      <div class="alert alert-warning"><i class="bi bi-hourglass me-1"></i>Bu oturum henüz işlenmedi.</div>
+      {% else %}
+
+      <!-- Özet istatistik kartları -->
+      {% if stats %}
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm stat-card primary h-100">
+            <div class="card-body py-3 px-3">
+              <div class="text-muted small">Öğrenci</div>
+              <div class="h4 fw-bold mb-0">{{ stats.student_count }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm stat-card success h-100">
+            <div class="card-body py-3 px-3">
+              <div class="text-muted small">Ortalama</div>
+              <div class="h4 fw-bold mb-0">{{ stats.mean|floatformat:1 }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm stat-card warning h-100">
+            <div class="card-body py-3 px-3">
+              <div class="text-muted small">Medyan</div>
+              <div class="h4 fw-bold mb-0">{{ stats.median|floatformat:1 }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm stat-card danger h-100">
+            <div class="card-body py-3 px-3">
+              <div class="text-muted small">Std. Sapma</div>
+              <div class="h4 fw-bold mb-0">{{ stats.std_dev|floatformat:2 }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Sekme Navigasyonu -->
+      <ul class="nav nav-tabs mb-3" id="analysisTabs">
+        <li class="nav-item">
+          <a class="nav-link {% if active_tab == 'stats' %}active{% endif %}"
+             href="?tab=stats">
+            <i class="bi bi-bar-chart me-1"></i>İstatistikler
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if active_tab == 'items' %}active{% endif %}"
+             href="?tab=items">
+            <i class="bi bi-list-check me-1"></i>Madde Analizi
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if active_tab == 'kr20' %}active{% endif %}"
+             href="?tab=kr20">
+            <i class="bi bi-graph-up me-1"></i>KR-20
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if active_tab == 'alpha' %}active{% endif %}"
+             href="?tab=alpha">
+            <i class="bi bi-graph-up-arrow me-1"></i>Cronbach α
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if active_tab == 'cheating' %}active{% endif %}"
+             href="?tab=cheating">
+            <i class="bi bi-shield-exclamation me-1"></i>Kopya Analizi
+          </a>
+        </li>
+        {% if test_form %}
+        <li class="nav-item">
+          <a class="nav-link {% if active_tab == 'outcomes' %}active{% endif %}"
+             href="?tab=outcomes">
+            <i class="bi bi-bullseye me-1"></i>Çıktı Başarısı
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+
+      <div class="tab-content">
+
+        <!-- === İSTATİSTİKLER === -->
+        {% if active_tab == 'stats' and stats %}
+        <div class="row g-4">
+          <div class="col-12">
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-light py-2">
+                <h6 class="mb-0 text-muted"><i class="bi bi-bar-chart me-1"></i>Puan Dağılımı (Histogram)</h6>
+              </div>
+              <div class="card-body">
+                <canvas id="histogramChart" height="120"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="alert alert-{{ stats.interpretation_type }} mb-0">
+                  <strong>Dağılım Yorumu:</strong> {{ stats.dist_interpretation }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const ctx = document.getElementById('histogramChart').getContext('2d');
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: {{ histogram_labels|safe }},
+              datasets: [{
+                label: 'Öğrenci Sayısı',
+                data: {{ stats.histogram_bins }},
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { title: { display: true, text: 'Doğru Sayısı' } },
+                y: { title: { display: true, text: 'Öğrenci Sayısı' }, beginAtZero: true }
+              }
+            }
+          });
+        });
+        </script>
+        {% endif %}
+
+        <!-- === MADDE ANALİZİ === -->
+        {% if active_tab == 'items' and item_analysis %}
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+            <h6 class="mb-0 text-muted"><i class="bi bi-list-check me-1"></i>Madde Analizi</h6>
+            <div class="d-flex gap-2 small">
+              <span class="badge risk-green px-2">Risk ≤ 30</span>
+              <span class="badge risk-yellow px-2">Risk 31–60</span>
+              <span class="badge risk-red px-2">Risk > 60</span>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Cevap</th>
+                    <th>p (Güçlük)</th>
+                    <th>r (Ayırt)</th>
+                    <th>Güçlük</th>
+                    <th>Ayırt Edicilik</th>
+                    <th>Risk</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in item_analysis %}
+                  {% with risk=item.r|floatformat:2 %}
+                  <tr class="{% if item.is_problematic %}table-danger{% endif %}">
+                    <td class="fw-bold">{{ item.question_number }}</td>
+                    <td><code class="fw-bold">{{ item.correct_answer }}</code></td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="progress flex-grow-1" style="height:6px;min-width:50px;">
+                          <div class="progress-bar {% if item.p > 0.85 %}bg-success{% elif item.p < 0.15 %}bg-danger{% else %}bg-primary{% endif %}"
+                               style="width:{{ item.p|floatformat:0 }}00%"></div>
+                        </div>
+                        <span class="small text-muted">{{ item.p|floatformat:2 }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="fw-semibold {% if item.r < 0.19 %}text-danger{% elif item.r < 0.29 %}text-warning{% else %}text-success{% endif %}">
+                        {{ item.r|floatformat:2 }}
+                      </span>
+                    </td>
+                    <td><small>{{ item.difficulty }}</small></td>
+                    <td><small>{{ item.discrimination }}</small></td>
+                    <td>
+                      {% if item.is_problematic %}
+                        <span class="badge risk-red">Sorunlu</span>
+                      {% else %}
+                        <span class="badge risk-green">Uygun</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if item.form_item %}
+                        <a href="{% url 'itempool:item_detail' pk=item.form_item.item_instance.pk %}"
+                           class="btn btn-xs btn-outline-primary" style="font-size:0.7rem;padding:1px 6px;">
+                          <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endwith %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- === KR-20 === -->
+        {% if active_tab == 'kr20' %}
+        {% if kr20 %}
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="text-center mb-4">
+              <div class="display-4 fw-bold text-{{ kr20.interpretation_type }}">{{ kr20.kr20 }}</div>
+              <div class="text-muted mt-1">KR-20 Güvenirlik Katsayısı</div>
+            </div>
+            <div class="alert alert-{{ kr20.interpretation_type }}">{{ kr20.interpretation }}</div>
+            <div class="row text-center g-3">
+              <div class="col-4">
+                <div class="text-muted small">Soru Sayısı (k)</div>
+                <div class="h5 fw-bold">{{ kr20.k }}</div>
+              </div>
+              <div class="col-4">
+                <div class="text-muted small">Öğrenci (n)</div>
+                <div class="h5 fw-bold">{{ kr20.n }}</div>
+              </div>
+              <div class="col-4">
+                <div class="text-muted small">Ortalama Puan</div>
+                <div class="h5 fw-bold">{{ kr20.mean_score }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">KR-20 hesaplamak için yeterli veri yok (en az 2 soru gerekli).</div>
+        {% endif %}
+        {% endif %}
+
+        <!-- === CRONBACH ALPHA === -->
+        {% if active_tab == 'alpha' %}
+        {% if alpha %}
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="text-center mb-4">
+              <div class="display-4 fw-bold text-{{ alpha.interpretation_type }}">{{ alpha.alpha }}</div>
+              <div class="text-muted mt-1">Cronbach's α (Alfa)</div>
+            </div>
+            <div class="alert alert-{{ alpha.interpretation_type }}">{{ alpha.interpretation }}</div>
+            <div class="row text-center g-3">
+              <div class="col-4">
+                <div class="text-muted small">Soru Sayısı (k)</div>
+                <div class="h5 fw-bold">{{ alpha.k }}</div>
+              </div>
+              <div class="col-4">
+                <div class="text-muted small">Öğrenci (n)</div>
+                <div class="h5 fw-bold">{{ alpha.n }}</div>
+              </div>
+              <div class="col-4">
+                <div class="text-muted small">Ortalama Puan</div>
+                <div class="h5 fw-bold">{{ alpha.mean_score }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">Cronbach Alpha hesaplamak için yeterli veri yok.</div>
+        {% endif %}
+        {% endif %}
+
+        <!-- === KOPYA ANALİZİ === -->
+        {% if active_tab == 'cheating' %}
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-light py-2">
+            <h6 class="mb-0 text-muted"><i class="bi bi-shield-exclamation me-1"></i>Kopya Analizi</h6>
+          </div>
+          <div class="card-body">
+            {% if cheating.error %}
+              <div class="alert alert-warning">{{ cheating.error }}</div>
+            {% elif cheating.risky_pairs %}
+              <div class="alert alert-danger">
+                <strong>{{ cheating.risky_pairs|length }} şüpheli çift</strong> tespit edildi.
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Öğrenci 1</th>
+                      <th>Öğrenci 2</th>
+                      <th>Risk</th>
+                      <th>Z-Skoru</th>
+                      <th>Aynı Yanlış</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for pair in cheating.risky_pairs %}
+                    <tr>
+                      <td>{{ pair.s1.student_name }}<br><small class="text-muted">{{ pair.s1.student_no }}</small></td>
+                      <td>{{ pair.s2.student_name }}<br><small class="text-muted">{{ pair.s2.student_no }}</small></td>
+                      <td>
+                        <span class="badge {% if pair.risk_level == 'Yüksek' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                          {{ pair.risk_level }}
+                        </span>
+                      </td>
+                      <td>{{ pair.z_score|floatformat:2 }}</td>
+                      <td>{{ pair.details.same_wrongs }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="alert alert-success">
+                <i class="bi bi-shield-check me-1"></i>Şüpheli kopya çifti tespit edilmedi.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- === ÖĞRENME ÇIKTISI BAŞARISI === -->
+        {% if active_tab == 'outcomes' %}
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-light py-2">
+            <h6 class="mb-0 text-muted"><i class="bi bi-bullseye me-1"></i>Öğrenme Çıktısı Başarı Raporu</h6>
+          </div>
+          <div class="card-body">
+            {% if outcome_performance %}
+              {% for perf in outcome_performance %}
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="small fw-semibold">
+                    {% if perf.outcome %}{{ perf.outcome.code }}: {{ perf.outcome.description|truncatechars:50 }}{% else %}Tanımsız{% endif %}
+                  </span>
+                  <span class="small text-muted">{{ perf.avg_correct_rate|floatformat:1 }}% — {{ perf.question_count }} soru</span>
+                </div>
+                <div class="progress" style="height: 12px;">
+                  {% with pct=perf.avg_correct_rate|floatformat:0 %}
+                  <div class="progress-bar {% if perf.avg_correct_rate >= 0.7 %}bg-success{% elif perf.avg_correct_rate >= 0.4 %}bg-warning{% else %}bg-danger{% endif %}"
+                       style="width: {{ pct }}00%"
+                       role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
+                  </div>
+                  {% endwith %}
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="alert alert-info">
+                Bu oturum için öğrenme çıktısı verisi yok (maddelerin çıktılara bağlı olması gerekir).
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+      </div><!-- /.tab-content -->
+      {% endif %}
+
+    </div><!-- /.col -->
+  </div><!-- /.row -->
+  {% endif %}
+</div>
+{% endblock %}

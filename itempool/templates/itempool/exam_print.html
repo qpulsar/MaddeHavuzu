@@ -11,12 +11,6 @@
     margin-left: {{ template.margin_left }}mm;
     margin-right: {{ template.margin_right }}mm;
 
-    {% if not header.html %}
-    @top-left   { content: "{{ header.left }}"; font-family: {{ template.font_family }}; font-size: 9pt; }
-    @top-center { content: "{{ header.center }}"; font-family: {{ template.font_family }}; font-size: 10pt; font-weight: bold; }
-    @top-right  { content: "{{ header.right }}"; font-family: {{ template.font_family }}; font-size: 9pt; }
-    {% endif %}
-
     {% if not footer.html %}
     @bottom-left   { content: "{{ footer.left }}"; font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
     @bottom-center { content: counter(page) " / " counter(pages); font-family: {{ template.font_family }}; font-size: 8pt; color: #666; }
@@ -35,6 +29,21 @@ body {
     color: #000;
     margin: 0;
     padding: 0;
+}
+
+/* GrapesJS tarafından üretilen CSS */
+{% if header.css %}{{ header.css }}{% endif %}
+{% if footer.css %}{{ footer.css }}{% endif %}
+
+.custom-header {
+    margin-bottom: 8pt;
+}
+.custom-header img {
+    max-height: 80px;
+}
+.custom-header table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
 {% if header.show_line %}
@@ -174,7 +183,7 @@ body {
 .answer-key-item .ak-no { font-weight: bold; }
 .answer-key-item .ak-ans { color: #c00; font-weight: bold; }
 
-.footer {
+.footer-running {
     position: running(footer);
     width: 100%;
     font-size: 9pt;
@@ -184,16 +193,6 @@ body {
     padding-top: 5pt;
     {% endif %}
 }
-.footer-table {
-    display: table;
-    width: 100%;
-}
-.footer-col {
-    display: table-cell;
-    width: 33.3%;
-}
-.footer-col.center { text-align: center; }
-.footer-col.right { text-align: right; }
 </style>
 </head>
 <body>
@@ -293,18 +292,11 @@ body {
 </div>
 {% endif %}
 
-    <div class="footer">
-        {% if footer.html %}
-            <div class="footer-content-html">
-                {{ footer.html|safe }}
-            </div>
-        {% else %}
-            <div class="footer-table">
-                <div class="footer-col">{{ footer.left|default:"" }}</div>
-                <div class="footer-col center">{{ footer.center|default:"" }}</div>
-                <div class="footer-col right">{{ footer.right|default:"" }}</div>
-            </div>
-        {% endif %}
+{% if footer.html %}
+    <div class="footer-running">
+        {{ footer.html|safe }}
     </div>
+{% endif %}
+
 </body>
 </html>

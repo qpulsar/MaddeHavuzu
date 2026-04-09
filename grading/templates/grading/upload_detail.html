@@ -52,7 +52,33 @@
 </div>
 {% endif %}
 
-<!-- Summary Cards -->
+<!-- Form Bağlantı Banner -->
+{% if session.test_form %}
+<div class="alert alert-primary d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <i class="bi bi-link-45deg me-2 fs-5"></i>
+    <strong>{{ session.test_form.name }}</strong> sınavına bağlı
+    {% if session.test_form.course %}<span class="text-muted ms-1">— {{ session.test_form.course.name }}</span>{% endif %}
+  </div>
+  <a href="{% url 'itempool:exam_grading_hub_session' pk=session.test_form.pk session_pk=session.pk %}"
+     class="btn btn-primary btn-sm">
+    <i class="bi bi-bar-chart me-1"></i>Analiz Paneli
+  </a>
+</div>
+{% elif session.is_processed %}
+<div class="alert alert-warning d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    Bu değlendirme bir sınav formuna bağlı değil.
+    Bir forma bağlayarak madde analizi ve öğrenme çıktısı raporu oluşturabilirsiniz.
+  </div>
+  <a href="{% url 'itempool:exam_grading_hub_standalone' session_pk=session.pk %}"
+     class="btn btn-warning btn-sm">
+    <i class="bi bi-bar-chart me-1"></i>Bağlantisız Analiz
+  </a>
+</div>
+{% endif %}
+
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card stat-card correct">

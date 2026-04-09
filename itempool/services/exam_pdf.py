@@ -9,6 +9,8 @@ from django.conf import settings
 
 def _resolve_variable(text: str, context: dict) -> str:
     """Şablon metin içindeki {variable} alanlarını doldurur."""
+    if not text:
+        return ''
     for key, val in context.items():
         text = text.replace(f'{{{key}}}', str(val))
     return text
@@ -36,7 +38,6 @@ def _get_choice_layout_class(fi, template) -> str:
     max_len = max(len(t) for t in texts)
     
     # Sayfa sütun sayısına göre eşik değerleri daralt
-    # 1 sütun: 22/55, 2 sütun: 12/30, 3 sütun: 8/20
     col_factor = template.column_count
     t3 = 22 if col_factor == 1 else (12 if col_factor == 2 else 8)
     t2 = 55 if col_factor == 1 else (30 if col_factor == 2 else 20)
@@ -54,41 +55,39 @@ def generate_exam_pdf(test_form, template: "ExamTemplate", with_answer_key: bool
     returns: PDF içeriği (bytes)
     """
     from weasyprint import HTML
+    import os
 
-    tpl = template # Define tpl early
+    tpl = template
 
     # Şablon değişkenleri
     var_context = {
         'form_name': test_form.name,
         'course': test_form.course.name if test_form.course else 'Genel',
+        'course_code': test_form.course.code if test_form.course else '—',
         'semester': test_form.course.semester if test_form.course else 'Genel',
+        'teacher_name': test_form.created_by.get_full_name() if test_form.created_by else '—',
         'date': date.today().strftime('%d.%m.%Y'),
         'page': '<span class="page-number"></span>',
         'total_pages': '<span class="total-pages"></span>',
     }
 
     # Özel HTML başlık/altbilgi varsa çöz (resolve)
-    header_html_resolved = None
-    if tpl.header_html:
-        header_html_resolved = _resolve_variable(tpl.header_html, var_context)
+    header_html_resolved = _resolve_variable(tpl.header_html, var_context) if tpl.header_html else None
+    footer_html_resolved = _resolve_variable(tpl.footer_html, var_context) if tpl.footer_html else None
 
-    footer_html_resolved = None
-    if tpl.footer_html:
-        footer_html_resolved = _resolve_variable(tpl.footer_html, var_context)
+    # GrapesJS CSS — değişken içerebilir (ender)
+    header_css_resolved = _resolve_variable(tpl.header_css, var_context) if tpl.header_css else ''
+    footer_css_resolved = _resolve_variable(tpl.footer_css, var_context) if tpl.footer_css else ''
 
     header_ctx = {
-        'left': _resolve_variable(tpl.header_left, var_context),
-        'center': _resolve_variable(tpl.header_center, var_context),
-        'right': _resolve_variable(tpl.header_right, var_context),
         'show_line': tpl.show_header_line,
         'html': header_html_resolved,
+        'css': header_css_resolved,
     }
     footer_ctx = {
-        'left': _resolve_variable(tpl.footer_left, var_context),
-        'center': _resolve_variable(tpl.footer_center, var_context),
-        'right': _resolve_variable(tpl.footer_right, var_context),
         'show_line': tpl.show_footer_line,
         'html': footer_html_resolved,
+        'css': footer_css_resolved,
     }
 
     form_items = test_form.form_items.select_related(
@@ -109,5 +108,7 @@ def generate_exam_pdf(test_form, template: "ExamTemplate", with_answer_key: bool
         'STATIC_URL': settings.STATIC_URL,
     })
 
-    pdf_bytes = HTML(string=html_string, base_url=settings.BASE_DIR).write_pdf()
+    # base_url olarak MEDIA_ROOT'u da çözebilmek için proje dizinini kullan
+    base_url = str(settings.BASE_DIR)
+    pdf_bytes = HTML(string=html_string, base_url=base_url).write_pdf()
     return pdf_bytes

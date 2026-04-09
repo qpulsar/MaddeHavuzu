@@ -181,6 +181,32 @@ class ExamTemplate(models.Model):
         help_text='Zengin metin editörü ile oluşturulan alt bilgi içeriği'
     )
 
+    # GrapesJS editör durumu
+    header_design_json = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name='Üst Bilgi Tasarım Verisi',
+        help_text='GrapesJS editör durumu (JSON)'
+    )
+    footer_design_json = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name='Alt Bilgi Tasarım Verisi',
+        help_text='GrapesJS editör durumu (JSON)'
+    )
+    header_css = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Üst Bilgi CSS',
+        help_text='GrapesJS tarafından üretilen CSS'
+    )
+    footer_css = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Alt Bilgi CSS',
+        help_text='GrapesJS tarafından üretilen CSS'
+    )
+
     class Meta:
         verbose_name = 'Sınav Kağıdı Şablonu'
         verbose_name_plural = 'Sınav Kağıdı Şablonları'
@@ -188,6 +214,12 @@ class ExamTemplate(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            # Diğer tüm şablonların varsayılan özelliğini kaldır
+            ExamTemplate.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
 
     @classmethod
     def get_default(cls):

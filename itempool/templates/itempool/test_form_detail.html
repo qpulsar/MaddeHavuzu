@@ -169,6 +169,40 @@
             </div>
         </div>
 
+        <!-- Faz 27: Değerlendirme Kartı -->
+        <div class="card shadow-sm mb-4 border-primary">
+            <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bar-chart-line me-1"></i>Değerlendirme</span>
+                {% if form.upload_sessions.count %}
+                <span class="badge bg-white text-primary">{{ form.upload_sessions.count }} oturum</span>
+                {% endif %}
+            </div>
+            <div class="card-body py-3">
+                {% if form.upload_sessions.exists %}
+                <div class="mb-3">
+                    {% with latest=form.upload_sessions.first %}
+                    <div class="small text-muted mb-1">Son değerlendirme:</div>
+                    <div class="fw-semibold small">{{ latest.original_filename }}</div>
+                    <div class="text-muted" style="font-size:0.75rem;">
+                        {{ latest.created_at|date:"d.m.Y H:i" }}
+                        {% if latest.student_count %}— {{ latest.student_count }} öğrenci{% endif %}
+                    </div>
+                    {% endwith %}
+                </div>
+                <a href="{% url 'itempool:exam_grading_hub' pk=form.pk %}"
+                   class="btn btn-primary btn-sm w-100 mb-2">
+                    <i class="bi bi-bar-chart me-1"></i>Analiz Panelini Aç
+                </a>
+                {% else %}
+                <p class="small text-muted mb-2">Henüz değerlendirme yüklenmemiş.</p>
+                {% endif %}
+                <a href="{% url 'itempool:exam_form_upload' pk=form.pk %}"
+                   class="btn btn-outline-primary btn-sm w-100">
+                    <i class="bi bi-upload me-1"></i>Değerlendirme Yükle
+                </a>
+            </div>
+        </div>
+
 <script>
 function updatePdfLinks(templateId) {
     // PDF ve Word linklerini güncelle

@@ -1,0 +1,177 @@
+{% extends "itempool/base.html" %}
+{% load static %}
+
+{% block title %}Değerlendirme Yükle — {{ test_form.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'itempool:test_form_list_all' %}">Sınav Formları</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'itempool:test_form_detail' pk=test_form.pk %}">{{ test_form.name }}</a></li>
+      <li class="breadcrumb-item active">Değerlendirme Yükle</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+
+    <!-- SOL: Yükleme Formu -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+          <h5 class="mb-0">
+            <i class="bi bi-upload me-2"></i>Optik Okuma Dosyası Yükle
+          </h5>
+          <small class="opacity-75">{{ test_form.name }}</small>
+        </div>
+        <div class="card-body p-4">
+
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+                {{ msg }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post" action="{% url 'new_upload' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <!-- Test formu bağlantısı gizli olarak -->
+            <input type="hidden" name="test_form_id" value="{{ test_form.pk }}">
+
+            <!-- Cevap anahtarı bilgisi -->
+            <div class="alert alert-success d-flex align-items-start mb-4">
+              <i class="bi bi-key-fill me-2 fs-5 mt-1"></i>
+              <div>
+                <strong>Cevap Anahtarı Hazır</strong>
+                <div class="mt-1">
+                  <code class="fs-6 text-success fw-bold letter-spacing-wide">{{ answer_key }}</code>
+                </div>
+                <small class="text-muted">{{ question_count }} soru — bu cevap anahtarı otomatik olarak kullanılacak.</small>
+              </div>
+            </div>
+
+            <!-- Sınav uygulaması seç (varsa) -->
+            {% if applications %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Sınav Uygulaması <span class="text-muted fw-normal">(opsiyonel)</span></label>
+              <select name="exam_application_id" class="form-select">
+                <option value="">— Belirtme —</option>
+                {% for app in applications %}
+                  <option value="{{ app.pk }}">{{ app.group.name }} — {{ app.application_date|date:"d.m.Y" }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+
+            <!-- Dosya -->
+            <div class="mb-3">
+              <label for="id_file" class="form-label fw-semibold">Optik Okuma TXT Dosyası <span class="text-danger">*</span></label>
+              <input type="file" id="id_file" name="file" class="form-control" accept=".txt" required>
+              <div class="form-text">Yalnızca .txt formatında dosyalar kabul edilir (maks. 20 MB).</div>
+            </div>
+
+            <!-- Dosya formatı -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Dosya Formatı</label>
+              <select name="format" class="form-select">
+                {% for fmt in formats %}
+                  <option value="{{ fmt.pk }}" {% if fmt == default_format %}selected{% endif %}>{{ fmt.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Yanlış-Doğru Oranı</label>
+                <select name="penalty_ratio" class="form-select">
+                  <option value="0">Yok (net = doğru)</option>
+                  <option value="1">1 yanlış = 1 doğru</option>
+                  <option value="2">2 yanlış = 1 doğru</option>
+                  <option value="3">3 yanlış = 1 doğru</option>
+                  <option value="4">4 yanlış = 1 doğru</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Soru Puanı</label>
+                <input type="number" name="points_per_question" value="1.0" min="0.1" step="0.1" class="form-control">
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-cloud-upload me-2"></i>Yükle ve Değerlendir
+              </button>
+              <a href="{% url 'itempool:test_form_detail' pk=test_form.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>İptal
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAĞ: Geçmiş Oturumlar -->
+    <div class="col-lg-5">
+      <!-- Form Özeti -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="card-title text-muted mb-3"><i class="bi bi-info-circle me-1"></i>Sınav Formu Bilgisi</h6>
+          <dl class="row mb-0 small">
+            <dt class="col-5">Form Adı</dt>
+            <dd class="col-7">{{ test_form.name }}</dd>
+            {% if test_form.course %}
+            <dt class="col-5">Ders</dt>
+            <dd class="col-7">{{ test_form.course.name }}</dd>
+            {% endif %}
+            <dt class="col-5">Soru Sayısı</dt>
+            <dd class="col-7">{{ question_count }}</dd>
+            <dt class="col-5">Oluşturulma</dt>
+            <dd class="col-7">{{ test_form.created_at|date:"d.m.Y" }}</dd>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Geçmiş oturumlar -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light py-2">
+          <h6 class="mb-0 text-muted"><i class="bi bi-clock-history me-1"></i>Önceki Değerlendirmeler</h6>
+        </div>
+        <div class="card-body p-0">
+          {% if existing_sessions %}
+            <div class="list-group list-group-flush">
+              {% for session in existing_sessions %}
+              <div class="list-group-item list-group-item-action px-3 py-2">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <div class="fw-semibold small">{{ session.original_filename }}</div>
+                    <div class="text-muted" style="font-size:0.75rem;">
+                      {{ session.created_at|date:"d.m.Y H:i" }} —
+                      {% if session.student_count %}{{ session.student_count }} öğrenci{% endif %}
+                      {% if session.question_count %}, {{ session.question_count }} soru{% endif %}
+                    </div>
+                  </div>
+                  <a href="{% url 'itempool:exam_grading_hub_session' pk=test_form.pk session_pk=session.pk %}"
+                     class="btn btn-sm btn-outline-primary ms-2">
+                    <i class="bi bi-bar-chart me-1"></i>Analiz
+                  </a>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center text-muted py-4">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+              Henüz değerlendirme yüklenmemiş
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

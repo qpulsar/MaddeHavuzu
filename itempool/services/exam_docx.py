@@ -53,7 +53,9 @@ def generate_exam_docx(test_form, template: "ExamTemplate", with_answer_key: boo
     var_context = {
         'form_name': test_form.name,
         'course': test_form.course.name if test_form.course else 'Genel',
+        'course_code': test_form.course.code if test_form.course else '—',
         'semester': test_form.course.semester if test_form.course else 'Genel',
+        'teacher_name': test_form.created_by.get_full_name() if test_form.created_by else '—',
         'date': date.today().strftime('%d.%m.%Y'),
         'page': '1', # Word dynamic field insertion is complex, using static placeholder
         'total_pages': '?',
@@ -65,45 +67,32 @@ def generate_exam_docx(test_form, template: "ExamTemplate", with_answer_key: boo
     font.name = 'Times New Roman'
     font.size = Pt(template.font_size)
 
-    # Başlık Tablosu veya Özel HTML
+    # Başlık — GrapesJS HTML'den metin ayıklama
     import re
     def clean_html(html):
         if not html: return ""
-        # Remove <style> and <script> content
         html = re.sub(r'<(style|script)[^>]*>.*?</\1>', '', html, flags=re.DOTALL)
-        # Replace common tags with newlines
         html = re.sub(r'<(p|br|div|tr|h[1-6])[^>]*>', '\n', html)
-        # Strip remaining tags
         text = re.sub(r'<[^>]+>', '', html)
-        # Decode common entities
         text = text.replace('&nbsp;', ' ').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
         return "\n".join([line.strip() for line in text.split('\n') if line.strip()])
 
     if template.header_html:
-        # Resolve variables in HTML
         resolved_html = _resolve_variable(template.header_html, var_context)
         header_text = clean_html(resolved_html)
-        p_header = doc.add_paragraph(header_text)
-        p_header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for line in header_text.split('\n'):
+            p_h = doc.add_paragraph(line)
+            p_h.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p_h.paragraph_format.space_after = Pt(0)
     else:
-        header_table = doc.add_table(rows=1, cols=3)
-        header_table.width = section.page_width - section.left_margin - section.right_margin
-        
-        cells = header_table.rows[0].cells
-        p_left = cells[0].paragraphs[0]
-        p_left.text = _resolve_variable(template.header_left, var_context)
-        p_left.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        
-        p_center = cells[1].paragraphs[0]
-        p_center.text = _resolve_variable(template.header_center, var_context)
-        p_center.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        
-        p_right = cells[2].paragraphs[0]
-        p_right.text = _resolve_variable(template.header_right, var_context)
-        p_right.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        # Boş başlık — sınav adını yaz
+        p_header = doc.add_paragraph(var_context.get('form_name', ''))
+        p_header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_header.runs[0].bold = True if p_header.runs else None
 
     if template.show_header_line:
-        doc.add_paragraph().add_run("_" * 80).bold = True # Simple separator
+        doc.add_paragraph().add_run("_" * 80).bold = True
+
 
     # 3. Öğrenci Bilgi Kutusu
     if template.show_student_info_box:

@@ -98,6 +98,17 @@ class UploadSession(models.Model):
         help_text='Bu yükleme hangi test formunun değerlendirmesi için?'
     )
 
+    # Faz 27: Sınav uygulamasıyla doğrudan bağlantı (opsiyonel)
+    exam_application = models.ForeignKey(
+        'itempool.ExamApplication',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='upload_sessions',
+        verbose_name='Sınav Uygulaması',
+        help_text='Bu yükleme hangi sınav uygulamasına ait?'
+    )
+
     wrong_to_correct_ratio = models.IntegerField(
         null=True,
         blank=True,

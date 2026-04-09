@@ -94,6 +94,7 @@ urlpatterns = [
     path('sablonlar/yeni/', views.exam_template_create, name='exam_template_create'),
     path('sablonlar/<int:pk>/duzenle/', views.exam_template_update, name='exam_template_update'),
     path('sablonlar/<int:pk>/onizleme/', views.exam_template_preview, name='exam_template_preview'),
+    path('sablonlar/resim-yukle/', views.template_image_upload, name='template_image_upload'),
     path('formlar/<int:pk>/pdf/', views.test_form_pdf, name='test_form_pdf'),
     path('formlar/<int:pk>/docx/', views.test_form_docx, name='test_form_docx'),
     path('formlar/<int:pk>/AI/auto-balance/', views.test_form_auto_balance, name='test_form_auto_balance'),
@@ -101,4 +102,11 @@ urlpatterns = [
     # Faz 13 — Değerlendirme Entegrasyonu
     path('formlar/<int:pk>/cevap-anahtari/', views.test_form_answer_key, name='test_form_answer_key'),
     path('analiz/oturum/<int:session_pk>/cikti-raporu/', views.outcome_performance_report, name='outcome_performance_report'),
+
+    # Faz 27 — Sınav Formu ↔ Optik Okuma Entegrasyonu
+    path('formlar/<int:pk>/degerlendirme/', views.exam_grading_hub, name='exam_grading_hub'),
+    path('formlar/<int:pk>/degerlendirme/<int:session_pk>/', views.exam_grading_hub, name='exam_grading_hub_session'),
+    path('formlar/<int:pk>/degerlendirme/yukle/', views.exam_form_upload, name='exam_form_upload'),
+    path('degerlendirme/<int:session_pk>/', views.exam_grading_hub_standalone, name='exam_grading_hub_standalone'),
+    path('degerlendirme/<int:session_pk>/bagla/', views.bind_session_to_form, name='bind_session_to_form'),
 ]

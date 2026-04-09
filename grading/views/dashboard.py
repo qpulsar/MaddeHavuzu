@@ -79,6 +79,9 @@ class NewUploadView(LoginRequiredMixin, View):
         format_id = request.POST.get('format')
         penalty_ratio = request.POST.get('penalty_ratio')
         points_per_question = request.POST.get('points_per_question', '1.0')
+        # Sınav formu ve uygulama bağlantısı (opsiyonel)
+        test_form_id = request.POST.get('test_form_id')
+        exam_application_id = request.POST.get('exam_application_id')
         
         # Validation
         if not uploaded_file:
@@ -112,8 +115,25 @@ class NewUploadView(LoginRequiredMixin, View):
                 'Dosya formatı bulunamadı. Lütfen admin panelinden bir format tanımlayın.'
             )
             return redirect('new_upload')
-        
-        # Create upload session
+
+        # Test formu ve sınav uygulaması çözümle
+        linked_test_form = None
+        linked_exam_application = None
+        if test_form_id:
+            try:
+                from itempool.models import TestForm
+                linked_test_form = TestForm.objects.get(pk=test_form_id)
+            except Exception:
+                pass
+        if exam_application_id:
+            try:
+                from itempool.models import ExamApplication
+                linked_exam_application = ExamApplication.objects.get(pk=exam_application_id)
+                if not linked_test_form and linked_exam_application.test_form:
+                    linked_test_form = linked_exam_application.test_form
+            except Exception:
+                pass
+
         session = UploadSession.objects.create(
             owner=request.user,
             original_filename=uploaded_file.name,
@@ -122,6 +142,8 @@ class NewUploadView(LoginRequiredMixin, View):
             wrong_to_correct_ratio=int(penalty_ratio) if penalty_ratio and penalty_ratio.isdigit() else 0,
             points_per_question=float(points_per_question) if points_per_question else 1.0,
             processing_status=ProcessingStatus.QUEUED,
+            test_form=linked_test_form,
+            exam_application=linked_exam_application,
         )
         
         # Process the file
@@ -134,9 +156,27 @@ class NewUploadView(LoginRequiredMixin, View):
                 f'Dosya başarıyla işlendi! {session.student_count} öğrenci, '
                 f'{session.question_count} soru.'
             )
+            # Sınav formu bağlıysa otomatik madde analizi tetikle
+            if linked_test_form and session.is_processed:
+                try:
+                    from itempool.services.analysis_service import ItemAnalysisService
+                    item_mapping = {
+                        fi.order - 1: fi.item_instance_id
+                        for fi in linked_test_form.form_items.order_by('order')
+                    }
+                    count = ItemAnalysisService().process_session_results(
+                        session, item_mapping, linked_test_form
+                    )
+                    if count > 0:
+                        messages.info(request, f'{count} madde için analiz sonuçları otomatik kaydedildi.')
+                except Exception as e:
+                    messages.warning(request, f'Madde analizi kaydedilirken hata: {e}')
         else:
             messages.error(request, f'Dosya işlenirken hata oluştu: {session.error_summary}')
-        
+
+        # Sınav formu bağlıysa analiz paneline yönlendir
+        if linked_test_form and success:
+            return redirect('itempool:exam_grading_hub_session', pk=linked_test_form.pk, session_pk=session.pk)
         return redirect('upload_detail', pk=session.pk)
 
 
