@@ -66,4 +66,19 @@
             }
         });
     })();
+
+    // ── PDF Yükleme Animasyonu ──────────────────────────────────────────
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('.pdf-download-link');
+        if (link) {
+            const overlay = document.getElementById('pdfLoadingOverlay');
+            if (overlay) {
+                overlay.classList.add('show');
+                // 15 saniye sonra otomatik kapat (dosya inmeye başlamış olmalı veya başarısız olmuştur)
+                setTimeout(() => {
+                    overlay.classList.remove('show');
+                }, 15000);
+            }
+        }
+    });
     
