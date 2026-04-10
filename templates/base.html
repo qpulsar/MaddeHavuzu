@@ -236,7 +236,7 @@
             <div class="loader-spinner"></div>
             <div class="loading-text pulse-animation">Sınav Kağıdı Hazırlanıyor</div>
             <p class="loading-subtext">Sorular düzenleniyor, mizanpaj ayarlanıyor ve PDF dosyası oluşturuluyor. Lütfen bekleyin...</p>
-            <div class="close-loading" onclick="document.getElementById('pdfLoadingOverlay').classList.remove('show')">
+            <div class="close-loading" onclick="const ov = document.getElementById('pdfLoadingOverlay'); ov.classList.remove('show'); setTimeout(() => { ov.style.display = 'none'; }, 300);">
                 <i class="bi bi-x-circle"></i> Bu pencereyi kapat
             </div>
         </div>
