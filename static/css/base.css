@@ -761,15 +761,16 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(var(--bs-body-bg-rgb), 0.85);
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--mh-bg, #ffffff);
+    background-color: rgba(var(--bs-body-bg-rgb, 255, 255, 255), 0.85);
     backdrop-filter: blur(8px);
-    display: none; /* JS ile açılacak */
+    display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 10000; /* Sidebar'ın önünde olmalı */
+    z-index: 99999; /* En üstte olmasını garantile */
     opacity: 0;
     transition: opacity 0.3s ease;
 }

@@ -73,10 +73,15 @@
         if (link) {
             const overlay = document.getElementById('pdfLoadingOverlay');
             if (overlay) {
+                overlay.style.display = 'flex';
+                // Trigger reflow for transition
+                overlay.offsetHeight; 
                 overlay.classList.add('show');
-                // 15 saniye sonra otomatik kapat (dosya inmeye başlamış olmalı veya başarısız olmuştur)
+                
+                // 15 saniye sonra otomatik kapat
                 setTimeout(() => {
                     overlay.classList.remove('show');
+                    setTimeout(() => { overlay.style.display = 'none'; }, 300);
                 }, 15000);
             }
         }
