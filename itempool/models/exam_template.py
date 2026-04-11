@@ -46,6 +46,20 @@ class ExamTemplate(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    is_shared = models.BooleanField(
+        default=False,
+        verbose_name='Herkesle Paylaş',
+        help_text='İşaretlenirse tüm kullanıcılar bu şablonu görebilir ve klonlayabilir.'
+    )
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='clones',
+        verbose_name='Orijinal Şablon'
+    )
+
     # Sayfa yapısı
     page_size = models.CharField(
         max_length=20,
@@ -217,9 +231,27 @@ class ExamTemplate(models.Model):
 
     def save(self, *args, **kwargs):
         if self.is_default:
-            # Diğer tüm şablonların varsayılan özelliğini kaldır
-            ExamTemplate.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
+            # Diğer şablonların varsayılan özelliğini kaldır (Kullanıcıya özel veya Admin paylaşımı bazında)
+            qs = ExamTemplate.objects.filter(is_default=True)
+            if self.created_by:
+                qs = qs.filter(created_by=self.created_by)
+            
+            qs.exclude(pk=self.pk).update(is_default=False)
         super().save(*args, **kwargs)
+
+    @classmethod
+    def get_default_for_user(cls, user):
+        """Kullanıcı için en uygun varsayılan şablonu döndürür."""
+        # 1. Kullanıcının kendi varsayılanı
+        tpl = cls.objects.filter(created_by=user, is_default=True).first()
+        if tpl: return tpl
+        
+        # 2. Sistem genelindeki (Admin tarafından paylaşılan) varsayılan
+        tpl = cls.objects.filter(is_shared=True, is_default=True).first()
+        if tpl: return tpl
+        
+        # 3. Herhangi bir varsayılan
+        return cls.get_default()
 
     @classmethod
     def get_default(cls):

@@ -25,6 +25,19 @@
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
+                    {% if prefilled_tf or prefilled_app %}
+                        <div class="alert alert-info border-info-subtle mb-4">
+                            <h6 class="alert-heading fw-bold mb-1"><i class="bi bi-info-circle-fill me-2"></i>Sınav Bağlantısı Aktif</h6>
+                            <p class="mb-0 small">
+                                Bu yükleme <strong>{{ prefilled_tf.name }}</strong> sınavı 
+                                {% if prefilled_app %}ve <strong>{{ prefilled_app.applied_at|date:"d.m.Y" }}</strong> tarihli uygulama{% endif %} 
+                                ile doğrudan ilişkilendirilecektir.
+                            </p>
+                            <input type="hidden" name="test_form_id" value="{{ prefilled_tf.pk }}">
+                            {% if prefilled_app %}<input type="hidden" name="exam_application_id" value="{{ prefilled_app.pk }}">{% endif %}
+                        </div>
+                    {% endif %}
+
                     <div class="mb-4">
                         <label for="file" class="form-label">TXT Dosyası <span class="text-danger">*</span></label>
                         <input type="file" class="form-control form-control-lg" id="file" name="file" accept=".txt"
@@ -98,15 +111,24 @@
                 <div class="row align-items-center">
                     <div class="col-md-7">
                         <ul class="mb-3">
-                            <li>Dosya içerisinde <strong>ANAHTAR</strong> veya <strong>CEVAP</strong> satırı
-                                bulunmalıdır.</li>
+                            {% if prefilled_tf %}
+                            <li>Doğru yanıtlar madde havuzundan (<strong>{{ prefilled_tf.name }}</strong>) otomatik olarak alınacak ve eşleştirilecektir.</li>
+                            <li>TXT dosyasında ayrıca bir ANAHTAR veya CEVAP satırı bulunmasına <strong>gerek yoktur</strong>.</li>
+                            {% else %}
+                            <li>Dosya içerisinde <strong>ANAHTAR</strong> veya <strong>CEVAP</strong> satırı bulunmalıdır.</li>
                             <li>Anahtar satırı, diğer öğrencilerin cevaplarıyla karşılaştırılacaktır.</li>
+                            {% endif %}
                             <li>Her satır bir öğrenciyi temsil eder.</li>
                             <li>Dosya formatı (sütun aralıkları) ayarlardan değiştirilebilir.</li>
                         </ul>
                         <div class="alert alert-info py-2">
-                            <small><i class="bi bi-info-circle me-1"></i> Örnekte görüldüğü gibi, ilk satırda cevap
-                                anahtarı tanımlanabilir.</small>
+                            <small><i class="bi bi-info-circle me-1"></i> 
+                            {% if prefilled_tf %}
+                                Sınav formu bağlı olduğu için sistem doğrudan soruların doğru cevaplarını kullanarak değerlendirme yapacaktır.
+                            {% else %}
+                                Örnekte görüldüğü gibi, ilk satırda cevap anahtarı tanımlanabilir.
+                            {% endif %}
+                            </small>
                         </div>
                     </div>
                     <div class="col-md-5">

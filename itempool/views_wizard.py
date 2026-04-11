@@ -366,9 +366,17 @@ def wizard_eval_step3(request, session_id):
 @login_required
 def test_form_list_all(request):
     """Tüm test formlarını listeler."""
-    forms_qs = (
-        TestForm.objects.filter(created_by=request.user)
-        .prefetch_related('form_items')
-        .order_by('-id')
-    )
+    user = request.user
+    if user.is_staff or (hasattr(user, 'profile') and user.profile.role == 'ADMIN'):
+        forms_qs = (
+            TestForm.objects.all()
+            .prefetch_related('form_items')
+            .order_by('-id')
+        )
+    else:
+        forms_qs = (
+            TestForm.objects.filter(created_by=request.user)
+            .prefetch_related('form_items')
+            .order_by('-id')
+        )
     return render(request, 'itempool/test_form_list_all.html', {'forms': forms_qs})

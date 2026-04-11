@@ -1,0 +1,71 @@
+<div class="col-md-6 col-xl-4">
+    <div class="card shadow-sm h-100 {% if tpl.is_default %}border-primary{% endif %} { % if not is_owner %}bg-light-subtle{% endif %}">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="text-truncate" title="{{ tpl.name }}">
+                {% if not is_owner %}
+                    {% if tpl.created_by.is_superuser or tpl.created_by.profile.role == 'ADMIN' %}
+                        <i class="bi bi-shield-check text-primary" title="Kurumsal Şablon"></i>
+                    {% else %}
+                        <i class="bi bi-person-circle text-muted" title="{{ tpl.created_by.get_full_name|default:tpl.created_by.username }}"></i>
+                    {% endif %}
+                {% endif %}
+                <strong>{{ tpl.name }}</strong>
+            </div>
+            <div class="d-flex gap-1">
+                {% if tpl.is_default %}
+                    <span class="badge bg-primary">Varsayılan</span>
+                {% endif %}
+                {% if tpl.is_shared and is_owner %}
+                    <span class="badge bg-success" title="Herkesle paylaşıldı"><i class="bi bi-share"></i></span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body small">
+            <div class="row text-center mb-2">
+                <div class="col-3 border-end">
+                    <div class="fw-bold">{{ tpl.column_count }}</div>
+                    <div class="text-muted">Sütun</div>
+                </div>
+                <div class="col-3 border-end">
+                    <div class="fw-bold">{{ tpl.font_size }}pt</div>
+                    <div class="text-muted">Font</div>
+                </div>
+                <div class="col-3 border-end">
+                    <div class="fw-bold">{{ tpl.page_size }}</div>
+                    <div class="text-muted">Kağıt</div>
+                </div>
+                <div class="col-3">
+                    <div class="fw-bold">{{ tpl.question_spacing }}pt</div>
+                    <div class="text-muted">Aralık</div>
+                </div>
+            </div>
+            <ul class="list-unstyled mb-0 text-muted">
+                <li><i class="bi bi-check2 text-success"></i> Font: {{ tpl.get_font_family_display }}</li>
+                <li><i class="bi bi-person-fill"></i> Oluşturan: {{ tpl.created_by.get_full_name|default:tpl.created_by.username }}</li>
+                {% if tpl.parent %}
+                    <li><i class="bi bi-git"></i> Şuradan klonlandı: {{ tpl.parent.name|truncatechars:15 }}</li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="card-footer bg-white d-flex gap-2 justify-content-between align-items-center">
+            <div class="d-flex gap-1">
+                <a href="{% url 'itempool:exam_template_preview' tpl.pk %}" class="btn btn-sm btn-outline-primary shadow-sm pdf-download-link" target="_blank" title="Önizle">
+                    <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'itempool:exam_template_fork' tpl.pk %}" class="btn btn-sm btn-outline-info shadow-sm" title="Bu şablonu kopyala (Klonla)">
+                    <i class="bi bi-copy"></i>
+                </a>
+            </div>
+            <div class="d-flex gap-1">
+                {% if is_owner or is_admin %}
+                    <a href="{% url 'itempool:exam_template_share_toggle' tpl.pk %}" class="btn btn-sm {% if tpl.is_shared %}btn-success{% else %}btn-outline-success{% endif %} shadow-sm" title="Paylaşımı Aç/Kapat">
+                        <i class="bi bi-share"></i>
+                    </a>
+                    <a href="{% url 'itempool:exam_template_update' tpl.pk %}" class="btn btn-sm btn-primary shadow-sm">
+                        <i class="bi bi-pencil"></i> Düzenle
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

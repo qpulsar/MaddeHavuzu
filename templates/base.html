@@ -64,11 +64,6 @@
 
             <ul class="nav nav-pills flex-column mb-0">
                 <li class="nav-item">
-                    <a href="{% url 'itempool:test_form_list_all' %}" class="nav-link {% if request.resolver_match.url_name in 'test_form_list_all,test_form_create,test_form_detail,test_form_edit_items,test_form_pdf,test_form_answer_key,test_form_wizard_blueprint' %}active{% endif %}">
-                        <i class="bi bi-journal-text"></i> Sınav Formları
-                    </a>
-                </li>
-                <li class="nav-item">
                     <a href="{% url 'itempool:course_list' %}" class="nav-link {% if request.resolver_match.url_name in 'course_list,course_create,course_detail,course_update,course_test_form_create,course_spec_table_create,exam_application_create,exam_application_delete,course_applied_items' %}active{% endif %}">
                         <i class="bi bi-book"></i> Dersler
                     </a>

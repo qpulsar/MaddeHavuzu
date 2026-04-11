@@ -1,7 +1,10 @@
-#!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
 import os
 import sys
+import warnings
+
+# Gereksiz kütüphane uyarılarını temizle (Importlardan önce olması daha sağlıklı)
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*NotOpenSSLWarning.*")
 
 
 def main():

@@ -1,16 +1,23 @@
 {% extends 'base.html' %}
 
-{% block title %}Yönetim Paneli - OptikForm{% endblock %}
+{% block title %}Komuta Merkezi - Yönetim Paneli{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-shield-lock me-2"></i>Yönetim Paneli</h2>
+    <div>
+        <h2 class="mb-1"><i class="bi bi-shield-lock-fill me-2 text-primary"></i>Yönetim Paneli</h2>
+        <p class="text-muted mb-0">Sistemin genel durumu ve birleşik yönetimsel araçlar</p>
+    </div>
 </div>
 
-<!-- Statistics Cards -->
+<!-- Sistem Özeti (Unified Stats) -->
+<h5 class="mb-3 text-muted fw-bold small text-uppercase tracking-wider">
+    <i class="bi bi-cpu me-2"></i>Sistem Genel Özeti
+</h5>
 <div class="row g-4 mb-4">
+    <!-- Birincil Sistem İstatistikleri -->
     <div class="col-md-3">
-        <div class="card stat-card h-100" style="border-left-color: #667eea;">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="border-left: 4px solid #34495e!important;">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -25,52 +32,50 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card h-100" style="border-left-color: #f59e0b;">
+        <div class="card stat-card h-100 border-0 shadow-sm {% if pending_users > 0 %}bg-warning-subtle{% endif %}" style="border-left: 4px solid var(--bs-warning)!important;">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-1">Onay Bekleyen</h6>
+                        <h6 class="text-muted mb-1">Onay Bekleyenler</h6>
                         <h2 class="mb-0">{{ pending_users }}</h2>
                     </div>
                     <div class="display-6 text-warning">
-                        <i class="bi bi-hourglass-split"></i>
+                        <i class="bi bi-person-exclamation"></i>
                     </div>
                 </div>
             </div>
             {% if pending_users > 0 %}
-            <div class="card-footer bg-warning bg-opacity-10 border-0">
-                <a href="{% url 'admin_users' %}?status=PENDING" class="text-warning text-decoration-none small">
-                    <i class="bi bi-arrow-right me-1"></i>Onay bekleyenleri gör
-                </a>
+            <div class="card-footer bg-transparent border-0 pt-0">
+                <a href="{% url 'admin_users' %}?status=PENDING" class="small text-warning text-decoration-none fw-bold">Şimdi Onayla <i class="bi bi-arrow-right"></i></a>
             </div>
             {% endif %}
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card h-100" style="border-left-color: #10b981;">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="border-left: 4px solid var(--mh-primary)!important;">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-1">Toplam Yükleme</h6>
-                        <h2 class="mb-0">{{ total_uploads }}</h2>
+                        <h6 class="text-muted mb-1">Madde Havuzları</h6>
+                        <h2 class="mb-0">{{ total_pools }}</h2>
                     </div>
-                    <div class="display-6 text-success">
-                        <i class="bi bi-file-earmark-arrow-up"></i>
+                    <div class="display-6 text-primary opacity-50">
+                        <i class="bi bi-layers"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card stat-card h-100" style="border-left-color: #764ba2;">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="border-left: 4px solid #1abc9c!important;">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="text-muted mb-1">Toplam Öğrenci</h6>
-                        <h2 class="mb-0">{{ total_students }}</h2>
+                        <h6 class="text-muted mb-1">Havuzdaki Maddeler</h6>
+                        <h2 class="mb-0">{{ total_items }}</h2>
                     </div>
-                    <div class="display-6 text-primary">
-                        <i class="bi bi-mortarboard"></i>
+                    <div class="display-6 text-success opacity-50">
+                        <i class="bi bi-database"></i>
                     </div>
                 </div>
             </div>
@@ -78,43 +83,159 @@
     </div>
 </div>
 
-<!-- Quick Actions -->
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <a href="{% url 'admin_users' %}" class="card text-decoration-none h-100 border-0 shadow-sm">
-            <div class="card-body text-center py-4">
-                <div class="display-4 text-primary mb-3"><i class="bi bi-people-fill"></i></div>
-                <h5>Kullanıcı Yönetimi</h5>
-                <p class="text-muted mb-0 small">Kullanıcıları görüntüle, onayla veya askıya al</p>
+<div class="row g-4 mb-5">
+    <!-- İkincil Faaliyet İstatistikleri -->
+    <div class="col-md-3">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="border-left: 4px solid #8e44ad!important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Aktif Dersler</h6>
+                        <h2 class="mb-0">{{ total_courses }}</h2>
+                    </div>
+                    <div class="display-6 text-purple opacity-50" style="color: #8e44ad;">
+                        <i class="bi bi-book"></i>
+                    </div>
+                </div>
             </div>
-        </a>
+        </div>
     </div>
-    <div class="col-md-4">
-        <a href="{% url 'admin_formats' %}" class="card text-decoration-none h-100 border-0 shadow-sm">
-            <div class="card-body text-center py-4">
-                <div class="display-4 text-success mb-3"><i class="bi bi-file-earmark-code"></i></div>
-                <h5>Dosya Formatları</h5>
-                <p class="text-muted mb-0 small">{{ total_formats }} aktif format tanımlı</p>
+    <div class="col-md-3">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="border-left: 4px solid #e67e22!important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Sınav Formları</h6>
+                        <h2 class="mb-0">{{ total_test_forms }}</h2>
+                    </div>
+                    <div class="display-6 text-warning opacity-50">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                </div>
             </div>
-        </a>
+        </div>
     </div>
-    <div class="col-md-4">
-        <a href="{% url 'admin_uploads' %}" class="card text-decoration-none h-100 border-0 shadow-sm">
-            <div class="card-body text-center py-4">
-                <div class="display-4 text-info mb-3"><i class="bi bi-cloud-upload"></i></div>
-                <h5>Tüm Yüklemeler</h5>
-                <p class="text-muted mb-0 small">Tüm kullanıcıların yüklemelerini görüntüle</p>
+    <div class="col-md-3">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="border-left: 4px solid #27ae60!important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Optik Okumalar</h6>
+                        <h2 class="mb-0">{{ total_uploads }}</h2>
+                    </div>
+                    <div class="display-6 text-success opacity-50">
+                        <i class="bi bi-upc-scan"></i>
+                    </div>
+                </div>
             </div>
-        </a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100 border-0 shadow-sm" style="border-left: 4px solid #c0392b!important;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">AI Promptları</h6>
+                        <h2 class="mb-0">{{ total_ai_prompts }}</h2>
+                    </div>
+                    <div class="display-6 text-danger opacity-50">
+                        <i class="bi bi-lightning-charge"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ortak Yönetim Araçları -->
+<div class="card border-0 shadow-sm mb-5 overflow-hidden">
+    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+        <h5 class="card-title fw-bold mb-0 text-primary">Birleşik Yönetim Araçları</h5>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-3">
+            <div class="col-md-4 col-lg-3">
+                <a href="{% url 'admin_users' %}" class="btn btn-outline-primary w-100 py-3 text-start px-3 d-flex align-items-center">
+                    <i class="bi bi-people-fill fs-4 me-3"></i>
+                    <div>
+                        <div class="fw-bold">Kullanıcı Yönetimi</div>
+                        <div class="small opacity-75">Onay ve yetkilendirme</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <a href="{% url 'itempool:pool_list' %}" class="btn btn-outline-info w-100 py-3 text-start px-3 d-flex align-items-center">
+                    <i class="bi bi-collection-fill fs-4 me-3"></i>
+                    <div>
+                        <div class="fw-bold">Madde Havuzları</div>
+                        <div class="small opacity-75">Tüm havuzlara erişim</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <a href="{% url 'itempool:course_list' %}" class="btn btn-outline-purple w-100 py-3 text-start px-3 d-flex align-items-center" style="--bs-btn-color: #8e44ad; --bs-btn-border-color: #8e44ad;">
+                    <i class="bi bi-journal-text fs-4 me-3"></i>
+                    <div>
+                        <div class="fw-bold">Ders Yönetimi</div>
+                        <div class="small opacity-75">Ders ve uygulama takibi</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <a href="{% url 'itempool:test_form_list_all' %}" class="btn btn-outline-warning w-100 py-3 text-start px-3 d-flex align-items-center">
+                    <i class="bi bi-file-earmark-text-fill fs-4 me-3"></i>
+                    <div>
+                        <div class="fw-bold">Sınav Formları</div>
+                        <div class="small opacity-75">Tüm sınavların listesi</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <a href="{% url 'admin_uploads' %}" class="btn btn-outline-secondary w-100 py-3 text-start px-3 d-flex align-items-center">
+                    <i class="bi bi-upc-scan fs-4 me-3"></i>
+                    <div>
+                        <div class="fw-bold">Optik Okumalar</div>
+                        <div class="small opacity-75">Tüm okuma geçmişi</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <a href="{% url 'admin_formats' %}" class="btn btn-outline-success w-100 py-3 text-start px-3 d-flex align-items-center">
+                    <i class="bi bi-file-earmark-binary fs-4 me-3"></i>
+                    <div>
+                        <div class="fw-bold">Okuma Formatları</div>
+                        <div class="small opacity-75">Dosya yapısı ayarları</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <a href="{% url 'itempool:exam_template_list' %}" class="btn btn-outline-dark w-100 py-3 text-start px-3 d-flex align-items-center">
+                    <i class="bi bi-layout-text-window-reverse fs-4 me-3"></i>
+                    <div>
+                        <div class="fw-bold">Baskı Şablonları</div>
+                        <div class="small opacity-75">Kağıt mizanpajı</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <a href="{% url 'itempool:ai_dashboard' %}" class="btn btn-outline-danger w-100 py-3 text-start px-3 d-flex align-items-center">
+                    <i class="bi bi-lightning-charge fs-4 me-3"></i>
+                    <div>
+                        <div class="fw-bold">AI Yönetimi</div>
+                        <div class="small opacity-75">Prompt şablonları</div>
+                    </div>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="row g-4">
-    <!-- Recent Pending Users -->
+    <!-- Son Onay Bekleyenler -->
     <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-person-plus me-2"></i>Onay Bekleyen Kullanıcılar</span>
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <span class="fw-bold text-primary"><i class="bi bi-person-plus me-2"></i>Onay Bekleyen Kullanıcılar</span>
                 {% if pending_users > 5 %}
                 <a href="{% url 'admin_users' %}?status=PENDING" class="btn btn-sm btn-light">Tümü</a>
                 {% endif %}
@@ -123,31 +244,23 @@
                 {% if recent_pending %}
                 <ul class="list-group list-group-flush">
                     {% for profile in recent_pending %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
                         <div>
-                            <strong>{{ profile.user.get_full_name|default:profile.user.username }}</strong>
-                            <br><small class="text-muted">{{ profile.user.email }}</small>
+                            <div class="fw-bold">{{ profile.user.get_full_name|default:profile.user.username }}</div>
+                            <small class="text-muted">{{ profile.user.email }}</small>
                         </div>
                         <div>
                             <form method="post" action="{% url 'admin_user_approve' profile.pk %}" class="d-inline">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-success" title="Onayla">
-                                    <i class="bi bi-check-lg"></i>
-                                </button>
-                            </form>
-                            <form method="post" action="{% url 'admin_user_reject' profile.pk %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-danger" title="Reddet">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
+                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">Onayla</button>
                             </form>
                         </div>
                     </li>
                     {% endfor %}
                 </ul>
                 {% else %}
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-check-circle display-4"></i>
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-check-circle display-4 opacity-25"></i>
                     <p class="mt-2 mb-0">Onay bekleyen kullanıcı yok</p>
                 </div>
                 {% endif %}
@@ -155,40 +268,32 @@
         </div>
     </div>
 
-    <!-- Recent Uploads -->
+    <!-- Son Sınav/Okuma Aktivitesi -->
     <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-clock-history me-2"></i>Son Yüklemeler</span>
-                <a href="{% url 'admin_uploads' %}" class="btn btn-sm btn-light">Tümü</a>
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <span class="fw-bold text-primary"><i class="bi bi-clock-history me-2"></i>Sistem Aktivitesi (Son Sınavlar)</span>
+                <a href="{% url 'itempool:test_form_list_all' %}" class="btn btn-sm btn-light">Tümü</a>
             </div>
             <div class="card-body p-0">
-                {% if recent_uploads %}
+                {% if recent_test_forms %}
                 <ul class="list-group list-group-flush">
-                    {% for upload in recent_uploads %}
-                    <li class="list-group-item">
+                    {% for form in recent_test_forms %}
+                    <li class="list-group-item py-3">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <strong>{{ upload.original_filename|truncatechars:30 }}</strong>
-                                <br><small class="text-muted">{{ upload.owner.username }} - {{ upload.created_at|date:"d.m.Y H:i" }}</small>
+                                <div class="fw-bold">{{ form.name|truncatechars:40 }}</div>
+                                <small class="text-muted">{{ form.created_by.username }} - {{ form.created_at|date:"d.m.Y H:i" }}</small>
                             </div>
-                            <div>
-                                {% if upload.processing_status == 'PROCESSED' %}
-                                <span class="badge bg-success">İşlendi</span>
-                                {% elif upload.processing_status == 'FAILED' %}
-                                <span class="badge bg-danger">Başarısız</span>
-                                {% else %}
-                                <span class="badge bg-secondary">{{ upload.get_processing_status_display }}</span>
-                                {% endif %}
-                            </div>
+                            <span class="badge bg-light text-dark border">{{ form.form_items.count }} Madde</span>
                         </div>
                     </li>
                     {% endfor %}
                 </ul>
                 {% else %}
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-inbox display-4"></i>
-                    <p class="mt-2 mb-0">Henüz yükleme yapılmamış</p>
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox display-4 opacity-25"></i>
+                    <p class="mt-2 mb-0">Henüz bir aktivite kaydedilmedi</p>
                 </div>
                 {% endif %}
             </div>

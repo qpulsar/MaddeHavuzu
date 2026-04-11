@@ -3,7 +3,7 @@ from .models import (
     ItemPool, LearningOutcome, Item, ItemChoice, ItemInstance,
     ImportBatch, DraftItem, OutcomeSuggestion, ItemAnalysisResult,
     TestForm, FormItem, Blueprint, SpecificationTable,
-    Course, CourseSpecTable, ExamApplication,
+    Course, CourseSpecTable, ExamApplication, AIPrompt
 )
 
 
@@ -102,3 +102,23 @@ class ItemInstanceAdmin(admin.ModelAdmin):
     def get_outcomes(self, obj):
         return ", ".join([o.code for o in obj.learning_outcomes.all()])
     get_outcomes.short_description = 'Öğrenme Çıktıları'
+
+@admin.register(AIPrompt)
+class AIPromptAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'is_active', 'updated_at')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'slug', 'description', 'template')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'slug', 'description', 'is_active')
+        }),
+        ('Prompt Detayları', {
+            'fields': ('system_instruction', 'template'),
+            'description': 'Şablonda kullanılabilecek değişkenler (örnek): {stem}, {choices}, {outcomes_text}'
+        }),
+        ('Zaman Bilgileri', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )

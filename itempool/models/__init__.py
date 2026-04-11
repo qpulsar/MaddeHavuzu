@@ -7,6 +7,7 @@ from .test_form import TestForm, FormItem, Blueprint, SpecificationTable
 from .audit import ItemAuditLog
 from .exam_application import Course, CourseSpecTable, ExamApplication
 from .exam_template import ExamTemplate
+from .ai import AIPrompt
 
 __all__ = [
     'ItemPool',
@@ -29,4 +30,5 @@ __all__ = [
     'ExamApplication',
     'ExamTemplate',
     'ItemEmbedding',
+    'AIPrompt',
 ]

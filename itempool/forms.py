@@ -208,7 +208,7 @@ class ExamTemplateForm(forms.ModelForm):
     class Meta:
         model = ExamTemplate
         fields = [
-            'name', 'is_default', 'page_size', 'column_count', 'column_divider',
+            'name', 'is_default', 'is_shared', 'page_size', 'column_count', 'column_divider',
             'margin_top', 'margin_bottom', 'margin_left', 'margin_right',
             'font_family', 'font_size', 'question_spacing', 'choice_spacing', 'choice_layout',
             'show_header_line', 'show_footer_line',
@@ -217,6 +217,7 @@ class ExamTemplateForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'is_default': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_shared': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'page_size': forms.Select(attrs={'class': 'form-select'}),
             'column_count': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 3}),
             'column_divider': forms.CheckboxInput(attrs={'class': 'form-check-input'}),

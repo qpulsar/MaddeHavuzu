@@ -26,27 +26,46 @@ class AdminDashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # grading app models
+        from grading.models import (
+            UserProfile, UserStatus, FileFormatConfig,
+            UploadSession, StudentResult
+        )
+        # itempool app models
+        from itempool.models import (
+            ItemPool, Course, TestForm, Item, ItemInstance, AIPrompt
+        )
+
         # User statistics
         context['total_users'] = User.objects.filter(is_staff=False).count()
         context['pending_users'] = UserProfile.objects.filter(status=UserStatus.PENDING).count()
         context['approved_users'] = UserProfile.objects.filter(status=UserStatus.APPROVED).count()
         
-        # Upload statistics
+        # Upload statistics (Optical)
         context['total_uploads'] = UploadSession.objects.count()
         context['total_students'] = StudentResult.objects.count()
+        context['total_formats'] = FileFormatConfig.objects.filter(is_active=True).count()
         
+        # Itempool statistics
+        context['total_pools'] = ItemPool.objects.count()
+        context['total_courses'] = Course.objects.count()
+        context['total_test_forms'] = TestForm.objects.count()
+        context['total_items'] = Item.objects.count()
+        context['total_ai_prompts'] = AIPrompt.objects.count()
+
         # Recent pending users
         context['recent_pending'] = UserProfile.objects.filter(
             status=UserStatus.PENDING
         ).select_related('user').order_by('-created_at')[:5]
         
-        # Recent uploads
+        # Recent activity
         context['recent_uploads'] = UploadSession.objects.select_related(
             'owner'
         ).order_by('-created_at')[:5]
-        
-        # File formats
-        context['total_formats'] = FileFormatConfig.objects.filter(is_active=True).count()
+
+        context['recent_test_forms'] = TestForm.objects.select_related(
+            'created_by'
+        ).order_by('-created_at')[:5]
         
         return context
 

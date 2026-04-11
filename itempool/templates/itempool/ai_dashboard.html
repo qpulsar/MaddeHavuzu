@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}AI Yönetim Paneli{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ai-card {
+        border-radius: 12px;
+        border: 1px solid var(--mh-border);
+        transition: all 0.2s ease;
+        background: white;
+    }
+    .ai-card:hover {
+        box-shadow: var(--card-shadow);
+    }
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+    }
+    .prompt-preview {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+        border: 1px solid #e9ecef;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .test-result-area {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 8px;
+        padding: 1.5rem;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.9rem;
+        min-height: 100px;
+        white-space: pre-wrap;
+    }
+    .nav-pills .nav-link.active {
+        background-color: var(--mh-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">AI Yönetim Paneli</h2>
+        <p class="text-muted mb-0">Prompt şablonlarını yönetin ve AI performansını test edin.</p>
+    </div>
+    <div>
+        <a href="{% url 'admin:itempool_aiprompt_changelist' %}" class="btn btn-outline-primary shadow-sm" target="_blank">
+            <i class="bi bi-gear"></i> Gelişmiş Düzenleme (Admin)
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Prompt Listesi -->
+    <div class="col-lg-4">
+        <div class="card ai-card shadow-sm mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+                <h5 class="card-title fw-bold mb-0">Aktif Şablonlar</h5>
+            </div>
+            <div class="list-group list-group-flush" id="promptList">
+                {% for prompt in prompts %}
+                <button type="button" 
+                        class="list-group-item list-group-item-action py-3 {% if test_slug == prompt.slug %}active{% endif %}"
+                        onclick="selectPrompt('{{ prompt.slug }}', '{{ prompt.name }}', `{{ prompt.template|escapejs }}`)">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <h6 class="mb-1 fw-bold">{{ prompt.name }}</h6>
+                        {% if prompt.is_active %}
+                        <span class="badge bg-success-subtle text-success status-badge">Aktif</span>
+                        {% else %}
+                        <span class="badge bg-danger-subtle text-danger status-badge">Pasif</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted d-block mt-1">{{ prompt.slug }}</small>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Alanı -->
+    <div class="col-lg-8">
+        <div class="card ai-card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div id="testInitialView" class="text-center py-5 {% if test_slug %}d-none{% endif %}">
+                    <i class="bi bi-robot fs-1 text-primary opacity-25 mb-3 d-block"></i>
+                    <h4>Test Etmek İçin Bir Şablon Seçin</h4>
+                    <p class="text-muted">Sol listeden bir prompt şablonu seçerek değişkenleri doldurabilir ve sonucu görebilirsiniz.</p>
+                </div>
+
+                <div id="testActiveView" class="{% if not test_slug %}d-none{% endif %}">
+                    <h5 class="fw-bold mb-3" id="activePromptTitle">{{ test_slug }}</h5>
+                    
+                    <form method="POST" id="testForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="test_slug" id="inputTestSlug" value="{{ test_slug }}">
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Şablon Önizleme</label>
+                            <div class="prompt-preview" id="promptTemplatePreview"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Test Verisi (JSON)</label>
+                            <textarea name="test_data" class="form-control font-monospace" rows="5" id="testDataContainer">{% if test_slug %}{"stem": "Örnek soru?", "choices": ["A", "B", "C"]}{% else %}{}{% endif %}</textarea>
+                            <div class="form-text">Şablondaki {değişken} alanlarını dolduracak JSON nesnesini girin.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-outline-primary px-4 bg-white" onclick="document.getElementById('runAIInput').value='false'">
+                                <i class="bi bi-code-square"></i> Sadece Formatla
+                            </button>
+                            <button type="submit" class="btn btn-primary px-4" onclick="document.getElementById('runAIInput').value='true'">
+                                <i class="bi bi-play-fill"></i> AI'yı Çalıştır
+                            </button>
+                            <input type="hidden" name="run_ai" id="runAIInput" value="false">
+                        </div>
+                    </form>
+
+                    {% if test_result %}
+                    <hr class="my-4">
+                    <div class="test-results mt-4">
+                        {% if test_result.status == 'success' %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-success"><i class="bi bi-check-circle"></i> Formatlanmış Prompt</label>
+                            <div class="prompt-preview bg-success-subtle border-success-subtle" style="max-height: none;">{{ test_result.formatted }}</div>
+                        </div>
+                        
+                        <div>
+                            <label class="form-label fw-bold text-primary"><i class="bi bi-cpu"></i> AI Yanıtı</label>
+                            <div class="test-result-area">{{ test_result.ai_output }}</div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-danger">
+                            <h6 class="fw-bold">Hata Oluştu</h6>
+                            {{ test_result.message }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function selectPrompt(slug, name, template) {
+        document.getElementById('testInitialView').classList.add('d-none');
+        document.getElementById('testActiveView').classList.remove('d-none');
+        
+        document.getElementById('activePromptTitle').innerText = name;
+        document.getElementById('inputTestSlug').value = slug;
+        document.getElementById('promptTemplatePreview').innerText = template;
+        
+        // Örnek veri doldurma
+        let sampleData = {"stem": "Soru burada...", "choices": ["A", "B"]};
+        if (slug === 'ITEM_GENERATE') {
+            sampleData = {"outcome_text": "Isı ve Sıcaklık kazanımı", "bloom_level": "Bilgi", "difficulty": "Kolay", "item_type": "MCQ", "count_str": "1 adet ", "format_str": "{...}", "guidance": "Geri çağırma."};
+        } else if (slug === 'SUGGEST_OUTCOMES') {
+            sampleData = {"stem": "Hangi madde ısıyı iletir?", "outcomes_text": "1. İletkenlik\n2. Yalıtkanlık"};
+        }
+        
+        document.getElementById('testDataContainer').value = JSON.stringify(sampleData, null, 2);
+
+        // Sidebar linklerini güncelle
+        document.querySelectorAll('#promptList .list-group-item').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+</script>
+{% endblock %}

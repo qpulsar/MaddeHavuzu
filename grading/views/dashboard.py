@@ -59,9 +59,35 @@ class NewUploadView(LoginRequiredMixin, View):
         formats = FileFormatConfig.objects.filter(is_active=True)
         default_format = formats.filter(is_default=True).first() or formats.first()
         
+        # Pre-fill data from query params
+        test_form_id = request.GET.get('test_form_id')
+        exam_application_id = request.GET.get('exam_application_id')
+        
+        prefilled_tf = None
+        prefilled_app = None
+        
+        if test_form_id:
+            try:
+                from itempool.models import TestForm
+                prefilled_tf = TestForm.objects.get(pk=test_form_id)
+            except Exception:
+                pass
+                
+        if exam_application_id:
+            try:
+                from itempool.models import ExamApplication
+                prefilled_app = ExamApplication.objects.get(pk=exam_application_id)
+                if not prefilled_tf and prefilled_app.test_form:
+                    prefilled_tf = prefilled_app.test_form
+            except Exception:
+                pass
+
         # Determine back_url
         referer = request.META.get('HTTP_REFERER', '')
-        if 'yonetim' in referer:
+        if prefilled_app:
+            # Sınav uygulamasından geldiyse kendi sayfasına dönsün
+            back_url = f'/havuz/dersler/{prefilled_app.course_id}/'
+        elif 'yonetim' in referer:
             back_url = '/yonetim/yuklemeler/'
         else:
             back_url = '/panel/'
@@ -70,6 +96,8 @@ class NewUploadView(LoginRequiredMixin, View):
             'formats': formats,
             'default_format': default_format,
             'back_url': back_url,
+            'prefilled_tf': prefilled_tf,
+            'prefilled_app': prefilled_app,
         })
 
     def post(self, request):

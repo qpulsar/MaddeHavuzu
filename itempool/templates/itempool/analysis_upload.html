@@ -1,30 +1,38 @@
 {% extends "base.html" %}
 
-{% block title %}Sınav Verisi Yükle - Madde Havuzu{% endblock %}
+{% block title %}{{ title }} - Madde Havuzu{% endblock %}
 
 {% block breadcrumb %}
 <div class="container-fluid px-4 px-lg-5 pt-2">
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item active">Test ve Madde Analizi</li>
+        <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Ana Sayfa</a></li>
+            <li class="breadcrumb-item active">Analiz & Raporlar</li>
         </ol>
     </nav>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center pt-4">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3">
-                <h4 class="card-title mb-0">Sınav Verisi Yükle ve Madde Analizi</h4>
+<div class="row pt-4 g-4">
+    <!-- Main Statistics Header -->
+    <div class="col-12 mb-2">
+        <h2 class="fw-bold"><i class="bi bi-bar-chart-steps text-primary me-2"></i>Analiz & Rapor Paneli</h2>
+        <p class="text-muted">Değerlendirilmiş sınav sonuçları ve madde analizlerine buradan ulaşabilirsiniz.</p>
+    </div>
+
+    <!-- Right Sidebar: Quick Upload -->
+    <div class="col-lg-4 order-lg-2">
+        <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="card-title mb-0 fw-bold"><i class="bi bi-plus-circle me-2"></i>Yeni Analiz Başlat</h5>
             </div>
             <div class="card-body p-4">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">1. Madde Havuzu Seçin</label>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">1. Madde Havuzu</label>
                         <select name="pool_id" class="form-select" id="pool-select" 
                                 hx-get="{% url 'itempool:analysis_get_forms' %}" 
                                 hx-target="#form-select-container" 
@@ -36,16 +44,15 @@
                         </select>
                     </div>
 
-                    <div id="form-select-container" class="mb-4">
-                        <label class="form-label fw-bold">2. Test Formu Seçin (Opsiyonel)</label>
+                    <div id="form-select-container" class="mb-3">
+                        <label class="form-label small fw-bold">2. Test Formu (Opsiyonel)</label>
                         <select name="form_id" class="form-select" disabled>
                             <option value="">Önce havuz seçin...</option>
                         </select>
-                        <div class="form-text">Veriler bu formdaki soru sırasına göre eşleştirilecektir.</div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">3. Optik Dosya Tanımı</label>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">3. Optik Dosya Tanımı</label>
                         <select name="file_format" class="form-select" required>
                             {% for fmt in formats %}
                             <option value="{{ fmt.id }}" {% if fmt.is_default %}selected{% endif %}>{{ fmt.name }}</option>
@@ -53,24 +60,24 @@
                         </select>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">4. Veri Dosyası (TXT/DAT)</label>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">4. Veri Dosyası (TXT)</label>
                         <input type="file" name="data_file" class="form-control" required>
                     </div>
 
                     <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label small">Soru Başına Puan</label>
-                            <input type="number" step="0.01" name="points_per_question" class="form-control" value="1.0">
+                        <div class="col-6">
+                            <label class="form-label extra-small text-muted">Soru Başı Puan</label>
+                            <input type="number" step="0.01" name="points_per_question" class="form-control form-control-sm" value="1.0">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small">Yanlış Doğru Oranı (Örn: 4)</label>
-                            <input type="number" name="wrong_to_correct_ratio" class="form-control" value="0">
+                        <div class="col-6">
+                            <label class="form-label extra-small text-muted">Yanlış Oranı</label>
+                            <input type="number" name="wrong_to_correct_ratio" class="form-control form-control-sm" value="0">
                         </div>
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary py-2">
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
                             <i class="bi bi-upload"></i> Veriyi Yükle ve Analiz Et
                         </button>
                     </div>
@@ -78,5 +85,90 @@
             </div>
         </div>
     </div>
+
+    <!-- Left Main Content: Historical Analyses & Pools -->
+    <div class="col-lg-8 order-lg-1">
+        <!-- Analyzed Exams Table -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0 fw-bold text-primary"><i class="bi bi-clipboard-check me-2"></i>Tamamlanan Sınav Analizleri</h5>
+                <span class="badge bg-primary rounded-pill">{{ recent_sessions|length }} Kayıt</span>
+            </div>
+            <div class="card-body p-0 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 border-0 small text-uppercase">Sınav / Analiz Adı</th>
+                                <th class="border-0 small text-uppercase">Tarih</th>
+                                <th class="border-0 small text-uppercase text-center">Öğrenci</th>
+                                <th class="border-0 small text-uppercase text-center">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in recent_sessions %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ session.test_form.name|default:session.original_filename }}</div>
+                                    <small class="text-muted"><i class="bi bi-person me-1"></i>{{ session.owner.get_full_name|default:session.owner.username }}</small>
+                                </td>
+                                <td class="small">{{ session.processed_at|date:"d.m.Y H:i" }}</td>
+                                <td class="text-center"><span class="badge bg-info-subtle text-info border border-info-subtle">{{ session.student_count }}</span></td>
+                                <td class="text-center px-3">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'itempool:exam_grading_hub_session' session.test_form.pk session.pk %}" class="btn btn-outline-primary" title="Detaylı Madde Analizi">
+                                            <i class="bi bi-graph-up"></i>
+                                        </a>
+                                        <a href="{% url 'itempool:outcome_performance_report' session.pk %}" class="btn btn-outline-success" title="Öğrenme Çıktısı Başarı Raporu">
+                                            <i class="bi bi-patch-check"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="bi bi-clipboard-x display-4 opacity-25"></i>
+                                    <p class="mt-2 mb-0">Henüz tamamlanmış bir analiz bulunmuyor.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item Pools Summary -->
+        <h5 class="mb-3 mt-5 fw-bold text-muted small text-uppercase"><i class="bi bi-collection me-2"></i>Aktif Madde Havuzları</h5>
+        <div class="row g-3">
+            {% for pool in pools|slice:":6" %}
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100 hvr-lift">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold mb-0">{{ pool.name|truncatechars:30 }}</h6>
+                            <span class="badge bg-secondary-subtle text-secondary small">{{ pool.status }}</span>
+                        </div>
+                        <p class="text-muted small mb-3">{{ pool.course.name|default:"Genel Havuz" }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted"><i class="bi bi-database me-1"></i>{{ pool.item_instances.count }} Madde</small>
+                            <a href="{% url 'itempool:pool_detail' pool.pk %}" class="btn btn-sm btn-link p-0 text-decoration-none fw-bold">Göz At <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <div class="col-12 mt-3 text-center">
+                <a href="{% url 'itempool:pool_list' %}" class="btn btn-light btn-sm px-4 rounded-pill border">Tüm Havuzları Gör</a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .hvr-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hvr-lift:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15)!important; }
+    .extra-small { font-size: 0.75rem; }
+</style>
 {% endblock %}

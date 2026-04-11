@@ -49,20 +49,32 @@ class ParsingService:
             parser = ConfigurableParser(file_format)
             parsed_data = parser.parse(file_content)
             
-            # Validate: must have exactly one key
+            # Answer key determination
+            answer_key = None
+            if parsed_data.has_key:
+                if parsed_data.has_multiple_keys:
+                    raise ValueError(
+                        f"Birden fazla cevap anahtarı bulundu ({len(parsed_data.keys)} adet). "
+                        "Lütfen dosyada yalnızca bir anahtar satırı olduğundan emin olun."
+                    )
+                answer_key = parsed_data.primary_key.answers
+            elif upload_session.test_form:
+                # Dosyada yoksa ama sınav formu bağlıysa pool'dan üret
+                try:
+                    from itempool.services.answer_key import generate_answer_key_from_form
+                    answer_key = generate_answer_key_from_form(upload_session.test_form)
+                except Exception as e:
+                    raise ValueError(f"Sınav formu üzerinden cevap anahtarı üretilemedi: {e}")
+            
+            if not answer_key:
+                raise ValueError(
+                    f"Cevap anahtarı bulunamadı. Dosyada '{file_format.key_identifier}' ifadesini içeren bir satır "
+                    "veya seçili bir sınav formu gereklidir."
+                )
+            
+            # Update question count if it came from the pool (parser sets it only if has_key)
             if not parsed_data.has_key:
-                raise ValueError(
-                    f"Cevap anahtarı bulunamadı. '{file_format.key_identifier}' ifadesini içeren satır aranıyor."
-                )
-            
-            if parsed_data.has_multiple_keys:
-                raise ValueError(
-                    f"Birden fazla cevap anahtarı bulundu ({len(parsed_data.keys)} adet). "
-                    "Lütfen dosyada yalnızca bir anahtar satırı olduğundan emin olun."
-                )
-            
-            # Get the answer key
-            answer_key = parsed_data.primary_key.answers
+                parsed_data.question_count = len(answer_key)
             
             # Initialize grading service with format config
             grading_service = GradingService(

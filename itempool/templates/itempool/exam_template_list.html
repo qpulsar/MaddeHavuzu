@@ -31,64 +31,62 @@
     Değişkenler: <code>{form_name}</code>, <code>{course}</code>, <code>{semester}</code>, <code>{date}</code>, <code>{page}</code>, <code>{total_pages}</code>
 </p>
 
-<div class="row g-3">
-    {% for tpl in templates %}
-    <div class="col-md-6 col-xl-4">
-        <div class="card shadow-sm h-100 {% if tpl.is_default %}border-primary{% endif %}">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <strong>{{ tpl.name }}</strong>
-                {% if tpl.is_default %}
-                <span class="badge bg-primary">Varsayılan</span>
-                {% endif %}
-            </div>
-            <div class="card-body small">
-                <div class="row text-center mb-2">
-                    <div class="col-3 border-end">
-                        <div class="fw-bold">{{ tpl.column_count }}</div>
-                        <div class="text-muted">Sütun</div>
-                    </div>
-                    <div class="col-3 border-end">
-                        <div class="fw-bold">{{ tpl.font_size }}pt</div>
-                        <div class="text-muted">Font</div>
-                    </div>
-                    <div class="col-3 border-end">
-                        <div class="fw-bold">{{ tpl.page_size }}</div>
-                        <div class="text-muted">Kağıt</div>
-                    </div>
-                    <div class="col-3">
-                        <div class="fw-bold">{{ tpl.question_spacing }}pt</div>
-                        <div class="text-muted">Aralık</div>
-                    </div>
+<ul class="nav nav-pills mb-4 gap-2" id="templateTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active shadow-sm" id="my-tabs" data-bs-toggle="tab" data-bs-target="#my-templates" type="button" role="tab">
+            <i class="bi bi-person"></i> Benim Şablonlarım <span class="badge bg-light text-primary ms-1">{{ my_templates|length }}</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link shadow-sm" id="admin-tabs" data-bs-toggle="tab" data-bs-target="#admin-templates" type="button" role="tab">
+            <i class="bi bi-shield-check"></i> Kurumsal Şablonlar <span class="badge bg-light text-primary ms-1">{{ admin_shared|length }}</span>
+        </button>
+    </li>
+    {% if other_shared %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link shadow-sm" id="other-tabs" data-bs-toggle="tab" data-bs-target="#other-templates" type="button" role="tab">
+            <i class="bi bi-people"></i> Diğer Paylaşılanlar <span class="badge bg-light text-primary ms-1">{{ other_shared|length }}</span>
+        </button>
+    </li>
+    {% endif %}
+</ul>
+
+<div class="tab-content" id="templateTabContent">
+    <!-- Benim Şablonlarım -->
+    <div class="tab-pane fade show active" id="my-templates" role="tabpanel">
+        <div class="row g-3">
+            {% for tpl in my_templates %}
+                {% include "itempool/partials/template_card.html" with tpl=tpl is_owner=True %}
+            {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Henüz kendi şablonunuz bulunmuyor.</p>
                 </div>
-                <ul class="list-unstyled mb-0 text-muted">
-                    <li><i class="bi bi-check2 text-success"></i> Font: {{ tpl.get_font_family_display }}</li>
-                    {% if tpl.column_count > 1 and tpl.column_divider %}
-                    <li><i class="bi bi-check2 text-success"></i> Sütun arası çizgi</li>
-                    {% endif %}
-                    {% if tpl.show_student_info_box %}
-                    <li><i class="bi bi-check2 text-success"></i> Öğrenci bilgi kutusu</li>
-                    {% endif %}
-                    {% if tpl.header_center %}
-                    <li><i class="bi bi-check2 text-success"></i> Üst bilgi: "{{ tpl.header_center|truncatechars:25 }}"</li>
-                    {% endif %}
-                </ul>
-            </div>
-            <div class="card-footer bg-white d-flex gap-2 justify-content-end">
-                <a href="{% url 'itempool:exam_template_preview' tpl.pk %}" class="btn btn-sm btn-outline-primary pdf-download-link" target="_blank" title="Örnek PDF önizlemesi açar">
-                    <i class="bi bi-eye"></i> Önizle
-                </a>
-                <a href="{% url 'itempool:exam_template_update' tpl.pk %}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-pencil"></i> Düzenle
-                </a>
-            </div>
+            {% endfor %}
         </div>
     </div>
-    {% empty %}
-    <div class="col-12 text-center py-5">
-        <i class="bi bi-file-earmark-text display-1 text-muted"></i>
-        <p class="mt-2 text-muted">Şablon bulunamadı. Varsayılan şablonları eklemek için:</p>
-        <code>python manage.py seed_exam_templates</code>
+
+    <!-- Admin Şablonları -->
+    <div class="tab-pane fade" id="admin-templates" role="tabpanel">
+        <div class="row g-3">
+            {% for tpl in admin_shared %}
+                {% include "itempool/partials/template_card.html" with tpl=tpl is_owner=False %}
+            {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Paylaşılan kurumsal şablon bulunmuyor.</p>
+                </div>
+            {% endfor %}
+        </div>
     </div>
-    {% endfor %}
+
+    <!-- Diğer Paylaşılanlar -->
+    {% if other_shared %}
+    <div class="tab-pane fade" id="other-templates" role="tabpanel">
+        <div class="row g-3">
+            {% for tpl in other_shared %}
+                {% include "itempool/partials/template_card.html" with tpl=tpl is_owner=False %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

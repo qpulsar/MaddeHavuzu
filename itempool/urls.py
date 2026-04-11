@@ -59,6 +59,7 @@ urlpatterns = [
     path('pools/<int:pool_id>/AI/vectorize-start/', views.pool_vectorize_start, name='pool_vectorize_start'),
     path('items/<int:pk>/AI/clone-variation/', views.item_clone_variation, name='item_clone_variation'),
     path('items/<int:pk>/AI/suggest-improvements/', views.item_suggest_improvements, name='item_suggest_improvements'),
+    path('AI/management/', views.ai_dashboard, name='ai_dashboard'),
 
     # Madde Detay Düzenleme (HTMX)
     path('items/instance/<int:pk>/edit/<str:section>/', views.item_detail_edit, name='item_detail_edit'),
@@ -94,6 +95,8 @@ urlpatterns = [
     path('sablonlar/yeni/', views.exam_template_create, name='exam_template_create'),
     path('sablonlar/<int:pk>/duzenle/', views.exam_template_update, name='exam_template_update'),
     path('sablonlar/<int:pk>/onizleme/', views.exam_template_preview, name='exam_template_preview'),
+    path('sablonlar/<int:pk>/klonla/', views.exam_template_fork, name='exam_template_fork'),
+    path('sablonlar/<int:pk>/paylas/', views.exam_template_share_toggle, name='exam_template_share_toggle'),
     path('sablonlar/resim-yukle/', views.template_image_upload, name='template_image_upload'),
     path('formlar/<int:pk>/pdf/', views.test_form_pdf, name='test_form_pdf'),
     path('formlar/<int:pk>/docx/', views.test_form_docx, name='test_form_docx'),

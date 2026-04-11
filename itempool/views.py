@@ -11,8 +11,9 @@ from django.core.paginator import Paginator
 
 from .models import (
     ItemPool, LearningOutcome, Item, ItemInstance, ImportBatch, DraftItem, ItemChoice, OutcomeSuggestion,
-    TestForm, FormItem, Blueprint, PoolPermission, ItemAuditLog, Course, CourseSpecTable, ExamApplication, ExamTemplate
+    TestForm, FormItem, Blueprint, PoolPermission, ItemAuditLog, Course, CourseSpecTable, ExamApplication, ExamTemplate, AIPrompt
 )
+from django.contrib.admin.views.decorators import staff_member_required
 from .mixins import PoolAccessMixin
 from .forms import (
     ItemPoolForm, LearningOutcomeForm, ItemForm, ItemChoiceFormSet, TestFormForm, BlueprintForm,
@@ -1001,7 +1002,24 @@ def blueprint_clone(request, pk):
 
 @login_required
 def analysis_upload(request):
-    pools = ItemPool.objects.all()
+    user = request.user
+    is_admin = user.is_staff or (hasattr(user, 'profile') and user.profile.role == 'ADMIN')
+    
+    if is_admin:
+        pools = ItemPool.objects.all().order_by('-created_at')
+        # Başarıyla işlenmiş ve bir forma bağlı tüm analizleri getir
+        recent_sessions = UploadSession.objects.filter(
+            processing_status='PROCESSED',
+            test_form__isnull=False
+        ).select_related('test_form', 'owner', 'file_format').order_by('-created_at')
+    else:
+        pools = ItemPool.objects.filter(owner=user).order_by('-created_at')
+        recent_sessions = UploadSession.objects.filter(
+            owner=user,
+            processing_status='PROCESSED',
+            test_form__isnull=False
+        ).select_related('test_form', 'owner', 'file_format').order_by('-created_at')
+
     formats = FileFormatConfig.objects.filter(is_active=True)
     
     if request.method == 'POST':
@@ -1056,7 +1074,9 @@ def analysis_upload(request):
             
     return render(request, 'itempool/analysis_upload.html', {
         'pools': pools,
-        'formats': formats
+        'formats': formats,
+        'recent_sessions': recent_sessions,
+        'title': 'Analiz ve Rapor Paneli'
     })
 
 @login_required
@@ -1076,7 +1096,11 @@ def analysis_get_forms(request):
 
 @login_required
 def course_list(request):
-    courses = Course.objects.filter(created_by=request.user).prefetch_related('pools').order_by('-created_at')
+    user = request.user
+    if user.is_staff or (hasattr(user, 'profile') and user.profile.role == 'ADMIN'):
+        courses = Course.objects.all().prefetch_related('pools').order_by('-created_at')
+    else:
+        courses = Course.objects.filter(created_by=request.user).prefetch_related('pools').order_by('-created_at')
     return render(request, 'itempool/course_list.html', {'courses': courses})
 
 
@@ -1113,12 +1137,35 @@ def course_update(request, pk):
 @login_required
 def course_detail(request, pk):
     from datetime import date
+    from grading.models import UploadSession
     course = get_object_or_404(Course, pk=pk, created_by=request.user)
     test_forms = course.test_forms.prefetch_related('form_items').order_by('-created_at')
     spec_tables = course.spec_tables.all().order_by('-created_at')
+    
+    # Uygulamalar ve bunlara bağlı yükleme oturumlarını getir
     applications = course.exam_applications.select_related('test_form').order_by('-applied_at')
+    app_ids = [app.pk for app in applications]
+    
+    # Her uygulama için en son başarılı yükleme oturumunu bul
+    latest_sessions = {}
+    if app_ids:
+        # SQLite uyumluluğu için distinct(field) yerine tümünü çekip sözlükte eziyoruz
+        # order_by('created_at') yapıyoruz ki son gelen en üstte kalsın
+        sessions = UploadSession.objects.filter(
+            exam_application_id__in=app_ids
+        ).order_by('created_at')
+        for s in sessions:
+            latest_sessions[s.exam_application_id] = s
+
     applications_by_form = {app.test_form_id: app for app in applications}
-    tf_with_app = [(tf, applications_by_form.get(tf.pk)) for tf in test_forms]
+    
+    # tf_with_app: (TestForm, ExamApplication, UploadSession)
+    tf_with_app = []
+    for tf in test_forms:
+        appl = applications_by_form.get(tf.pk)
+        session = latest_sessions.get(appl.pk) if appl else None
+        tf_with_app.append((tf, appl, session))
+
     return render(request, 'itempool/course_detail.html', {
         'course': course,
         'test_forms': test_forms,
@@ -1364,8 +1411,36 @@ def course_applied_items(request, course_pk):
 
 @login_required
 def exam_template_list(request):
-    templates = ExamTemplate.objects.order_by('-is_default', 'name')
-    return render(request, 'itempool/exam_template_list.html', {'templates': templates})
+    user = request.user
+    is_admin = user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'ADMIN')
+    
+    # Tüm şablonlar (kendi oluşturdukları + paylaşılanlar)
+    all_qs = ExamTemplate.objects.filter(
+        Q(created_by=user) | Q(is_shared=True)
+    ).select_related('created_by', 'created_by__profile').order_by('-is_default', 'name')
+    
+    # Kategorizasyon
+    my_templates = []
+    admin_shared = []
+    other_shared = []
+    
+    for tpl in all_qs:
+        if tpl.created_by == user:
+            my_templates.append(tpl)
+        else:
+            # Diğerlerinin paylaştığı şablonlar
+            tpl_user = tpl.created_by
+            if tpl_user and (tpl_user.is_superuser or (hasattr(tpl_user, 'profile') and tpl_user.profile.role == 'ADMIN')):
+                admin_shared.append(tpl)
+            else:
+                other_shared.append(tpl)
+                
+    return render(request, 'itempool/exam_template_list.html', {
+        'my_templates': my_templates,
+        'admin_shared': admin_shared,
+        'other_shared': other_shared,
+        'is_admin': is_admin
+    })
 
 
 @login_required
@@ -1410,6 +1485,16 @@ def exam_template_create(request):
 def exam_template_update(request, pk):
     from .forms import ExamTemplateForm
     tpl = get_object_or_404(ExamTemplate, pk=pk)
+    
+    # Yetki kontrolü: Sadece sahibi veya admin düzenleyebilir
+    user = request.user
+    is_owner = tpl.created_by == user
+    is_admin = user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'ADMIN')
+    
+    if not (is_owner or is_admin):
+        messages.error(request, 'Bu şablonu düzenleme yetkiniz yok. Lütfen kendi kopyanızı oluşturun.')
+        return redirect('itempool:exam_template_list')
+        
     if request.method == 'POST':
         form = ExamTemplateForm(request.POST, request.FILES, instance=tpl)
         if form.is_valid():
@@ -1454,6 +1539,51 @@ def exam_template_update(request, pk):
         'header_design_json': json.dumps(tpl.header_design_json) if tpl.header_design_json else '',
         'footer_design_json': json.dumps(tpl.footer_design_json) if tpl.footer_design_json else '',
     })
+
+
+@login_required
+def exam_template_fork(request, pk):
+    """Mevcut bir şablonu kopyalayarak yeni bir şablon oluşturur."""
+    original = get_object_or_404(ExamTemplate, pk=pk)
+    
+    # Sadece kendi şablonunu veya paylaşılanları klonlayabilir
+    if not (original.created_by == request.user or original.is_shared):
+        messages.error(request, 'Bu şablonu kopyalama yetkiniz yok.')
+        return redirect('itempool:exam_template_list')
+        
+    # Klonla
+    clone = ExamTemplate.objects.get(pk=pk)
+    clone.pk = None
+    clone.id = None
+    clone.name = f"{original.name} (Kopyası)"
+    clone.created_by = request.user
+    clone.is_default = False
+    clone.is_shared = False
+    clone.parent = original
+    clone.save()
+    
+    messages.success(request, f'"{original.name}" başarıyla kopyalandı. Şimdi düzenleyebilirsiniz.')
+    return redirect('itempool:exam_template_update', pk=clone.pk)
+
+
+@login_required
+def exam_template_share_toggle(request, pk):
+    """Şablonun paylaşım durumunu değiştirir."""
+    tpl = get_object_or_404(ExamTemplate, pk=pk)
+    
+    # Yetki kontrolü
+    user = request.user
+    is_admin = user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'ADMIN')
+    if tpl.created_by != user and not is_admin:
+        messages.error(request, 'Bu işlem için yetkiniz yok.')
+        return redirect('itempool:exam_template_list')
+        
+    tpl.is_shared = not tpl.is_shared
+    tpl.save()
+    
+    status = "paylaşıma açıldı" if tpl.is_shared else "paylaşımdan kaldırıldı"
+    messages.success(request, f'Şablon {status}.')
+    return redirect('itempool:exam_template_list')
 
 
 @login_required
@@ -1821,3 +1951,53 @@ def bind_session_to_form(request, session_pk):
         messages.warning(request, f'Baglama yapildi ancak madde analizi: {e}')
 
     return redirect('itempool:exam_grading_hub_session', pk=test_form.pk, session_pk=session_pk)
+
+
+@staff_member_required
+def ai_dashboard(request):
+    """
+    Yöneticiler için merkezi AI yönetim paneli.
+    Prompt'ların listelenmesi, durumu ve test edilmesi için kullanılır.
+    """
+    prompts = AIPrompt.objects.all()
+    
+    test_result = None
+    test_slug = request.POST.get('test_slug')
+    
+    if request.method == 'POST' and test_slug:
+        # Prompt testi
+        try:
+            prompt_obj = AIPrompt.objects.get(slug=test_slug)
+            test_data_raw = request.POST.get('test_data', '{}')
+            test_data = json.loads(test_data_raw)
+            
+            # Formatı dene
+            formatted_prompt = prompt_obj.format_prompt(**test_data)
+            
+            # Eğer 'run_ai' seçilmişse gerçekten çalıştır
+            if request.POST.get('run_ai') == 'true':
+                client = get_llm_client()
+                # _generate metodunu kullanabilmek için (metodun başına _ olduğu için dikkat)
+                result = client._generate(formatted_prompt, prompt_obj.system_instruction)
+                test_result = {
+                    'status': 'success',
+                    'formatted': formatted_prompt,
+                    'ai_output': result
+                }
+            else:
+                test_result = {
+                    'status': 'success',
+                    'formatted': formatted_prompt,
+                    'ai_output': 'AI çalıştırma seçilmedi, sadece format denendi.'
+                }
+        except Exception as e:
+            test_result = {
+                'status': 'error',
+                'message': str(e)
+            }
+
+    return render(request, 'itempool/ai_dashboard.html', {
+        'prompts': prompts,
+        'test_result': test_result,
+        'test_slug': test_slug
+    })
