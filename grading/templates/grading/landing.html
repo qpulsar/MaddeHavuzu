@@ -1,73 +1,308 @@
 {% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
 
-{% block title %}OptikForm - Optik Form Değerlendirme Sistemi{% endblock %}
+{% block title %}Madde Havuzum - Yeni Nesil Sınav Yönetim Sistemi{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Landing Page Specific Styles */
+    .hero-section {
+        padding: 5rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        background: var(--mh-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--mh-text-muted);
+        max-width: 600px;
+        margin-bottom: 2.5rem;
+    }
+
+    .feature-card {
+        border: none;
+        border-radius: 1.5rem;
+        transition: all 0.3s ease;
+        background: var(--mh-card-bg);
+        box-shadow: 0 10px 30px -15px rgba(0,0,0,0.1);
+        height: 100%;
+        overflow: hidden;
+        border: 1px solid var(--mh-border);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px -20px rgba(0,0,0,0.2);
+        border-color: var(--mh-primary);
+    }
+
+    .feature-icon-box {
+        width: 64px;
+        height: 64px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.75rem;
+        background: var(--mh-primary-subtle);
+        color: var(--mh-primary);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--mh-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .workflow-step {
+        position: relative;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        background: var(--mh-primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 4px 10px var(--mh-primary-subtle);
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2rem;
+        padding: 4rem;
+    }
+
+    [data-theme="dark"] .feature-card {
+        background: #1a1e2e;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title { font-size: 2.5rem; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-lg-8">
-        <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold"
-                style="background: var(--mh-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                OptikForm
-            </h1>
-            <p class="lead text-muted mt-3">
-                Optik okuyucu dosyalarınızı hızlıca değerlendirin ve sonuçları Excel olarak indirin.
-            </p>
+<div class="landing-wrapper">
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <span class="badge rounded-pill bg-primary-subtle text-primary mb-3 px-3 py-2 fw-semibold">
+                        <i class="bi bi-stars me-1"></i> Yapay Zeka Destekli Sınav Yönetimi
+                    </span>
+                    <h1 class="hero-title animate__animated animate__fadeInUp">
+                        Ölçme ve Değerlendirmede <br> Yeni Nesil Standart
+                    </h1>
+                    <p class="hero-subtitle mx-auto animate__animated animate__fadeInUp animate__delay-1s">
+                        Soru bankasından sınav kağıdına, optik okumadan detaylı psikometrik analizlere kadar tüm süreci tek bir platformda yönetin.
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeInUp animate__delay-2s">
+                        <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-5 rounded-pill shadow-lg">
+                            Hemen Başlayın <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                        <a href="#features" class="btn btn-outline-secondary btn-lg px-5 rounded-pill">
+                            Keşfedin
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 text-center p-4">
-                    <div class="card-body">
-                        <div class="display-4 text-primary mb-3">
-                            <i class="bi bi-upload"></i>
-                        </div>
-                        <h5 class="card-title">Kolay Yükleme</h5>
-                        <p class="card-text text-muted">
-                            TXT dosyanızı yükleyin, sistem otomatik olarak ayrıştırsın.
-                        </p>
-                    </div>
+    <!-- Stats Section -->
+    <section class="py-5 mb-5 overflow-hidden">
+        <div class="container">
+            <div class="row g-4 text-center">
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">10K+</div>
+                    <div class="text-muted small text-uppercase fw-bold tracking-wider">Soru Bankası</div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 text-center p-4">
-                    <div class="card-body">
-                        <div class="display-4 text-success mb-3">
-                            <i class="bi bi-check2-circle"></i>
-                        </div>
-                        <h5 class="card-title">Otomatik Değerlendirme</h5>
-                        <p class="card-text text-muted">
-                            Cevap anahtarı bulunur ve tüm öğrenciler değerlendirilir.
-                        </p>
-                    </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">500+</div>
+                    <div class="text-muted small text-uppercase fw-bold tracking-wider">Aktif Sınav</div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 text-center p-4">
-                    <div class="card-body">
-                        <div class="display-4 text-info mb-3">
-                            <i class="bi bi-file-earmark-excel"></i>
-                        </div>
-                        <h5 class="card-title">Excel Çıktı</h5>
-                        <p class="card-text text-muted">
-                            Sonuçları tek tıkla formatlanmış Excel olarak indirin.
-                        </p>
-                    </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">100K+</div>
+                    <div class="text-muted small text-uppercase fw-bold tracking-wider">Değerlendirme</div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number">99%</div>
+                    <div class="text-muted small text-uppercase fw-bold tracking-wider">Doğruluk Payı</div>
                 </div>
             </div>
         </div>
+    </section>
 
-        <div class="text-center mt-5">
-            <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-5 me-2 mb-2">
-                <i class="bi bi-box-arrow-in-right me-2"></i>Giriş Yap
-            </a>
-            <a href="{% url 'features' %}" class="btn btn-outline-primary btn-lg px-5 me-2 mb-2">
-                <i class="bi bi-stars me-2"></i>Özellikleri Keşfet
-            </a>
-            <a href="{% url 'register' %}" class="btn btn-outline-secondary btn-lg px-5 mb-2">
-                <i class="bi bi-person-plus me-2"></i>Kayıt Ol
-            </a>
+    <!-- Features Section -->
+    <section id="features" class="py-5">
+        <div class="container">
+            <div class="row justify-content-center mb-5">
+                <div class="col-lg-6 text-center">
+                    <h2 class="fw-bold">Her Şey Tek Bir Platformda</h2>
+                    <p class="text-muted">Gelişmiş özelliklerimizle ölçme sürecini kolaylaştırıyor, zamandan tasarruf sağlıyoruz.</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Feature 1: Madde Bankası -->
+                <div class="col-md-4">
+                    <div class="card feature-card p-4">
+                        <div class="card-body">
+                            <div class="feature-icon-box" style="background: rgba(30, 92, 255, 0.1); color: #1e5cff;">
+                                <i class="bi bi-collection"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Zengin Madde Bankası</h5>
+                            <p class="text-muted mb-0">Hiyerarşik havuz yapısı, versiyonlama ve gelişmiş madde geçmişi ile sorularınızı güvenle yönetin.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Yapay Zeka -->
+                <div class="col-md-4">
+                    <div class="card feature-card p-4">
+                        <div class="card-body">
+                            <div class="feature-icon-box" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                                <i class="bi bi-lightning-charge"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">AI Kazanım Önerisi</h5>
+                            <p class="text-muted mb-0">Google Gemini desteğiyle maddelerinize otomatik öğrenme çıktısı ve Bloom taksonomisi önerileri alın.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Akıllı Sihirbaz -->
+                <div class="col-md-4">
+                    <div class="card feature-card p-4">
+                        <div class="card-body">
+                            <div class="feature-icon-box" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">
+                                <i class="bi bi-magic"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Akıllı Sınav Sihirbazı</h5>
+                            <p class="text-muted mb-0">Belirtke tablosu ve blueprint mantığıyla, dengeli ve bilimsel sınav formlarını dakikalar içinde oluşturun.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Optik Okuma -->
+                <div class="col-md-4">
+                    <div class="card feature-card p-4">
+                        <div class="card-body">
+                            <div class="feature-icon-box" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                                <i class="bi bi-upc-scan"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Gelişmiş Optik Okuma</h5>
+                            <p class="text-muted mb-0">NefOptik entegrasyonu ile farklı dosya formatlarını hızla okuyun, hata ayıklama ve cevap anahtarı eşleme yapın.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 5: İleri Analizler -->
+                <div class="col-md-4">
+                    <div class="card feature-card p-4">
+                        <div class="card-body">
+                            <div class="feature-icon-box" style="background: rgba(249, 115, 22, 0.1); color: #f97316;">
+                                <i class="bi bi-bar-chart-line"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">İleri Madde Analizi</h5>
+                            <p class="text-muted mb-0">Madde güçlüğü (p), ayırıcılık (r), KR-20 ve Cronbach Alpha katsayılarıyla sınav geçerliliğini ölçün.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 6: Baskı Şablonları -->
+                <div class="col-md-4">
+                    <div class="card feature-card p-4">
+                        <div class="card-body">
+                            <div class="feature-icon-box" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                <i class="bi bi-printer"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Tasarım & Baskı Merkezi</h5>
+                            <p class="text-muted mb-0">Özelleştirilebilir PDF şablonları, çok sütunlu mizanpaj ve her sınav formu için otomatik cevap kağıtları.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Workflow Section -->
+    <section class="py-5 bg-primary-subtle rounded-5 my-5 mx-0 mx-md-4">
+        <div class="container py-4">
+            <h2 class="text-center fw-bold mb-5">Süreç Nasıl Yönetilir?</h2>
+            <div class="row g-0">
+                <div class="col-md-3 workflow-step">
+                    <div class="step-number">1</div>
+                    <h6 class="fw-bold">Maddeleri Topla</h6>
+                    <p class="small text-muted">Word (Docx) dosyasından aktar veya manuel ekle.</p>
+                </div>
+                <div class="col-md-3 workflow-step">
+                    <div class="step-number">2</div>
+                    <h6 class="fw-bold">Sınavı Tasarla</h6>
+                    <p class="small text-muted">Belirtke tablosuna göre soruları otomatik seç.</p>
+                </div>
+                <div class="col-md-3 workflow-step">
+                    <div class="step-number">3</div>
+                    <h6 class="fw-bold">Sınavı Uygula</h6>
+                    <p class="small text-muted">PDF çıktılarını al ve optik okuma verisini yükle.</p>
+                </div>
+                <div class="col-md-3 workflow-step">
+                    <div class="step-number">4</div>
+                    <h6 class="fw-bold">Analiz Et</h6>
+                    <p class="small text-muted">Hatalı soruları tespit et ve başarıyı raporla.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="py-5 mb-5 text-center">
+        <div class="container pt-5">
+            <h2 class="fw-bold mb-4">Ölçme süreçlerinizi dijitalleştirin.</h2>
+            <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">Hemen kayıt olun ve kurumunuzun sınav kalitesini bilimsel verilerle artırmaya başlayın.</p>
+            <div class="d-flex justify-content-center gap-2">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-5 rounded-pill shadow">Ücretsiz Kayıt Ol</a>
+                <a href="{% url 'features' %}" class="btn btn-light btn-lg px-5 rounded-pill border">Daha Fazla Bilgi</a>
+            </div>
+        </div>
+    </section>
 </div>
+
+<script>
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
 {% endblock %}
