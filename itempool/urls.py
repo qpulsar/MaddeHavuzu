@@ -82,6 +82,7 @@ urlpatterns = [
     path('dersler/<int:pk>/', views.course_detail, name='course_detail'),
     path('dersler/<int:pk>/duzenle/', views.course_update, name='course_update'),
     path('dersler/<int:course_pk>/belirtke/yeni/', views.course_spec_table_create, name='course_spec_table_create'),
+    path('belirtke/<int:pk>/duzenle/', views.course_spec_table_update, name='course_spec_table_update'),
     path('belirtke/<int:pk>/sil/', views.course_spec_table_delete, name='course_spec_table_delete'),
     path('dersler/<int:course_pk>/sinav/yeni/', views.course_test_form_create, name='course_test_form_create'),
     path('dersler/<int:course_pk>/sinav/<int:tf_pk>/uygula/', views.exam_application_quick, name='exam_application_quick'),
@@ -112,4 +113,5 @@ urlpatterns = [
     path('formlar/<int:pk>/degerlendirme/yukle/', views.exam_form_upload, name='exam_form_upload'),
     path('degerlendirme/<int:session_pk>/', views.exam_grading_hub_standalone, name='exam_grading_hub_standalone'),
     path('degerlendirme/<int:session_pk>/bagla/', views.bind_session_to_form, name='bind_session_to_form'),
+    path('sablon-indir/', views.download_docx_template, name='download_docx_template'),
 ]

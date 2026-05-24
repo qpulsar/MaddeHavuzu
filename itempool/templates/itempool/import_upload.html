@@ -24,10 +24,15 @@
             </div>
             <div class="card-body py-4">
                 <div class="alert alert-info border-info shadow-sm">
-                    <h6><i class="bi bi-info-circle-fill"></i> Dosya Formatı İpuçları</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0"><i class="bi bi-info-circle-fill"></i> Dosya Formatı İpuçları</h6>
+                        <a href="{% url 'itempool:download_docx_template' %}" class="btn btn-sm btn-outline-info text-decoration-none py-0 px-2 fw-semibold">
+                            <i class="bi bi-download"></i> Örnek Şablonu İndir
+                        </a>
+                    </div>
                     <ul class="mb-0 small">
-                        <li>Sorular numara ile başlamalıdır (Örn: <strong>1.</strong> Soru kökü...).</li>
-                        <li><strong>Otomatik Numaralandırma</strong> veya <strong>Madde İmi</strong> desteği mevcuttur.</li>
+                        <li>Sorular numara ile başlayabilir (Örn: <strong>1.</strong> Soru kökü...).</li>
+                        <li><strong>Numarasız veya çok satırlı</strong> soru kökleri de tam uyumla desteklenmektedir.</li>
                         <li>Şıklar alfabetik olmalıdır (Örn: <strong>A)</strong> Seçenek...).</li>
                         <li>Doğru cevap <strong>Cevap: A</strong> şeklinde belirtilmelidir.</li>
                         <li>Dosya uzantısı <strong>.docx</strong> olmalıdır.</li>

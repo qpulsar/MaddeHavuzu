@@ -1185,33 +1185,32 @@ def course_spec_table_create(request, course_pk):
         pool__in=course.pools.all(), is_active=True
     ).select_related('pool').order_by('pool', 'order', 'code')
 
+    for oc in outcomes:
+        oc.current_count = 0
+
     if request.method == 'POST':
         form = CourseSpecTableForm(request.POST)
         if form.is_valid():
             spec = form.save(commit=False)
             spec.course = course
             spec.created_by = request.user
-            # rows_json form POST'undan manuel parse et
+            
+            # rows_json'ı doğrusal liste olarak oluştur
             rows = []
-            topic_count = int(request.POST.get('topic_count', 0))
             total = 0
-            for i in range(topic_count):
-                topic = request.POST.get(f'topic_{i}', '').strip()
-                if not topic:
-                    continue
-                row_outcomes = []
-                for oc in outcomes:
-                    count = int(request.POST.get(f'count_{i}_{oc.id}', 0) or 0)
-                    if count > 0:
-                        row_outcomes.append({
-                            'outcome_id': oc.id,
-                            'outcome_code': oc.code,
-                            'bloom_level': oc.level,
-                            'question_count': count,
-                        })
-                        total += count
-                if row_outcomes:
-                    rows.append({'topic': topic, 'outcomes': row_outcomes})
+            for oc in outcomes:
+                count = int(request.POST.get(f'count_{oc.id}', 0) or 0)
+                if count > 0:
+                    rows.append({
+                        'outcome_id': oc.id,
+                        'outcome_code': oc.code,
+                        'outcome_subject': oc.subject or "Genel / Konusuz",
+                        'outcome_desc': oc.description,
+                        'bloom_level': oc.get_level_display(),
+                        'question_count': count,
+                    })
+                    total += count
+            
             spec.rows_json = rows
             spec.total_questions = total
             spec.save()
@@ -1223,6 +1222,59 @@ def course_spec_table_create(request, course_pk):
         'form': form,
         'course': course,
         'outcomes': outcomes,
+    })
+
+
+@login_required
+def course_spec_table_update(request, pk):
+    spec = get_object_or_404(CourseSpecTable, pk=pk, course__created_by=request.user)
+    course = spec.course
+    outcomes = LearningOutcome.objects.filter(
+        pool__in=course.pools.all(), is_active=True
+    ).select_related('pool').order_by('pool', 'order', 'code')
+
+    # Soru sayılarını outcomes üzerine enjekte et
+    questions_map = {}
+    if spec.rows_json:
+        for row in spec.rows_json:
+            questions_map[row.get('outcome_id')] = row.get('question_count', 0)
+    
+    for oc in outcomes:
+        oc.current_count = questions_map.get(oc.id, 0)
+
+    if request.method == 'POST':
+        form = CourseSpecTableForm(request.POST, instance=spec)
+        if form.is_valid():
+            spec = form.save(commit=False)
+            
+            # rows_json'ı doğrusal liste olarak oluştur
+            rows = []
+            total = 0
+            for oc in outcomes:
+                count = int(request.POST.get(f'count_{oc.id}', 0) or 0)
+                if count > 0:
+                    rows.append({
+                        'outcome_id': oc.id,
+                        'outcome_code': oc.code,
+                        'outcome_subject': oc.subject or "Genel / Konusuz",
+                        'outcome_desc': oc.description,
+                        'bloom_level': oc.get_level_display(),
+                        'question_count': count,
+                    })
+                    total += count
+            
+            spec.rows_json = rows
+            spec.total_questions = total
+            spec.save()
+            messages.success(request, 'Belirtke tablosu güncellendi.')
+            return redirect('itempool:course_detail', pk=course.pk)
+    else:
+        form = CourseSpecTableForm(instance=spec)
+    return render(request, 'itempool/course_spec_table_form.html', {
+        'form': form,
+        'course': course,
+        'outcomes': outcomes,
+        'spec': spec,
     })
 
 
@@ -2001,3 +2053,45 @@ def ai_dashboard(request):
         'test_result': test_result,
         'test_slug': test_slug
     })
+
+
+from io import BytesIO
+from docx import Document
+from django.http import FileResponse
+
+@login_required
+def download_docx_template(request):
+    doc = Document()
+    doc.add_heading('Madde Havuzu Soru İçe Aktarma Şablonu', level=0)
+    
+    doc.add_paragraph('Bu şablonu kullanarak sorularınızı toplu olarak içe aktarabilirsiniz. Lütfen aşağıdaki format kurallarına uyunuz:')
+    doc.add_paragraph('1. Soru numarası ile başlayın (örn: 1. veya 1-).')
+    doc.add_paragraph('2. Seçenekleri A), B), C)... şeklinde alt alta yazın.')
+    doc.add_paragraph('3. Doğru cevabı "Cevap: A" veya "Yanıt: B" şeklinde belirtin (isteğe bağlı).')
+    doc.add_paragraph('4. Numarasız veya çok satırlı soru kökleri de desteklenmektedir. Şıklar geldiğinde soru otomatik ayrıştırılır.')
+    
+    doc.add_paragraph('')
+    doc.add_heading('Örnek Soru 1 (Numaralı Klasik Soru)', level=2)
+    doc.add_paragraph('1. Aşağıdakilerden hangisi tipik bir performans testidir?')
+    doc.add_paragraph('A) Genel zekayı ölçen bir IQ testi')
+    doc.add_paragraph('B) Matematiksel becerileri değerlendiren bir test')
+    doc.add_paragraph('C) Sınav kaygısını ölçen bir test')
+    doc.add_paragraph('D) Atletler için fiziksel uygunluk testi')
+    doc.add_paragraph('E) Ders başarısını değerlendiren bir final sınavı')
+    doc.add_paragraph('Cevap: D')
+    
+    doc.add_paragraph('')
+    doc.add_heading('Örnek Soru 2 (Numarasız Soru)', level=2)
+    doc.add_paragraph('Aşağıdaki maddelerden hangisi güvenirlik katsayısını doğrudan etkiler?')
+    doc.add_paragraph('A) Testin uzunluğu')
+    doc.add_paragraph('B) Grubun homojenliği')
+    doc.add_paragraph('C) Soru sayısı')
+    doc.add_paragraph('D) Sınav süresi')
+    doc.add_paragraph('Cevap: A')
+    
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    
+    response = FileResponse(buffer, as_attachment=True, filename='MaddeHavuzu_Soru_Sablonu.docx')
+    return response

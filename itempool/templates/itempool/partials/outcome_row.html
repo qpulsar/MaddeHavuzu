@@ -1,7 +1,12 @@
 <tr id="outcome-{{ oc.id }}">
     <td class="text-muted">{{ oc.order }}</td>
     <td><span class="badge bg-primary">{{ oc.code }}</span></td>
-    <td class="small">{{ oc.description }}</td>
+    <td class="small">
+        {% if oc.subject %}
+        <span class="badge bg-light text-secondary border me-1">{{ oc.subject }}</span>
+        {% endif %}
+        {{ oc.description }}
+    </td>
     <td><span class="badge bg-info text-dark">{{ oc.get_level_display }}</span></td>
     <td>
         <div class="btn-group">

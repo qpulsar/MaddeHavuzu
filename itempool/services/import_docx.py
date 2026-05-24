@@ -25,75 +25,66 @@ class DocxImportService:
         doc = Document(self.batch.uploaded_file.path)
         
         current_item = None
+        last_unmatched_text = ""
         items_count = 0
         
         for para in doc.paragraphs:
             text = para.text.strip()
-            
-            # Word'ün kendi numaralandırma sistemi var mı kontrol et
-            is_numbered = self._is_numbered(para)
-            
-            if not text and not is_numbered:
+            if not text:
                 continue
             
-            # Regex kontrolleri
             q_match = self.QUESTION_RE.match(text)
             c_match = self.CHOICE_RE.match(text)
             ans_match = self.CORRECT_RE.match(text)
-
-            # Karar değişkenleri
-            is_new_question = False
-            is_choice = False
             
-            if c_match:
-                # Metin A), B) gibi başlıyorsa seviye ne olursa olsun şıktır
-                is_choice = True
-            elif q_match:
-                # Metin 1., 2. gibi başlıyorsa seviye ne olursa olsun sorudur
-                is_new_question = True
-            elif is_numbered:
-                # Metinde açıkça 1. veya A) yok ama Word liste diyor
-                level = self._get_num_level(para)
-                if level == 0:
-                    is_new_question = True
-                else:
-                    is_choice = True
-            
-            # Doğru cevap kontrolü (En yüksek öncelik değil ama ayrık olmalı)
-            if ans_match and current_item:
-                current_item['correct'] = ans_match.group(2).upper()
-                continue
-
-            # Uygulama: Soru başlangıcı
-            if is_new_question:
+            if ans_match:
                 if current_item:
-                    self._save_draft(current_item)
-                    items_count += 1
-                
-                stem_text = q_match.group(2) if q_match else text
-                current_item = {
-                    'stem': stem_text,
-                    'choices': [],
-                    'correct': None
-                }
+                    current_item['correct'] = ans_match.group(2).upper()
                 continue
-            
-            # Uygulama: Seçenek ekleme
-            if is_choice and current_item:
-                label = c_match.group(1).upper() if c_match else self._predict_next_label(current_item['choices'])
-                choice_text = c_match.group(2) if c_match else text
+                
+            if c_match:
+                label = c_match.group(1).upper()
+                choice_text = c_match.group(2)
+                
+                if not current_item:
+                    current_item = {
+                        'stem': last_unmatched_text.strip() or "Soru Kökü Eksik",
+                        'choices': [],
+                        'correct': None
+                    }
+                    last_unmatched_text = ""
                 
                 current_item['choices'].append({
                     'label': label,
                     'text': choice_text
                 })
-                continue
-            
-            # Eğer yukarıdakiler değilse ve current_item varsa, köke ekleme yap (çok satırlı soru kökü)
-            if current_item and not current_item['choices']:
-                current_item['stem'] += "\n" + text
+            elif q_match:
+                if current_item:
+                    self._save_draft(current_item)
+                    items_count += 1
+                
+                current_item = {
+                    'stem': q_match.group(2),
+                    'choices': [],
+                    'correct': None
+                }
+                last_unmatched_text = ""
+            else:
+                # Numarasız metin
+                # Eğer zaten bir sorumuz varsa ve şıkları eklenmişse, bu yeni bir sorunun başlangıcıdır!
+                if current_item and current_item['choices']:
+                    self._save_draft(current_item)
+                    items_count += 1
+                    current_item = None
+                
+                if current_item:
+                    current_item['stem'] += "\n" + text
+                else:
+                    if last_unmatched_text:
+                        last_unmatched_text += "\n" + text
+                    else:
+                        last_unmatched_text = text
 
-        # Son soruyu kaydet
         if current_item:
             self._save_draft(current_item)
             items_count += 1

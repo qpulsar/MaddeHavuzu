@@ -35,9 +35,6 @@
         <p class="text-muted mb-0"><i class="bi bi-calendar3"></i> {{ course.semester }}</p>
     </div>
     <div class="btn-toolbar mb-2 mb-md-0 gap-2">
-        <a href="{% url 'itempool:course_test_form_create' course.pk %}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Yeni Sınav
-        </a>
         <a href="{% url 'itempool:course_update' course.pk %}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-pencil"></i> Düzenle
         </a>
@@ -270,12 +267,15 @@
                                 <span class="fw-bold">{{ st.name }}</span>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="badge bg-primary">{{ st.total_questions }} soru</span>
+                                    <a href="{% url 'itempool:course_spec_table_update' st.pk %}" class="btn btn-sm btn-outline-primary py-0 px-1" title="Düzenle">
+                                        <i class="bi bi-pencil small"></i>
+                                    </a>
                                     <form method="post"
                                           action="{% url 'itempool:course_spec_table_delete' st.pk %}"
                                           class="d-inline"
                                           onsubmit="return confirm('Bu belirtke tablosunu silmek istiyor musunuz?')">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" title="Sil">
                                             <i class="bi bi-trash small"></i>
                                         </button>
                                     </form>
@@ -295,14 +295,12 @@
                                         </thead>
                                         <tbody>
                                             {% for row in st.rows_json %}
-                                            {% for oc in row.outcomes %}
                                             <tr>
-                                                {% if forloop.first %}<td rowspan="{{ row.outcomes|length }}">{{ row.topic }}</td>{% endif %}
-                                                <td class="small">{{ oc.outcome_code }}</td>
-                                                <td class="small text-muted">{{ oc.bloom_level }}</td>
-                                                <td><span class="badge bg-secondary">{{ oc.question_count }}</span></td>
+                                                <td>{{ row.outcome_subject }}</td>
+                                                <td class="small"><strong class="text-primary">{{ row.outcome_code }}</strong> — {{ row.outcome_desc }}</td>
+                                                <td class="small text-muted">{{ row.bloom_level }}</td>
+                                                <td><span class="badge bg-secondary">{{ row.question_count }}</span></td>
                                             </tr>
-                                            {% endfor %}
                                             {% endfor %}
                                         </tbody>
                                     </table>

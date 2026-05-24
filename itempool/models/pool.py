@@ -60,12 +60,12 @@ class LearningOutcome(models.Model):
     Öğrenme Çıktısı tablosu. Havuzlara özel olarak tanımlanır.
     """
     class BloomLevel(models.TextChoices):
-        KNOWLEDGE = 'KNOWLEDGE', 'Bilgi'
-        COMPREHENSION = 'COMPREHENSION', 'Kavrama'
-        APPLICATION = 'APPLICATION', 'Uygulama'
-        ANALYSIS = 'ANALYSIS', 'Analiz'
-        SYNTHESIS = 'SYNTHESIS', 'Sentez'
-        EVALUATION = 'EVALUATION', 'Değerlendirme'
+        REMEMBERING = 'REMEMBERING', 'Hatırlama'
+        UNDERSTANDING = 'UNDERSTANDING', 'Anlama'
+        APPLYING = 'APPLYING', 'Uygulama'
+        ANALYZING = 'ANALYZING', 'Analiz Etme'
+        EVALUATING = 'EVALUATING', 'Değerlendirme'
+        CREATING = 'CREATING', 'Yaratma'
 
     pool = models.ForeignKey(
         ItemPool,
@@ -78,13 +78,19 @@ class LearningOutcome(models.Model):
         verbose_name='Çıktı Kodu',
         help_text='Örn: ÖÇ1, KAZ1'
     )
+    subject = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='İçerik / Konu',
+        help_text='Öğrenme çıktısının ait olduğu konu veya ünite'
+    )
     description = models.TextField(
         verbose_name='Açıklama'
     )
     level = models.CharField(
         max_length=30,
         choices=BloomLevel.choices,
-        default=BloomLevel.KNOWLEDGE,
+        default=BloomLevel.REMEMBERING,
         verbose_name='Bilişsel Düzey (Bloom)'
     )
     order = models.IntegerField(

@@ -79,6 +79,12 @@
 
                     <!-- Maddeler Sekmesi -->
                     <div class="tab-pane fade show active" id="items-pane" role="tabpanel" aria-labelledby="items-tab">
+                        {% if not outcomes %}
+                        <div class="alert alert-warning border-warning shadow-sm mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Henüz öğrenme çıktısı tanımlanmadı. Madde eklemeden önce öğrenme çıktılarınızı tanımlayın.
+                        </div>
+                        {% endif %}
                         
                         <!-- AI & Search Tools -->
                         <div class="row align-items-center mb-3 g-2">
@@ -229,7 +235,10 @@
                                         <div class="col-md-2">
                                             {{ outcome_form.code }}
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-3">
+                                            {{ outcome_form.subject }}
+                                        </div>
+                                        <div class="col-md-3">
                                             {{ outcome_form.description }}
                                         </div>
                                         <div class="col-md-2">
@@ -351,6 +360,17 @@ document.addEventListener('DOMContentLoaded', function() {
             
             modalOutcomeCode.textContent = outcomeCode;
             aiGenerateForm.action = "/havuz/outcomes/" + outcomeId + "/AI/generate/";
+        });
+    }
+    
+    var aiGenerateForm = document.getElementById('aiGenerateForm');
+    if (aiGenerateForm) {
+        aiGenerateForm.addEventListener('submit', function (event) {
+            var btn = this.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Maddeler üretiliyor, lütfen bekleyin...';
+            }
         });
     }
 });

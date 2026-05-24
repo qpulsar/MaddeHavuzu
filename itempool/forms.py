@@ -17,18 +17,40 @@ class LearningOutcomeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.pool = kwargs.pop('pool', None)
         super().__init__(*args, **kwargs)
+        self.fields['code'].required = False
 
     def clean_code(self):
         code = self.cleaned_data.get('code')
+        if not code:
+            return ""
         if self.pool and LearningOutcome.objects.filter(pool=self.pool, code=code).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("Bu kod bu havuzda zaten kullanılıyor.")
         return code
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if not instance.code:
+            if self.pool:
+                instance.pool = self.pool
+            pool = instance.pool
+            existing_count = pool.outcomes.count() if pool else 0
+            candidate_num = existing_count + 1
+            while True:
+                candidate_code = f"ÖÇ-{candidate_num}"
+                if not LearningOutcome.objects.filter(pool=pool, code=candidate_code).exists():
+                    instance.code = candidate_code
+                    break
+                candidate_num += 1
+        if commit:
+            instance.save()
+        return instance
+
     class Meta:
         model = LearningOutcome
-        fields = ['code', 'description', 'level', 'order']
+        fields = ['code', 'subject', 'description', 'level', 'order']
         widgets = {
-            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ÖÇ-1'}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ÖÇ-1 (Boş bırakılırsa otomatik üretilir)'}),
+            'subject': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'İçerik / Konu (Örn: Geçerlik)'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Çıktı açıklaması'}),
             'level': forms.Select(attrs={'class': 'form-select'}),
             'order': forms.NumberInput(attrs={'class': 'form-control'}),
