@@ -20,7 +20,7 @@ from .forms import (
     CourseForm, CourseSpecTableForm, TestFormCreateForm, ExamApplicationForm
 )
 from .services.import_docx import DocxImportService
-from .services.llm_client import get_llm_client
+from .services.llm_client import get_llm_client, parse_json_from_llm
 from .services.similarity import SimilarityService
 from .services.form_service import FormService
 from django.db import transaction
@@ -83,7 +83,7 @@ class ItemPoolDetailView(PoolAccessMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Havuzdaki öğrenme çıktıları
-        context['outcomes'] = self.object.outcomes.filter(is_active=True).order_by('order', 'code')
+        context['outcomes'] = self.object.outcomes.filter(is_active=True).order_by('code', 'id')
         
         # Havuzdaki maddeler (Pagination + Select Related)
         items_qs = self.object.item_instances.select_related('item').prefetch_related('learning_outcomes').all()
@@ -367,14 +367,10 @@ def item_suggest_outcomes(request, pk):
     raw_response = client.suggest_outcomes(item.stem, outcomes)
     
     try:
-        # JSON temizleme (bazı LLM'ler markdown code block içinde dönebiliyor)
-        cleaned_json = raw_response.strip()
-        if cleaned_json.startswith("```"):
-            cleaned_json = cleaned_json.split("```")[1]
-            if cleaned_json.startswith("json"):
-                cleaned_json = cleaned_json[4:]
-        
-        data = json.loads(cleaned_json)
+        data = parse_json_from_llm(raw_response)
+        if not data or not isinstance(data, dict):
+            return HttpResponse(f"Öneri ayrıştırılamadı. Yanıt: {raw_response[:100]}")
+            
         outcome_id = data.get('outcome_id')
         score = data.get('score', 0)
         reason = data.get('reason', '')
@@ -421,13 +417,9 @@ def pool_bulk_suggest_outcomes(request, pk):
         item = inst.item
         raw_response = client.suggest_outcomes(item.stem, outcomes)
         try:
-            cleaned_json = raw_response.strip()
-            if cleaned_json.startswith("```"):
-                cleaned_json = cleaned_json.split("```")[1]
-                if cleaned_json.startswith("json"):
-                    cleaned_json = cleaned_json[4:]
-            
-            data = json.loads(cleaned_json)
+            data = parse_json_from_llm(raw_response)
+            if not data or not isinstance(data, dict):
+                continue
             outcome_id = data.get('outcome_id')
             if outcome_id:
                 learning_outcome = LearningOutcome.objects.get(id=outcome_id)
@@ -440,7 +432,7 @@ def pool_bulk_suggest_outcomes(request, pk):
                     }
                 )
                 count += 1
-        except:
+        except Exception:
             continue
             
     messages.success(request, f"{count} madde için AI önerileri hazırlandı.")
@@ -646,16 +638,9 @@ def item_suggest_distractors(request):
     raw_response = client.suggest_distractors(stem, correct_answer)
     
     try:
-        # JSON temizleme
-        cleaned_json = raw_response.strip()
-        if cleaned_json.startswith("```"):
-            chunks = cleaned_json.split("```")
-            if len(chunks) > 1:
-                cleaned_json = chunks[1]
-                if cleaned_json.startswith("json"):
-                    cleaned_json = cleaned_json[4:]
-        
-        distractors = json.loads(cleaned_json)
+        distractors = parse_json_from_llm(raw_response)
+        if not distractors:
+            return HttpResponse(f'<div class="alert alert-danger py-1 small mb-0">Hata: Yanıt ayrıştırılamadı. ({raw_response[:60]}...)</div>')
         if not isinstance(distractors, list):
             distractors = [str(distractors)]
             
@@ -677,16 +662,10 @@ def item_clone_variation(request, pk):
     raw_response = client.generate_variation(item.stem, json.dumps(choices))
     
     try:
-        # JSON temizleme
-        cleaned_json = raw_response.strip()
-        if cleaned_json.startswith("```"):
-            chunks = cleaned_json.split("```")
-            if len(chunks) > 1:
-                cleaned_json = chunks[1]
-                if cleaned_json.startswith("json"):
-                    cleaned_json = cleaned_json[4:]
-        
-        data = json.loads(cleaned_json)
+        data = parse_json_from_llm(raw_response)
+        if not data or not isinstance(data, dict):
+            messages.error(request, f'Varyasyon yanıtı ayrıştırılamadı: {raw_response[:100]}')
+            return redirect('itempool:item_detail', pk=pk)
         
         # ImportBatch oluştur
         now_str = datetime.now().strftime("%d.%m.%Y %H:%M")
@@ -729,16 +708,10 @@ def item_suggest_improvements(request, pk):
     raw_response = client.suggest_improvements(item.stem, json.dumps(choices))
     
     try:
-        # JSON temizleme
-        cleaned_json = raw_response.strip()
-        if cleaned_json.startswith("```"):
-            chunks = cleaned_json.split("```")
-            if len(chunks) > 1:
-                cleaned_json = chunks[1]
-                if cleaned_json.startswith("json"):
-                    cleaned_json = cleaned_json[4:]
-        
-        data = json.loads(cleaned_json)
+        data = parse_json_from_llm(raw_response)
+        if not data or not isinstance(data, dict):
+            return HttpResponse(f'<div class="alert alert-danger py-1 small mb-0">Hata: AI yanıtı ayrıştırılamadı.</div>')
+            
         return render(request, 'itempool/partials/item_improvements.html', {
             'instance': instance, 
             'improved': data

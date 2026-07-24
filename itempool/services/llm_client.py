@@ -1,4 +1,6 @@
 import os
+import re
+import json
 import logging
 from django.conf import settings
 from dotenv import load_dotenv
@@ -9,6 +11,45 @@ from itempool.models import AIPrompt
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+def parse_json_from_llm(raw_response):
+    """
+    LLM yanıtlarından güvenli bir şekilde JSON verisi ayıklar.
+    Markdown kod bloklarını (```json ... ```), başındaki/sonundaki metinleri ve boşlukları temizler.
+    """
+    if not raw_response or not isinstance(raw_response, str):
+        return None
+    
+    text = raw_response.strip()
+    if text.startswith("Hata:") or text.startswith("API Key") or text.startswith("Gateway"):
+        return None
+
+    # 1. Regex ile { ... } veya [ ... ] bloklarını ara
+    match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
+    if match:
+        json_str = match.group(0)
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            pass
+
+    # 2. Triple backticks (```) temizleme fallback
+    if "```" in text:
+        chunks = text.split("```")
+        for chunk in chunks:
+            chunk_str = chunk.strip()
+            if chunk_str.startswith("json"):
+                chunk_str = chunk_str[4:].strip()
+            try:
+                return json.loads(chunk_str)
+            except json.JSONDecodeError:
+                continue
+
+    # 3. Doğrudan parse denemesi
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return None
 
 class LLMClient:
     """

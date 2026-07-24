@@ -68,7 +68,7 @@
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="outcomes-tab" data-bs-toggle="tab" data-bs-target="#outcomes-pane" type="button" role="tab" aria-selected="false">
-                            <i class="bi bi-bullseye"></i> Öğrenme Çıktıları <span class="badge bg-secondary ms-1">{{ outcomes.count }}</span>
+                            <i class="bi bi-bullseye"></i> Öğrenme Çıktıları <span id="outcomeCountBadge" class="badge bg-secondary ms-1">{{ outcomes.count }}</span>
                         </button>
                     </li>
                 </ul>
@@ -229,6 +229,8 @@
                                               if(thead) thead.classList.remove('d-none');
                                               var empty = document.getElementById('outcomes-empty');
                                               if(empty) empty.remove();
+                                              var b = document.getElementById('outcomeCountBadge');
+                                              if(b) { b.textContent = parseInt(b.textContent || '0') + 1; }
                                           }">
                                     {% csrf_token %}
                                     <div class="row g-2">
@@ -259,13 +261,13 @@
 
                         <!-- Çıktılar Tablosu — tablo her zaman DOM'da olmalı (HTMX #outcomes-tbody hedefi için) -->
                         <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle">
+                            <table class="table table-sm table-hover align-middle" id="outcomes-table">
                                 <thead {% if not outcomes %}class="d-none"{% endif %} id="outcomes-thead">
                                     <tr>
                                         <th style="width: 5%">#</th>
-                                        <th style="width: 10%">Kod</th>
-                                        <th style="width: 60%">Açıklama</th>
-                                        <th style="width: 15%">Düzey (Bloom)</th>
+                                        <th style="width: 15%; cursor: pointer;" onclick="sortOutcomeTable(1)" title="Koda göre sırala">Kod <i class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th style="width: 55%; cursor: pointer;" onclick="sortOutcomeTable(2)" title="Açıklamaya göre sırala">Açıklama <i class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th style="width: 15%; cursor: pointer;" onclick="sortOutcomeTable(3)" title="Düzeye göre sırala">Düzey (Bloom) <i class="bi bi-arrow-down-up small text-muted"></i></th>
                                         <th style="width: 10%">İşlem</th>
                                     </tr>
                                 </thead>
@@ -374,5 +376,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+let sortAscending = true;
+function sortOutcomeTable(columnIndex) {
+    const tbody = document.getElementById('outcomes-tbody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    rows.sort((a, b) => {
+        const cellA = a.children[columnIndex] ? a.children[columnIndex].innerText.trim() : '';
+        const cellB = b.children[columnIndex] ? b.children[columnIndex].innerText.trim() : '';
+        return sortAscending 
+            ? cellA.localeCompare(cellB, 'tr', { numeric: true })
+            : cellB.localeCompare(cellA, 'tr', { numeric: true });
+    });
+    
+    sortAscending = !sortAscending;
+    rows.forEach(row => tbody.appendChild(row));
+}
 </script>
 {% endblock %}

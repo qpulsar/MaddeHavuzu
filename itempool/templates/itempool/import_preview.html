@@ -37,8 +37,8 @@
             {% csrf_token %}
             <div class="mb-3 d-flex justify-content-end sticky-top pt-2 bg-white" style="z-index: 1000; top: 0;">
                 <a href="{% url 'itempool:pool_detail' batch.pool.id %}" class="btn btn-outline-secondary me-2">İptal</a>
-                <button type="submit" class="btn btn-success shadow">
-                    <i class="bi bi-check-circle"></i> Onayla ve Havuza Aktar ({{ batch.item_count }} Madde)
+                <button type="submit" class="btn btn-success shadow" id="commitSubmitBtn">
+                    <i class="bi bi-check-circle"></i> Onayla ve Havuza Aktar (<span id="selectedCountBadge">{{ batch.item_count }}</span> Madde)
                 </button>
             </div>
 
@@ -115,7 +115,7 @@
                                     {% endif %}
 
                                     <div class="form-check form-switch mb-3">
-                                        <input class="form-check-input" type="checkbox" role="switch" name="active_{{ item.id }}" id="status-{{ item.id }}" checked>
+                                        <input class="form-check-input draft-item-toggle" type="checkbox" role="switch" name="active_{{ item.id }}" id="status-{{ item.id }}" checked>
                                         <label class="form-check-label" for="status-{{ item.id }}">Aktarılacak</label>
                                     </div>
                                 </div>
@@ -149,5 +149,24 @@
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const switches = document.querySelectorAll('.draft-item-toggle');
+    const badge = document.getElementById('selectedCountBadge');
+    
+    function updateCount() {
+        if (!badge) return;
+        let activeCount = 0;
+        switches.forEach(sw => {
+            if (sw.checked) activeCount++;
+        });
+        badge.textContent = activeCount;
+    }
+    
+    switches.forEach(sw => {
+        sw.addEventListener('change', updateCount);
+    });
+});
+</script>
 
 {% endblock %}

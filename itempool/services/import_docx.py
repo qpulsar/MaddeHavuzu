@@ -9,12 +9,14 @@ class DocxImportService:
     Word (.docx) dosyalarını ayrıştırıp taslak madde (DraftItem) olarak kaydeden servis.
     """
     
-    # Soru numarası regex (1. 2) 1- vb.)
-    QUESTION_RE = re.compile(r'^(\d+)[.)-]\s*(.*)')
-    # Şık regex (A) B) A. B. vb.)
-    CHOICE_RE = re.compile(r'^([A-Ea-e])[.)]\s*(.*)')
-    # Doğru cevap belirteci (Cevap: A, Yanıt B vb.)
-    CORRECT_RE = re.compile(r'^(Cevap|Yanıt|Key):\s*([A-Ea-e])', re.IGNORECASE)
+    # Soru numarası regex (1. 2) 1- 12. vb.)
+    QUESTION_RE = re.compile(r'^\s*(\d+)[.)-]\s*(.*)')
+    # Şık regex (A) B) A. B- A: vb.)
+    CHOICE_RE = re.compile(r'^\s*([A-Ea-e])[\.\)\-:]\s*(.*)')
+    # Yan yana şıklar için regex (A. ... B. ... C. ...)
+    INLINE_CHOICES_RE = re.compile(r'([A-Ea-e])[\.\)\-:]\s*([^A-Ea-e\.\)\-:]+)')
+    # Doğru cevap belirteci (Cevap: A, Cevap=C, Yanıt B, Doğru Cevap: D vb.)
+    CORRECT_RE = re.compile(r'(?:Cevap|Yanıt|Key|Doğru Cevap)\s*[:=]\s*([A-Ea-e])', re.IGNORECASE)
 
     def __init__(self, batch_id, use_ai=False):
         self.batch = ImportBatch.objects.get(id=batch_id)
@@ -35,36 +37,57 @@ class DocxImportService:
             
             q_match = self.QUESTION_RE.match(text)
             c_match = self.CHOICE_RE.match(text)
-            ans_match = self.CORRECT_RE.match(text)
+            ans_match = self.CORRECT_RE.search(text)
             
             if ans_match:
                 if current_item:
-                    current_item['correct'] = ans_match.group(2).upper()
+                    current_item['correct'] = ans_match.group(1).upper()
                 continue
                 
             if c_match:
-                label = c_match.group(1).upper()
-                choice_text = c_match.group(2)
-                
-                if not current_item:
-                    current_item = {
-                        'stem': last_unmatched_text.strip() or "Soru Kökü Eksik",
-                        'choices': [],
-                        'correct': None
-                    }
-                    last_unmatched_text = ""
-                
-                current_item['choices'].append({
-                    'label': label,
-                    'text': choice_text
-                })
+                # Satırda birden fazla şık var mı kontrol et (Ör: A. X B. Y C. Z D. T)
+                inline_matches = list(self.INLINE_CHOICES_RE.finditer(text))
+                if len(inline_matches) > 1:
+                    if not current_item:
+                        current_item = {
+                            'stem': last_unmatched_text.strip() or "Soru Kökü Eksik",
+                            'choices': [],
+                            'correct': None
+                        }
+                        last_unmatched_text = ""
+                    for m in inline_matches:
+                        current_item['choices'].append({
+                            'label': m.group(1).upper(),
+                            'text': m.group(2).strip()
+                        })
+                else:
+                    label = c_match.group(1).upper()
+                    choice_text = c_match.group(2)
+                    
+                    if not current_item:
+                        current_item = {
+                            'stem': last_unmatched_text.strip() or "Soru Kökü Eksik",
+                            'choices': [],
+                            'correct': None
+                        }
+                        last_unmatched_text = ""
+                    
+                    current_item['choices'].append({
+                        'label': label,
+                        'text': choice_text
+                    })
             elif q_match:
                 if current_item:
                     self._save_draft(current_item)
                     items_count += 1
                 
+                # Öncüllü sorular için (I., II. vb.) soru numarası gelmeden önceki metni soru kökünün başına ekle
+                full_stem = q_match.group(2)
+                if last_unmatched_text:
+                    full_stem = f"{last_unmatched_text.strip()}\n{full_stem}"
+                
                 current_item = {
-                    'stem': q_match.group(2),
+                    'stem': full_stem.strip(),
                     'choices': [],
                     'correct': None
                 }
