@@ -94,10 +94,22 @@ class ItemDetailEditForm(forms.ModelForm):
             'scoring_rubric': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
 
+class BaseItemChoiceFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+        filled_forms = 0
+        for form in self.forms:
+            if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
+                text = form.cleaned_data.get('text')
+                if text and text.strip():
+                    filled_forms += 1
+
 ItemChoiceFormSet = forms.inlineformset_factory(
-    Item, ItemChoice, form=ItemChoiceForm,
-    extra=4, can_delete=True, min_num=2, validate_min=True,
-    max_num=10, validate_max=True
+    Item, ItemChoice, form=ItemChoiceForm, formset=BaseItemChoiceFormSet,
+    extra=4, can_delete=True, min_num=0, validate_min=False,
+    max_num=10, validate_max=False
 )
 
 class TestFormForm(forms.ModelForm):
@@ -171,6 +183,17 @@ class TestFormCreateForm(forms.ModelForm):
     ]
 
     # Otomatik seçim kriterleri (ek alanlar)
+    spec_table = forms.ModelChoiceField(
+        queryset=SpecificationTable.objects.none(),
+        required=False,
+        label='Belirtke Tablosu',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text='Seçilirse sorular bu belirtke tablosundaki öğrenme çıktısı ağırlıklarına göre otomatik çekilir.'
+    )
+    total_questions = forms.IntegerField(
+        min_value=1, initial=20, required=False, label='Toplam Soru Sayısı',
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 1})
+    )
     difficulty = forms.ChoiceField(
         choices=DIFFICULTY_CHOICES,
         initial='MIXED',
@@ -211,6 +234,7 @@ class TestFormCreateForm(forms.ModelForm):
             self.fields['excluded_forms'].queryset = TestForm.objects.filter(
                 course=course
             ).order_by('-created_at')
+            self.fields['spec_table'].queryset = course.specification_tables.all()
 
 
 class ExamApplicationForm(forms.ModelForm):

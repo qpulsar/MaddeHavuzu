@@ -1,4 +1,4 @@
-<form hx-post="{% url 'itempool:item_detail_save' instance.id section %}" hx-swap="outerHTML" hx-target="this">
+<form hx-post="{% url 'itempool:item_detail_save' instance.id section %}" hx-swap="outerHTML" hx-target="#{{ section }}-card">
     {% csrf_token %}
     {% if section == 'stem' %}
     <div class="card shadow-sm mb-4 border-warning" id="stem-card">
@@ -6,7 +6,7 @@
             <span><i class="bi bi-pencil-square"></i> Düzenle: Madde Kökü</span>
             <div>
                 <button type="submit" class="btn btn-sm btn-success py-0 me-1">Kaydet</button>
-                <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail' instance.id %}" hx-target="body">İptal</button>
+                <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail_save' instance.id 'stem' %}" hx-target="#stem-card" hx-swap="outerHTML">İptal</button>
             </div>
         </div>
         <div class="card-body">
@@ -21,7 +21,7 @@
             <span><i class="bi bi-pencil-square"></i> Düzenle: Meta Veriler</span>
             <div>
                 <button type="submit" class="btn btn-sm btn-success py-0 me-1">Kaydet</button>
-                <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail' instance.id %}" hx-target="body">İptal</button>
+                <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail_save' instance.id 'meta' %}" hx-target="#meta-card" hx-swap="outerHTML">İptal</button>
             </div>
         </div>
         <div class="card-body py-1">
@@ -45,7 +45,7 @@
             <span><i class="bi bi-pencil-square"></i> Düzenle: Öğrenme Çıktıları</span>
             <div>
                 <button type="submit" class="btn btn-sm btn-success py-0 me-1">Kaydet</button>
-                <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail' instance.id %}" hx-target="body">İptal</button>
+                <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail_save' instance.id 'outcomes' %}" hx-target="#outcomes-card" hx-swap="outerHTML">İptal</button>
             </div>
         </div>
         <div class="card-body">

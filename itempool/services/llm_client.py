@@ -127,10 +127,12 @@ Gerekirse madde kökünü (soruyu) ve şıkları iyileştir.
 Soru: {stem}
 Şıklar: {choices}
 
-Lütfen sadece iyileştirilmiş versiyonu JSON formatında dön:
-{{"improved_stem": "...", "improved_choices": [...]}}"""
+Lütfen cevabı SADECE ve SADECE aşağıdaki JSON formatında dön:
+{{"improved_stem": "İyileştirilmiş soru kökü", "improved_choices": [{{"label": "A", "text": "İyileştirilmiş şık metni"}}]}}"""
         
-        template, system = self._get_prompt_config('ITEM_IMPROVE', default_tpl)
+        default_system = "Sen uzman bir sınav sorusu inceleme asistanısın. Cevabını SADECE geçerli bir JSON nesnesi olarak ver. Başka hiçbir açıklama ekleme."
+        template, system = self._get_prompt_config('ITEM_IMPROVE', default_tpl, default_system)
+        system = system or default_system
         prompt = template.format(stem=stem, choices=choices)
         return self._generate(prompt, system)
 

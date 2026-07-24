@@ -86,4 +86,32 @@
             }
         }
     });
+
+    // ── Global HTMX & AI Loading Kilit & Spinner ─────────────────────────────
+    document.addEventListener('htmx:configRequest', function(evt) {
+        const elt = evt.detail.elt;
+        if (elt && (elt.tagName === 'BUTTON' || elt.tagName === 'A')) {
+            elt.classList.add('disabled');
+            if (elt.tagName === 'BUTTON') elt.disabled = true;
+            
+            // Eğer buton veya link içinde spinner yoksa spinner ekle
+            if (!elt.querySelector('.spinner-border')) {
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm me-1 btn-htmx-spinner';
+                spinner.setAttribute('role', 'status');
+                spinner.setAttribute('aria-hidden', 'true');
+                elt.insertBefore(spinner, elt.firstChild);
+            }
+        }
+    });
+
+    document.addEventListener('htmx:afterRequest', function(evt) {
+        const elt = evt.detail.elt;
+        if (elt && (elt.tagName === 'BUTTON' || elt.tagName === 'A')) {
+            elt.classList.remove('disabled');
+            if (elt.tagName === 'BUTTON') elt.disabled = false;
+            const spinner = elt.querySelector('.btn-htmx-spinner');
+            if (spinner) spinner.remove();
+        }
+    });
     

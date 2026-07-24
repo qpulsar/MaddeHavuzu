@@ -62,8 +62,7 @@
                             <th style="min-width: 150px;">Konu / Ünite</th>
                             <th>Kazanım (Öğrenme Çıktısı)</th>
                             <th style="width: 180px;" class="text-center">Bilişsel Düzey (Bloom)</th>
-                            <th style="width: 120px;" class="text-center">Ağırlık (%)</th>
-                            <th style="width: 120px;" class="text-center">Soru Sayısı</th>
+                            <th style="width: 160px;" class="text-center">Ağırlık (%)</th>
                         </tr>
                     </thead>
                     <tbody id="topicRows">
@@ -79,21 +78,20 @@
                             <td class="text-center small text-muted">
                                 {{ oc.get_level_display }}
                             </td>
-                            <td class="text-center fw-bold text-info" id="weight_{{ oc.id }}">
-                                0%
-                            </td>
                             <td>
-                                <input type="number" name="count_{{ oc.id }}" class="form-control form-control-sm text-center count-input"
-                                       min="0" value="{{ oc.current_count|default:0 }}" data-outcome-id="{{ oc.id }}">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" name="weight_{{ oc.id }}" class="form-control text-center weight-input"
+                                           min="0" max="100" step="0.5" value="{{ oc.current_weight|default:0 }}" data-outcome-id="{{ oc.id }}">
+                                    <span class="input-group-text">%</span>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                     <tfoot>
                         <tr class="table-light fw-bold">
-                            <td colspan="3" class="text-end">Toplam</td>
+                            <td colspan="3" class="text-end">Toplam Ağırlık</td>
                             <td class="text-center text-info" id="totalWeight">0%</td>
-                            <td class="text-center" id="grandTotal">0</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -114,38 +112,20 @@
 <script>
 (function () {
     function updateTotals() {
-        let grandTotal = 0;
-        const inputs = document.querySelectorAll('.count-input');
+        let totalWeight = 0;
+        const inputs = document.querySelectorAll('.weight-input');
         
         inputs.forEach(function (inp) {
-            grandTotal += parseInt(inp.value || 0);
+            totalWeight += parseFloat(inp.value || 0);
         });
         
-        document.getElementById('grandTotal').textContent = grandTotal;
-        
-        inputs.forEach(function (inp) {
-            const count = parseInt(inp.value || 0);
-            const oid = inp.dataset.outcomeId;
-            const weightEl = document.getElementById('weight_' + oid);
-            
-            if (weightEl) {
-                if (grandTotal > 0) {
-                    const percent = Math.round((count / grandTotal) * 100);
-                    weightEl.textContent = percent + '%';
-                } else {
-                    weightEl.textContent = '0%';
-                }
-            }
-        });
-        
-        if (grandTotal > 0) {
-            document.getElementById('totalWeight').textContent = '100%';
-        } else {
-            document.getElementById('totalWeight').textContent = '0%';
+        const totalEl = document.getElementById('totalWeight');
+        if (totalEl) {
+            totalEl.textContent = Math.round(totalWeight * 10) / 10 + '%';
         }
     }
 
-    document.querySelectorAll('.count-input').forEach(function (inp) {
+    document.querySelectorAll('.weight-input').forEach(function (inp) {
         inp.addEventListener('input', updateTotals);
     });
 

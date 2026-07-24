@@ -181,7 +181,11 @@ def item_create(request, pool_id):
 
                 if needs_choices and formset is not None:
                     formset.instance = item
-                    formset.save()
+                    choices = formset.save(commit=False)
+                    for choice in choices:
+                        if choice.text and choice.text.strip():
+                            choice.item = item
+                            choice.save()
 
                 # Havuz ile ilişkilendir
                 item_instance = ItemInstance.objects.create(
@@ -739,7 +743,7 @@ def item_suggest_improvements(request, pk):
     try:
         data = parse_json_from_llm(raw_response)
         if not data or not isinstance(data, dict):
-            return HttpResponse(f'<div class="alert alert-danger py-1 small mb-0">Hata: AI yanıtı ayrıştırılamadı.</div>')
+            return HttpResponse(f'<div class="alert alert-warning py-2 small mb-0"><i class="bi bi-exclamation-triangle me-1"></i> AI yanıtı ayrıştırılamadı. (Dönen yanıt: {raw_response[:80]})</div>')
             
         return render(request, 'itempool/partials/item_improvements.html', {
             'instance': instance, 
@@ -775,6 +779,11 @@ def item_detail_edit(request, pk, section):
 def item_detail_save(request, pk, section):
     instance = get_object_or_404(ItemInstance, id=pk)
     item = instance.item
+    
+    if request.method == 'GET':
+        return render(request, 'itempool/partials/item_detail_card.html', {
+            'instance': instance, 'section': section
+        })
     
     if request.method == 'POST':
         if section in ['stem', 'meta']:
@@ -1197,24 +1206,37 @@ def course_spec_table_create(request, course_pk):
             spec.course = course
             spec.created_by = request.user
             
-            # rows_json'ı doğrusal liste olarak oluştur
             rows = []
-            total = 0
+            total_weight = 0.0
+            from itempool.models import SpecificationTable, SpecificationCell
+            
+            # Ana SpecificationTable nesnesi oluştur
+            spec_table, _ = SpecificationTable.objects.get_or_create(
+                name=spec.name,
+                defaults={'created_by': request.user}
+            )
+
             for oc in outcomes:
-                count = int(request.POST.get(f'count_{oc.id}', 0) or 0)
-                if count > 0:
+                weight = float(request.POST.get(f'weight_{oc.id}', 0) or 0)
+                if weight > 0:
                     rows.append({
                         'outcome_id': oc.id,
                         'outcome_code': oc.code,
                         'outcome_subject': oc.subject or "Genel / Konusuz",
                         'outcome_desc': oc.description,
                         'bloom_level': oc.get_level_display(),
-                        'question_count': count,
+                        'weight': weight,
                     })
-                    total += count
+                    total_weight += weight
+                    # SpecificationCell kaydı oluştur/güncelle
+                    SpecificationCell.objects.update_or_create(
+                        table=spec_table,
+                        outcome=oc,
+                        defaults={'weight': weight}
+                    )
             
             spec.rows_json = rows
-            spec.total_questions = total
+            spec.total_questions = int(total_weight)
             spec.save()
             messages.success(request, 'Belirtke tablosu kaydedildi.')
             return redirect('itempool:course_detail', pk=course.pk)
@@ -1235,38 +1257,48 @@ def course_spec_table_update(request, pk):
         pool__in=course.pools.all(), is_active=True
     ).select_related('pool').order_by('pool', 'order', 'code')
 
-    # Soru sayılarını outcomes üzerine enjekte et
-    questions_map = {}
+    # Ağırlıkları outcomes üzerine enjekte et
+    weights_map = {}
     if spec.rows_json:
         for row in spec.rows_json:
-            questions_map[row.get('outcome_id')] = row.get('question_count', 0)
+            weights_map[row.get('outcome_id')] = row.get('weight', 0)
     
     for oc in outcomes:
-        oc.current_count = questions_map.get(oc.id, 0)
+        oc.current_weight = weights_map.get(oc.id, 0)
 
     if request.method == 'POST':
         form = CourseSpecTableForm(request.POST, instance=spec)
         if form.is_valid():
             spec = form.save(commit=False)
             
-            # rows_json'ı doğrusal liste olarak oluştur
             rows = []
-            total = 0
+            total_weight = 0.0
+            from itempool.models import SpecificationTable, SpecificationCell
+            spec_table, _ = SpecificationTable.objects.get_or_create(
+                name=spec.name,
+                defaults={'created_by': request.user}
+            )
+
             for oc in outcomes:
-                count = int(request.POST.get(f'count_{oc.id}', 0) or 0)
-                if count > 0:
+                weight = float(request.POST.get(f'weight_{oc.id}', 0) or 0)
+                if weight > 0:
                     rows.append({
                         'outcome_id': oc.id,
                         'outcome_code': oc.code,
                         'outcome_subject': oc.subject or "Genel / Konusuz",
                         'outcome_desc': oc.description,
                         'bloom_level': oc.get_level_display(),
-                        'question_count': count,
+                        'weight': weight,
                     })
-                    total += count
+                    total_weight += weight
+                    SpecificationCell.objects.update_or_create(
+                        table=spec_table,
+                        outcome=oc,
+                        defaults={'weight': weight}
+                    )
             
             spec.rows_json = rows
-            spec.total_questions = total
+            spec.total_questions = int(total_weight)
             spec.save()
             messages.success(request, 'Belirtke tablosu güncellendi.')
             return redirect('itempool:course_detail', pk=course.pk)
@@ -1307,8 +1339,14 @@ def course_test_form_create(request, course_pk):
             # Otomatik seçim kriterlerini metadata olarak sakla
             method = request.POST.get('method', 'MANUAL')
             excluded_ids = [int(x) for x in request.POST.getlist('excluded_forms')]
+            spec_table = form.cleaned_data.get('spec_table')
+            spec_table_id = spec_table.id if spec_table else None
+            total_questions = form.cleaned_data.get('total_questions') or 20
+
             metadata = {
                 'method': method,
+                'spec_table_id': spec_table_id,
+                'total_questions': total_questions,
                 'difficulty': form.cleaned_data.get('difficulty', 'MIXED'),
                 'item_type_counts': {
                     'MCQ': form.cleaned_data.get('n_mcq') or 0,
@@ -1342,13 +1380,15 @@ def course_test_form_create(request, course_pk):
 def _auto_select_items(test_form, course):
     """
     generation_metadata'ya göre havuzlardan otomatik madde seçer.
-    Zorluk, madde türü ve dışlama kriterlerini uygular.
+    Belirtke tablosu ağırlığı, zorluk ve dışlama kriterlerini uygular.
     """
     import random
     meta = test_form.generation_metadata
     difficulty = meta.get('difficulty', 'MIXED')
     type_counts = meta.get('item_type_counts', {})
     excluded_form_ids = meta.get('excluded_form_ids', [])
+    spec_table_id = meta.get('spec_table_id')
+    total_questions = meta.get('total_questions', 20)
 
     # Dışlanan sınavlardaki maddelerin ID'leri
     excluded_instance_ids = set(
@@ -1356,12 +1396,10 @@ def _auto_select_items(test_form, course):
         .values_list('item_instance_id', flat=True)
     )
 
-    # Bu derse daha önce uygulanan maddeler de dışlanabilir (isteğe bağlı)
     pool_ids = list(test_form.pools.values_list('id', flat=True))
     if not pool_ids:
         pool_ids = list(course.pools.values_list('id', flat=True))
 
-    # Zorluk filtresi
     difficulty_map = {
         'EASY': ['EASY'],
         'MEDIUM': ['MEDIUM'],
@@ -1372,23 +1410,64 @@ def _auto_select_items(test_form, course):
 
     order = 1
     test_form.form_items.all().delete()
+    selected_instances = set()
 
-    for itype, count in type_counts.items():
-        if count <= 0:
-            continue
-        qs = list(
-            ItemInstance.objects.filter(
-                pool_id__in=pool_ids,
-                item__item_type=itype,
-                item__difficulty_intended__in=allowed_difficulties,
-            ).exclude(
-                id__in=excluded_instance_ids
-            ).select_related('item')
-        )
-        random.shuffle(qs)
-        for inst in qs[:count]:
-            FormItem.objects.create(form=test_form, item_instance=inst, order=order)
-            order += 1
+    # 1. Eğer Belirtke Tablosu seçilmişse ağırlıklarına göre seç
+    if spec_table_id:
+        try:
+            from itempool.models import SpecificationTable
+            spec_table = SpecificationTable.objects.get(id=spec_table_id)
+            cells = spec_table.cells.filter(weight__gt=0)
+            for cell in cells:
+                n_cell_q = max(1, round((cell.weight / 100.0) * total_questions))
+                qs = list(
+                    ItemInstance.objects.filter(
+                        pool_id__in=pool_ids,
+                        learning_outcomes=cell.outcome,
+                        item__difficulty_intended__in=allowed_difficulties,
+                    ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
+                )
+                random.shuffle(qs)
+                for inst in qs[:n_cell_q]:
+                    FormItem.objects.create(form=test_form, item_instance=inst, order=order)
+                    selected_instances.add(inst.id)
+                    order += 1
+        except Exception as e:
+            logger.error(f"Spec Table auto select error: {e}")
+
+    # 2. Eğer soru tipi sayıları verilmişse
+    has_type_counts = any(v > 0 for v in type_counts.values())
+    if has_type_counts:
+        for itype, count in type_counts.items():
+            if count <= 0:
+                continue
+            qs = list(
+                ItemInstance.objects.filter(
+                    pool_id__in=pool_ids,
+                    item__item_type=itype,
+                    item__difficulty_intended__in=allowed_difficulties,
+                ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
+            )
+            random.shuffle(qs)
+            for inst in qs[:count]:
+                FormItem.objects.create(form=test_form, item_instance=inst, order=order)
+                selected_instances.add(inst.id)
+                order += 1
+    elif not spec_table_id or test_form.form_items.count() == 0:
+        # Genel rastgele soru seçimi (total_questions kadar)
+        needed = total_questions - test_form.form_items.count()
+        if needed > 0:
+            qs = list(
+                ItemInstance.objects.filter(
+                    pool_id__in=pool_ids,
+                    item__difficulty_intended__in=allowed_difficulties,
+                ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
+            )
+            random.shuffle(qs)
+            for inst in qs[:needed]:
+                FormItem.objects.create(form=test_form, item_instance=inst, order=order)
+                selected_instances.add(inst.id)
+                order += 1
 
 
 @login_required
@@ -1528,8 +1607,10 @@ def exam_template_create(request):
                     tpl.footer_design_json = None
 
             tpl.save()
-            messages.success(request, 'Şablon oluşturuldu.')
+            messages.success(request, 'Şablon başarıyla oluşturuldu.')
             return redirect('itempool:exam_template_list')
+        else:
+            messages.error(request, f'Şablon oluşturulamadı: {form.errors.as_text()}')
     else:
         form = ExamTemplateForm()
     return render(request, 'itempool/exam_template_form.html', {'form': form, 'title': 'Yeni Şablon'})
