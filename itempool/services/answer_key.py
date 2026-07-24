@@ -12,6 +12,7 @@ def generate_answer_key_from_form(test_form) -> str:
     SHORT_ANSWER → expected_answer'ın ilk kelimesini alır (kısaltılmış).
     OPEN → '?' ile işaretlenir.
     """
+    key_chars = []
     form_items = test_form.form_items.select_related(
         'item_instance__item'
     ).prefetch_related('item_instance__item__choices').order_by('order')

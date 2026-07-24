@@ -11,7 +11,8 @@ class TestAnswerKeyService:
 
     def test_generate_answer_key_mcq(self, user, item_pool):
         # Test formu oluştur
-        tf = TestForm.objects.create(name='Test', pool=item_pool, created_by=user)
+        tf = TestForm.objects.create(name='Test', created_by=user)
+        tf.pools.add(item_pool)
 
         # 3 MCQ sorusu ekle
         for i, correct_label in enumerate(['A', 'C', 'B']):
@@ -29,7 +30,8 @@ class TestAnswerKeyService:
         assert len(key) == 3
 
     def test_generate_answer_key_mixed_types(self, user, item_pool):
-        tf = TestForm.objects.create(name='Karışık Test', pool=item_pool, created_by=user)
+        tf = TestForm.objects.create(name='Karışık Test', created_by=user)
+        tf.pools.add(item_pool)
 
         # MCQ soru
         mcq = Item.objects.create(stem='Soru 1', item_type='MCQ', author=user)
@@ -54,14 +56,16 @@ class TestAnswerKeyService:
         assert key[2] == 'A'   # OPEN işareti
 
     def test_generate_answer_key_empty_form(self, user, item_pool):
-        tf = TestForm.objects.create(name='Boş Form', pool=item_pool, created_by=user)
+        tf = TestForm.objects.create(name='Boş Form', created_by=user)
+        tf.pools.add(item_pool)
         key = generate_answer_key_from_form(tf)
         assert key == ''
 
     def test_uploadsession_test_form_fk(self, user, item_pool):
         """UploadSession'a TestForm FK eklendiğini doğrula."""
         from grading.models import UploadSession
-        tf = TestForm.objects.create(name='Test Form', pool=item_pool, created_by=user)
+        tf = TestForm.objects.create(name='Test Form', created_by=user)
+        tf.pools.add(item_pool)
 
         # Dosya olmadan sadece FK testi için UploadSession oluştur
         session = UploadSession(

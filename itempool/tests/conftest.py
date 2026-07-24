@@ -10,8 +10,6 @@ def user(db):
 def item_pool(db, user):
     return ItemPool.objects.create(
         name='Test Havuzu',
-        course='Fizik 101',
-        semester='2024-Bahar',
         level='Lisans 1',
         owner=user,
         status=ItemPool.Status.ACTIVE
