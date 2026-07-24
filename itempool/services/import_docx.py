@@ -130,6 +130,16 @@ class DocxImportService:
             manual_review = True
             review_note += "Doğru cevap bulunamadı. "
 
+        # %65 Metin Benzerliği (Mükerrer Soru) Kontrolü
+        try:
+            from .similarity import SimilarityService
+            similar_item, ratio = SimilarityService.find_duplicate_candidates(item_data['stem'], pool_id=self.batch.pool.id, threshold=0.65)
+            if similar_item:
+                manual_review = True
+                review_note += f"⚠️ Mükerrer/Benzer Soru Uyarısı: Havuzdaki #{similar_item.id} numaralı madde ile %{ratio:.0f} uyuşuyor. "
+        except Exception:
+            pass
+
         DraftItem.objects.create(
             batch=self.batch,
             stem=item_data['stem'],

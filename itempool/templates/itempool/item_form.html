@@ -28,7 +28,13 @@
 
                     <div class="row mb-4">
                         <div class="col-md-8">
-                            <label class="form-label fw-bold">Madde Kökü (Soru)</label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label fw-bold mb-0">Madde Kökü (Soru)</label>
+                                <button type="button" class="btn btn-xs btn-outline-secondary" onclick="document.getElementById('stemImageInput').click();">
+                                    <i class="bi bi-image"></i> Görsel / Grafik Ekle
+                                </button>
+                                <input type="file" id="stemImageInput" class="d-none" accept="image/*" onchange="uploadStemImage(this)">
+                            </div>
                             <div id="duplicate-check-container" class="mb-2"></div>
                             {{ form.stem }}
                             {{ form.stem.errors }}
@@ -240,6 +246,34 @@
             htmx.process(stem);
         }
     }
-})();
+});
+
+function uploadStemImage(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch('{% url "itempool:item_image_upload" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.url) {
+            const stemTextarea = document.getElementById('id_stem');
+            if (stemTextarea) {
+                const imgTag = `<img src="${data.url}" class="img-fluid rounded my-2" alt="Görsel">`;
+                stemTextarea.value = stemTextarea.value ? stemTextarea.value + '\n' + imgTag : imgTag;
+            }
+        } else {
+            alert('Görsel yüklenemedi: ' + (data.error || 'Bilinmeyen hata'));
+        }
+    })
+    .catch(err => {
+        alert('Görsel yüklenirken bir ağ hatası oluştu.');
+    });
+}
 </script>
 {% endblock %}

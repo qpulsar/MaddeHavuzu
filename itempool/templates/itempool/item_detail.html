@@ -34,7 +34,7 @@
                 {% for choice in instance.item.choices.all %}
                 <div class="list-group-item d-flex align-items-center {% if choice.is_correct %}list-group-item-success{% endif %}">
                     <span class="badge {% if choice.is_correct %}bg-success{% else %}bg-secondary{% endif %} me-3">{{ choice.label }}</span>
-                    <div class="flex-grow-1">{{ choice.text }}</div>
+                    <div class="flex-grow-1">{{ choice.text|safe }}</div>
                     {% if choice.is_correct %}
                     <i class="bi bi-check-circle-fill text-success ms-2" title="Doğru Cevap"></i>
                     {% endif %}

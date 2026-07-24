@@ -30,6 +30,8 @@ urlpatterns = [
     
     # Öğrenme Çıktısı HTMX ve Normal Rotalar
     path('<int:pool_id>/outcomes/add/', views.add_learning_outcome, name='outcome_add'),
+    path('<int:pool_id>/outcomes/import-excel/', views.outcome_import_excel, name='outcome_import_excel'),
+    path('outcomes/download-template/', views.outcome_download_template, name='outcome_download_template'),
     path('outcomes/<int:pk>/', views.get_learning_outcome_row, name='outcome_row'),
     path('outcomes/<int:pk>/edit/', views.edit_learning_outcome, name='outcome_edit'),
     path('outcomes/<int:pk>/delete/', views.delete_learning_outcome, name='outcome_delete'),
@@ -42,6 +44,7 @@ urlpatterns = [
     path('<int:pool_id>/items/yeni/', views.item_create, name='item_create'),
     path('items/<int:pk>/', views.item_detail, name='item_detail'),
     path('items/<int:pk>/sil/', views.item_delete, name='item_delete'),
+    path('items/upload-image/', views.item_image_upload, name='item_image_upload'),
 
     # Docx Import Rotaları
     path('<int:pool_id>/import/', views.import_upload, name='import_upload'),

@@ -18,7 +18,7 @@
         </div>
     </div>
     <div class="card-body fs-5 py-4">
-        {{ instance.item.stem|linebreaks }}
+        {{ instance.item.stem|safe|linebreaks }}
     </div>
 </div>
 

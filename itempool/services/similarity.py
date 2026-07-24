@@ -55,6 +55,37 @@ class SimilarityService:
         results.sort(key=lambda x: x['score'], reverse=True)
         return results[:top_n]
 
+    @classmethod
+    def find_duplicate_candidates(cls, stem, pool_id=None, threshold=0.65):
+        """
+        Yerel metin benzerliği hesaplayarak (SequenceMatcher) mükerrer/benzer soruları tespit eder.
+        API/embedding maliyeti gerektirmez. Threshold %65 (0.65) varsayılandır.
+        """
+        from difflib import SequenceMatcher
+        if not stem or len(stem.strip()) < 10:
+            return None, 0.0
+
+        clean_stem = " ".join(stem.lower().split())
+        
+        items_qs = Item.objects.all()
+        if pool_id:
+            instance_ids = ItemInstance.objects.filter(pool_id=pool_id).values_list('item_id', flat=True)
+            items_qs = items_qs.filter(id__in=instance_ids)
+
+        best_match = None
+        max_ratio = 0.0
+
+        for item in items_qs:
+            clean_item_stem = " ".join(item.stem.lower().split())
+            ratio = SequenceMatcher(None, clean_stem, clean_item_stem).ratio()
+            if ratio > max_ratio:
+                max_ratio = ratio
+                best_match = item
+
+        if max_ratio >= threshold:
+            return best_match, round(max_ratio * 100, 1)
+        return None, 0.0
+
     @staticmethod
     def get_threshold_label(score_percent):
         if score_percent >= 90: return "Mükerrer veya çok yakın"

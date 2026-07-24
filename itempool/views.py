@@ -249,6 +249,35 @@ def item_delete(request, pk):
     return redirect('itempool:pool_detail', pk=pool_id)
 
 
+# Excel Öğrenme Çıktısı İçe Aktarma View'ları
+
+from .services.import_excel_outcomes import ExcelOutcomeImportService
+
+@login_required
+def outcome_import_excel(request, pool_id):
+    pool = get_object_or_404(ItemPool, id=pool_id)
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        uploaded_file = request.FILES['excel_file']
+        try:
+            service = ExcelOutcomeImportService(pool.id, uploaded_file)
+            created, updated = service.process()
+            messages.success(request, f'Öğrenme çıktıları başarıyla aktarıldı: {created} yeni eklendi, {updated} güncellendi.')
+        except Exception as e:
+            messages.error(request, f'Excel aktarılırken hata oluştu: {str(e)}')
+    return redirect(f"{reverse('itempool:pool_detail', kwargs={'pk': pool.id})}#outcomes-pane")
+
+@login_required
+def outcome_download_template(request):
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="ogrenme_ciktilari_sablon.csv"'
+    response.write('\ufeff')  # Excel Türkçe karakter desteği için BOM
+    writer = csv.writer(response)
+    writer.writerow(['Kod', 'Açıklama', 'Düzey', 'Konu', 'Sıra'])
+    writer.writerow(['ÖÇ-1', 'Ölçme ve değerlendirme ile ilgili temel kavramları açıklar.', 'Anlama', 'Temel Kavramlar', '1'])
+    writer.writerow(['ÖÇ-2', 'Eğitimde başarının ölçülmesinde kullanılabilecek farklı madde türlerini bilir.', 'Hatırlama', 'Madde Türleri', '2'])
+    return response
+
+
 # Docx Import View'ları
 
 @login_required
@@ -2040,6 +2069,29 @@ def download_docx_template(request):
     doc.add_paragraph('Bu şablonu kullanarak sorularınızı toplu olarak içe aktarabilirsiniz. Lütfen aşağıdaki format kurallarına uyunuz:')
     doc.add_paragraph('1. Soru numarası ile başlayın (örn: 1. veya 1-).')
     doc.add_paragraph('2. Seçenekleri A), B), C)... şeklinde alt alta yazın.')
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename='soru_ice_aktarma_sablonu.docx')
+
+
+import os
+import uuid
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.http import JsonResponse
+
+@login_required
+def item_image_upload(request):
+    """Soru kökü ve şıklar için zengin metin editöründen yüklenen görselleri kaydeder."""
+    if request.method == 'POST' and (request.FILES.get('image') or request.FILES.get('upload')):
+        image_file = request.FILES.get('image') or request.FILES.get('upload')
+        ext = os.path.splitext(image_file.name)[1].lower() or '.png'
+        filename = f"item_images/{uuid.uuid4().hex}{ext}"
+        saved_path = default_storage.save(filename, ContentFile(image_file.read()))
+        image_url = default_storage.url(saved_path)
+        return JsonResponse({'url': image_url, 'location': image_url, 'success': True})
+    return JsonResponse({'error': 'Geçersiz istek veya görsel yüklenemedi.'}, status=400)
     doc.add_paragraph('3. Doğru cevabı "Cevap: A" veya "Yanıt: B" şeklinde belirtin (isteğe bağlı).')
     doc.add_paragraph('4. Numarasız veya çok satırlı soru kökleri de desteklenmektedir. Şıklar geldiğinde soru otomatik ayrıştırılır.')
     

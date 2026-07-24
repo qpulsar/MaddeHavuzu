@@ -206,9 +206,17 @@
                     <div class="tab-pane fade" id="outcomes-pane" role="tabpanel" aria-labelledby="outcomes-tab">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="card-title mb-0">Öğrenme Çıktıları</h5>
-                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#addOutcomeForm" aria-expanded="false" aria-controls="addOutcomeForm">
-                                <i class="bi bi-plus"></i> Çıktı Ekle
-                            </button>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'itempool:outcome_download_template' %}" class="btn btn-sm btn-outline-secondary" title="Excel / CSV Şablonu İndir">
+                                    <i class="bi bi-download"></i> Şablon İndir
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#excelImportOutcomeModal">
+                                    <i class="bi bi-file-earmark-excel"></i> Excel'den Yükle
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="collapse" data-bs-target="#addOutcomeForm" aria-expanded="false" aria-controls="addOutcomeForm">
+                                    <i class="bi bi-plus"></i> Çıktı Ekle
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Çıktı Ekleme Formu -->
@@ -395,4 +403,42 @@ function sortOutcomeTable(columnIndex) {
     rows.forEach(row => tbody.appendChild(row));
 }
 </script>
+
+<!-- Excel ÖÇ İçe Aktarma Modalı -->
+<div class="modal fade" id="excelImportOutcomeModal" tabindex="-1" aria-labelledby="excelImportOutcomeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{% url 'itempool:outcome_import_excel' pool.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="excelImportOutcomeModalLabel">
+                        <i class="bi bi-file-earmark-excel"></i> Excel / CSV'den ÖÇ Yükle
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <p class="small text-muted mb-3">
+                        Öğrenme çıktılarınızı toplu yüklemek için <strong>.xlsx</strong> veya <strong>.csv</strong> dosyanızı seçin.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dosya Seçin</label>
+                        <input type="file" name="excel_file" class="form-control" accept=".xlsx, .xls, .csv" required>
+                    </div>
+                    <div class="alert alert-light border small text-muted">
+                        <strong>Sütun Yapısı:</strong> Kod, Açıklama, Düzey (Anlama, Bilgi vb.), Konu, Sıra
+                        <br>
+                        <a href="{% url 'itempool:outcome_download_template' %}" class="btn btn-link btn-sm p-0 mt-1">
+                            <i class="bi bi-download"></i> Örnek Şablonu İndir (.csv)
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-upload"></i> İçe Aktar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
