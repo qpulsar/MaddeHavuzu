@@ -205,7 +205,10 @@ def wizard_exam_step2(request, form_id):
         else:
             exclude_ids = set()
             if course_id:
-                course = get_object_or_404(Course, pk=course_id, created_by=request.user)
+                if request.user.is_staff or request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role == 'ADMIN'):
+                    course = get_object_or_404(Course, pk=course_id)
+                else:
+                    course = get_object_or_404(Course, pk=course_id, created_by=request.user)
                 exclude_ids = course.get_applied_item_instance_ids()
 
             tf.form_items.all().delete()

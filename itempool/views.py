@@ -1131,9 +1131,21 @@ def course_create(request):
     return render(request, 'itempool/course_form.html', {'form': form, 'title': 'Yeni Ders'})
 
 
+def _get_course_or_404(user, pk):
+    if user.is_staff or user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'ADMIN'):
+        return get_object_or_404(Course, pk=pk)
+    return get_object_or_404(Course, pk=pk, created_by=user)
+
+
+def _get_spec_table_or_404(user, pk):
+    if user.is_staff or user.is_superuser or (hasattr(user, 'profile') and user.profile.role == 'ADMIN'):
+        return get_object_or_404(CourseSpecTable, pk=pk)
+    return get_object_or_404(CourseSpecTable, pk=pk, course__created_by=user)
+
+
 @login_required
 def course_update(request, pk):
-    course = get_object_or_404(Course, pk=pk, created_by=request.user)
+    course = _get_course_or_404(request.user, pk)
     if request.method == 'POST':
         form = CourseForm(request.POST, instance=course)
         if form.is_valid():
@@ -1149,7 +1161,7 @@ def course_update(request, pk):
 def course_detail(request, pk):
     from datetime import date
     from grading.models import UploadSession
-    course = get_object_or_404(Course, pk=pk, created_by=request.user)
+    course = _get_course_or_404(request.user, pk)
     test_forms = course.test_forms.prefetch_related('form_items').order_by('-created_at')
     spec_tables = course.spec_tables.all().order_by('-created_at')
     
@@ -1191,7 +1203,7 @@ def course_detail(request, pk):
 
 @login_required
 def course_spec_table_create(request, course_pk):
-    course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+    course = _get_course_or_404(request.user, course_pk)
     outcomes = LearningOutcome.objects.filter(
         pool__in=course.pools.all(), is_active=True
     ).select_related('pool').order_by('pool', 'order', 'code')
@@ -1251,7 +1263,7 @@ def course_spec_table_create(request, course_pk):
 
 @login_required
 def course_spec_table_update(request, pk):
-    spec = get_object_or_404(CourseSpecTable, pk=pk, course__created_by=request.user)
+    spec = _get_spec_table_or_404(request.user, pk)
     course = spec.course
     outcomes = LearningOutcome.objects.filter(
         pool__in=course.pools.all(), is_active=True
@@ -1314,7 +1326,7 @@ def course_spec_table_update(request, pk):
 
 @login_required
 def course_spec_table_delete(request, pk):
-    spec = get_object_or_404(CourseSpecTable, pk=pk, course__created_by=request.user)
+    spec = _get_spec_table_or_404(request.user, pk)
     course_pk = spec.course_id
     if request.method == 'POST':
         spec.delete()
@@ -1327,7 +1339,7 @@ def course_spec_table_delete(request, pk):
 @login_required
 def course_test_form_create(request, course_pk):
     """Derse ait yeni sınav formu oluşturur."""
-    course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+    course = _get_course_or_404(request.user, course_pk)
 
     if request.method == 'POST':
         form = TestFormCreateForm(request.POST, course=course)
@@ -1475,7 +1487,7 @@ def exam_application_create(request, course_pk=None):
     initial = {}
     course = None
     if course_pk:
-        course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+        course = _get_course_or_404(request.user, course_pk)
         initial['course'] = course
 
     if request.method == 'POST':
@@ -1499,7 +1511,7 @@ def exam_application_create(request, course_pk=None):
 def exam_application_quick(request, course_pk, tf_pk):
     """Inline 'mark as applied' from the course detail page — no separate form page needed."""
     from datetime import date as date_cls
-    course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+    course = _get_course_or_404(request.user, course_pk)
     tf = get_object_or_404(TestForm, pk=tf_pk)
     if request.method == 'POST':
         applied_at_str = request.POST.get('applied_at') or str(date_cls.today())
@@ -1521,7 +1533,10 @@ def exam_application_quick(request, course_pk, tf_pk):
 
 @login_required
 def exam_application_delete(request, pk):
-    app = get_object_or_404(ExamApplication, pk=pk, created_by=request.user)
+    if request.user.is_staff or request.user.is_superuser or (hasattr(request.user, 'profile') and request.user.profile.role == 'ADMIN'):
+        app = get_object_or_404(ExamApplication, pk=pk)
+    else:
+        app = get_object_or_404(ExamApplication, pk=pk, created_by=request.user)
     course_pk = app.course_id
     if request.method == 'POST':
         app.delete()
@@ -1533,7 +1548,7 @@ def exam_application_delete(request, pk):
 def course_applied_items(request, course_pk):
     """Bir derse daha önce uygulanan madde instance ID'lerini JSON döndürür."""
     from django.http import JsonResponse
-    course = get_object_or_404(Course, pk=course_pk, created_by=request.user)
+    course = _get_course_or_404(request.user, course_pk)
     applied_ids = list(course.get_applied_item_instance_ids())
     return JsonResponse({'applied_item_instance_ids': applied_ids, 'count': len(applied_ids)})
 
