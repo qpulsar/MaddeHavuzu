@@ -36,30 +36,26 @@ class FormService:
             
             # 4. Her madde için şıkları karıştır ve doğru cevabı hedef harfe oturt
             for fi, target_label in zip(items, target_labels):
-                item = fi.item_instance.item
-                orig_choices = list(item.choices.all())
+                choices_list = [dict(c) for c in fi.get_choices()]
                 
                 # Doğru cevabı bul ve listeden çıkar
-                correct_idx = next((i for i, c in enumerate(orig_choices) if c.is_correct), None)
+                correct_idx = next((i for i, c in enumerate(choices_list) if c.get('is_correct')), None)
                 if correct_idx is None:
-                    # Doğru cevabı olmayan (hatalı) soruyu sadece karıştır, dengelemeye katma
-                    random.shuffle(orig_choices)
-                    final_list = orig_choices
+                    random.shuffle(choices_list)
+                    final_list = choices_list
                 else:
-                    correct_choice = orig_choices.pop(correct_idx)
-                    # Diğer (yanlış) cevapları kendi arasında karıştır
-                    random.shuffle(orig_choices)
-                    # Doğru cevabı hedef etiketin olduğu sıraya yerleştir
+                    correct_choice = choices_list.pop(correct_idx)
+                    random.shuffle(choices_list)
                     target_idx = valid_labels.index(target_label)
-                    final_list = orig_choices[:target_idx] + [correct_choice] + orig_choices[target_idx:]
+                    final_list = choices_list[:target_idx] + [correct_choice] + choices_list[target_idx:]
                 
-                # 5. Overrides JSON oluştur ve kaydet
+                # 5. Overrides JSON oluştur ve kaydet (sadece bu sınav formuna özel)
                 overrides = []
                 for i, c in enumerate(final_list):
                     overrides.append({
                         'label': labels[i] if i < len(labels) else str(i),
-                        'text': c.text,
-                        'is_correct': getattr(c, 'is_correct', False)
+                        'text': c.get('text', ''),
+                        'is_correct': bool(c.get('is_correct', False))
                     })
                 fi.choice_overrides = overrides
                 fi.save()

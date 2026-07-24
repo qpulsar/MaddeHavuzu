@@ -77,6 +77,42 @@ class FormItem(models.Model):
     # Format: [{"label": "A", "text": "...", "is_correct": bool}, ...]
     choice_overrides = models.JSONField(null=True, blank=True, verbose_name='Şık Düzenlemeleri')
 
+    def get_choices(self):
+        """
+        FormItem'a özgü dondurulmuş şık listesini döndürür.
+        """
+        if self.choice_overrides:
+            return self.choice_overrides
+        
+        choices = []
+        if self.item_instance_id and hasattr(self.item_instance, 'item'):
+            for c in self.item_instance.item.choices.all():
+                choices.append({
+                    'label': c.label,
+                    'text': c.text,
+                    'is_correct': c.is_correct
+                })
+        return choices
+
+    def save(self, *args, **kwargs):
+        # Sınava eklendiğinde o anki şıkları dondur (snapshot)
+        if not self.choice_overrides and self.item_instance_id:
+            try:
+                item = self.item_instance.item
+                if item and item.item_type in ('MCQ', 'TF'):
+                    orig_choices = []
+                    for c in item.choices.all():
+                        orig_choices.append({
+                            'label': c.label,
+                            'text': c.text,
+                            'is_correct': c.is_correct
+                        })
+                    if orig_choices:
+                        self.choice_overrides = orig_choices
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Form Maddesi'
         verbose_name_plural = 'Form Maddeleri'

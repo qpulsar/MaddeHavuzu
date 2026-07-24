@@ -15,25 +15,23 @@ def generate_answer_key_from_form(test_form) -> str:
     key_chars = []
     form_items = test_form.form_items.select_related(
         'item_instance__item'
-    ).prefetch_related('item_instance__item__choices').order_by('order')
+    ).order_by('order')
 
     for fi in form_items:
-        # 1. Önce override (karıştırılmış/dengelenmiş) şıklara bak
-        if fi.choice_overrides:
-            correct_over = next((c for c in fi.choice_overrides if c.get('is_correct')), None)
-            if correct_over:
-                key_chars.append(correct_over.get('label', '?'))
+        choices = fi.get_choices()
+        if choices:
+            correct_choice = next((c for c in choices if c.get('is_correct')), None)
+            if correct_choice:
+                key_chars.append(correct_choice.get('label', '?'))
                 continue
         
-        # 2. Override yoksa orijinal kurguya bak
         item = fi.item_instance.item
-        if item.item_type in ('MCQ', 'TF'):
-            correct_orig = item.choices.filter(is_correct=True).first()
-            key_chars.append(correct_orig.label if correct_orig else '?')
-        elif item.item_type == 'SHORT_ANSWER':
-            key_chars.append('K')  # Kısa cevaplı → 'K' işareti
+        if item.item_type == 'SHORT_ANSWER':
+            key_chars.append('K')
+        elif item.item_type == 'OPEN':
+            key_chars.append('A')
         else:
-            key_chars.append('A')  # Açık uçlu → 'A' işareti
+            key_chars.append('?')
 
     return ''.join(key_chars)
 
