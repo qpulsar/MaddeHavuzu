@@ -11,8 +11,11 @@
                 <li class="breadcrumb-item active">Kullanıcılar</li>
             </ol>
         </nav>
-        <h2 class="mt-2"><i class="bi bi-people me-2"></i>Kullanıcı Yönetimi</h2>
+        <h2 class="mt-2 mb-0"><i class="bi bi-people me-2"></i>Kullanıcı Yönetimi</h2>
     </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+        <i class="bi bi-person-plus-fill me-1"></i> Yeni Kullanıcı Ekle
+    </button>
 </div>
 
 <!-- Filters -->
@@ -159,4 +162,66 @@
     </ul>
 </nav>
 {% endif %}
+
+<!-- Create User Modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <form method="post" action="{% url 'admin_user_create' %}">
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="createUserModalLabel">
+                        <i class="bi bi-person-plus-fill me-2"></i>Yeni Kullanıcı Ekle
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Kullanıcı Adı <span class="text-danger">*</span></label>
+                        <input type="text" name="username" class="form-control" placeholder="Örn: ahmet.yilmaz" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ad</label>
+                            <input type="text" name="first_name" class="form-control" placeholder="Ahmet">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Soyad</label>
+                            <input type="text" name="last_name" class="form-control" placeholder="Yılmaz">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">E-posta Adresi <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" placeholder="ahmet@universite.edu.tr" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Şifre <span class="text-danger">*</span></label>
+                        <input type="password" name="password" class="form-control" placeholder="En az 8 karakter..." required minlength="8">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sistem Rolü</label>
+                        <select name="role" class="form-select">
+                            <option value="INSTRUCTOR" selected>Öğretim Elemanı</option>
+                            <option value="COORDINATOR">Koordinatör</option>
+                            <option value="ASSISTANT">Araştırma Görevlisi / Asistan</option>
+                            <option value="ADMIN">Yönetici</option>
+                        </select>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="is_staff" id="isStaffCheck">
+                        <label class="form-check-label small" for="isStaffCheck">
+                            Yönetici Paneline Erişim İzni Ver (is_staff)
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i> Kullanıcıyı Oluştur
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -7,7 +7,7 @@ from grading.views.auth import (
 )
 from grading.views.dashboard import DashboardView, NewUploadView, UploadDetailView, DownloadExcelView, UploadSessionDeleteView, UploadStatisticsView, UpdatePenaltyView, KR20StatisticsView, AlphaStatisticsView
 from grading.views.admin_dashboard import (
-    AdminDashboardView, UserManagementView, UserApproveView, UserRejectView, UserSuspendView,
+    AdminDashboardView, UserManagementView, UserApproveView, UserRejectView, UserSuspendView, UserCreateView,
     FileFormatListView, FileFormatCreateView, FileFormatEditView, FileFormatDeleteView,
     AllUploadsView
 )
@@ -45,6 +45,7 @@ urlpatterns = [
     # Admin Dashboard
     path('yonetim/', AdminDashboardView.as_view(), name='admin_dashboard'),
     path('yonetim/kullanicilar/', UserManagementView.as_view(), name='admin_users'),
+    path('yonetim/kullanicilar/yeni/', UserCreateView.as_view(), name='admin_user_create'),
     path('yonetim/kullanicilar/<int:pk>/onayla/', UserApproveView.as_view(), name='admin_user_approve'),
     path('yonetim/kullanicilar/<int:pk>/reddet/', UserRejectView.as_view(), name='admin_user_reject'),
     path('yonetim/kullanicilar/<int:pk>/askiya-al/', UserSuspendView.as_view(), name='admin_user_suspend'),

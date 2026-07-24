@@ -236,3 +236,48 @@ class AllUploadsView(ListView):
         context['current_user'] = self.request.GET.get('user', '')
         context['current_status'] = self.request.GET.get('status', '')
         return context
+
+
+@method_decorator(staff_member_required, name='dispatch')
+class UserCreateView(View):
+    """View to create a new user from admin panel."""
+
+    def post(self, request):
+        username = request.POST.get('username', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+        role = request.POST.get('role', 'INSTRUCTOR')
+        is_staff = request.POST.get('is_staff') == 'on'
+
+        if not username or not password or not email:
+            messages.error(request, 'Kullanıcı adı, e-posta ve şifre alanları zorunludur.')
+            return redirect('admin_users')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, f'"{username}" kullanıcı adı sistemde zaten kayıtlı.')
+            return redirect('admin_users')
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, f'"{email}" e-posta adresi sistemde zaten kayıtlı.')
+            return redirect('admin_users')
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_staff=is_staff
+        )
+
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.status = UserStatus.APPROVED
+        profile.role = role
+        profile.approved_by = request.user
+        profile.approved_at = timezone.now()
+        profile.save()
+
+        messages.success(request, f'"{user.get_full_name() or user.username}" kullanıcısı başarıyla eklendi ve onaylandı.')
+        return redirect('admin_users')
