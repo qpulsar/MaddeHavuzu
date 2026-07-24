@@ -33,13 +33,14 @@ class AdminDashboardView(TemplateView):
         )
         # itempool app models
         from itempool.models import (
-            ItemPool, Course, TestForm, Item, ItemInstance, AIPrompt
+            ItemPool, Course, TestForm, Item, ItemInstance, AIPrompt, ExamTemplate, SpecificationTable
         )
 
         # User statistics
-        context['total_users'] = User.objects.filter(is_staff=False).count()
+        context['total_users'] = User.objects.count()
         context['pending_users'] = UserProfile.objects.filter(status=UserStatus.PENDING).count()
         context['approved_users'] = UserProfile.objects.filter(status=UserStatus.APPROVED).count()
+        context['active_users'] = User.objects.filter(is_active=True).count()
         
         # Upload statistics (Optical)
         context['total_uploads'] = UploadSession.objects.count()
@@ -52,6 +53,8 @@ class AdminDashboardView(TemplateView):
         context['total_test_forms'] = TestForm.objects.count()
         context['total_items'] = Item.objects.count()
         context['total_ai_prompts'] = AIPrompt.objects.count()
+        context['total_exam_templates'] = ExamTemplate.objects.count()
+        context['total_spec_tables'] = SpecificationTable.objects.count()
 
         # Recent pending users
         context['recent_pending'] = UserProfile.objects.filter(
