@@ -44,6 +44,9 @@ def wizard_landing(request):
 @login_required
 def wizard_pool_step1(request):
     """Adım 1: Havuz temel bilgileri."""
+    existing_pools = ItemPool.objects.filter(owner=request.user)
+    existing_pools_count = existing_pools.count()
+
     if request.method == 'POST':
         form = ItemPoolForm(request.POST)
         if form.is_valid():
@@ -54,7 +57,12 @@ def wizard_pool_step1(request):
             return redirect('itempool:wizard_pool_step2', pool_id=pool.pk)
     else:
         form = ItemPoolForm(initial={'status': 'ACTIVE'})
-    return render(request, 'itempool/wizard/havuz_1.html', {'form': form})
+
+    return render(request, 'itempool/wizard/havuz_1.html', {
+        'form': form,
+        'existing_pools_count': existing_pools_count,
+        'existing_pools': existing_pools,
+    })
 
 
 @login_required

@@ -199,9 +199,14 @@
                     <li>Öğrenme çıktılarını tanımla</li>
                     <li>Sorularını ekle</li>
                 </ul>
-                <div class="wiz-stat">
+                <div class="wiz-stat d-block">
                     {% if pool_count %}
-                    Mevcut havuz: <strong>{{ pool_count }}</strong>
+                    <div>Mevcut havuz: <strong>{{ pool_count }}</strong></div>
+                    <div class="mt-1">
+                        <a href="{% url 'itempool:wizard_exam_step1' %}" class="small text-primary fw-bold text-decoration-underline">
+                            Mevcut havuzla sınav formu oluştur →
+                        </a>
+                    </div>
                     {% else %}
                     Henüz havuz yok — buradan başlayın
                     {% endif %}
