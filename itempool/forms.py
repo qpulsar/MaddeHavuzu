@@ -234,7 +234,7 @@ class TestFormCreateForm(forms.ModelForm):
             self.fields['excluded_forms'].queryset = TestForm.objects.filter(
                 course=course
             ).order_by('-created_at')
-            self.fields['spec_table'].queryset = course.specification_tables.all()
+            self.fields['spec_table'].queryset = course.spec_tables.all()
 
 
 class ExamApplicationForm(forms.ModelForm):

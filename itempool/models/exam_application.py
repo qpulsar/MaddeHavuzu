@@ -48,18 +48,21 @@ class Course(models.Model):
     class Meta:
         verbose_name = 'Ders'
         verbose_name_plural = 'Dersler'
-        ordering = ['-created_at']
-
     def __str__(self):
         return f"{self.name} ({self.semester})"
 
     def get_applied_item_instance_ids(self):
         """Bu derse ait sınavlarda daha önce kullanılmış tüm madde instance ID'lerini döndürür."""
+        from .test_form import FormItem
         return set(
             FormItem.objects.filter(
                 form__applications__course=self
             ).values_list('item_instance_id', flat=True)
         )
+
+    @property
+    def specification_tables(self):
+        return self.spec_tables
 
 
 class CourseSpecTable(models.Model):

@@ -38,3 +38,15 @@ def test_course_detail_owner_and_other_instructor_access(client):
     client.force_login(hoca2)
     res2 = client.get(url)
     assert res2.status_code == 404
+
+
+@pytest.mark.django_db
+def test_course_test_form_create_view(client):
+    instructor = User.objects.create_user('hoca3', 'hoca3@example.com', 'pass1234')
+    course = Course.objects.create(name='Kimya I', code='KIM101', created_by=instructor)
+    client.force_login(instructor)
+
+    url = reverse('itempool:course_test_form_create', kwargs={'course_pk': course.pk})
+    response = client.get(url)
+    assert response.status_code == 200
+
