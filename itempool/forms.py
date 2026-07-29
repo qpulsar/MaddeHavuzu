@@ -47,13 +47,12 @@ class LearningOutcomeForm(forms.ModelForm):
 
     class Meta:
         model = LearningOutcome
-        fields = ['code', 'subject', 'description', 'level', 'order']
+        fields = ['code', 'subject', 'description', 'level']
         widgets = {
-            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ÖÇ-1 (Boş bırakılırsa otomatik üretilir)'}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ÖÇ-1'}),
             'subject': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'İçerik / Konu (Örn: Geçerlik)'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Çıktı açıklaması'}),
             'level': forms.Select(attrs={'class': 'form-select'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
 class ItemForm(forms.ModelForm):

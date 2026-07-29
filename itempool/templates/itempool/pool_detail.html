@@ -225,7 +225,7 @@
                                 <form hx-post="{% url 'itempool:outcome_add' pool.id %}"
                                       hx-target="#outcomes-tbody"
                                       hx-swap="beforeend"
-                                      hx-include="[name='code'], [name='description'], [name='level'], [name='order']"
+                                      hx-include="[name='code'], [name='subject'], [name='description'], [name='level']"
                                       hx-on::after-request="
                                           var errDiv = document.getElementById('outcome-add-error');
                                           if(event.detail.successful) {
@@ -248,14 +248,11 @@
                                         <div class="col-md-3">
                                             {{ outcome_form.subject }}
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             {{ outcome_form.description }}
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-3">
                                             {{ outcome_form.level }}
-                                        </div>
-                                        <div class="col-md-2">
-                                            {{ outcome_form.order }}
                                         </div>
                                         <div class="col-12" id="outcome-add-error"></div>
                                         <div class="col-12 text-end mt-2">
@@ -272,10 +269,15 @@
                             <table class="table table-sm table-hover align-middle" id="outcomes-table">
                                 <thead {% if not outcomes %}class="d-none"{% endif %} id="outcomes-thead">
                                     <tr>
-                                        <th style="width: 5%">#</th>
-                                        <th style="width: 15%; cursor: pointer;" onclick="sortOutcomeTable(1)" title="Koda göre sırala">Kod <i class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th style="width: 55%; cursor: pointer;" onclick="sortOutcomeTable(2)" title="Açıklamaya göre sırala">Açıklama <i class="bi bi-arrow-down-up small text-muted"></i></th>
-                                        <th style="width: 15%; cursor: pointer;" onclick="sortOutcomeTable(3)" title="Düzeye göre sırala">Düzey (Bloom) <i class="bi bi-arrow-down-up small text-muted"></i></th>
+                                        <th style="width: 15%; cursor: pointer;" onclick="sortOutcomeTable(0, this)" title="Koda göre sırala" class="user-select-none">
+                                            Kod <i class="bi bi-arrow-down-up small text-muted sort-icon"></i>
+                                        </th>
+                                        <th style="width: 55%; cursor: pointer;" onclick="sortOutcomeTable(1, this)" title="Açıklamaya göre sırala" class="user-select-none">
+                                            Açıklama <i class="bi bi-arrow-down-up small text-muted sort-icon"></i>
+                                        </th>
+                                        <th style="width: 20%; cursor: pointer;" onclick="sortOutcomeTable(2, this)" title="Düzeye göre sırala" class="user-select-none">
+                                            Düzey (Bloom) <i class="bi bi-arrow-down-up small text-muted sort-icon"></i>
+                                        </th>
                                         <th style="width: 10%">İşlem</th>
                                     </tr>
                                 </thead>
@@ -385,11 +387,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+let currentSortColumn = -1;
 let sortAscending = true;
-function sortOutcomeTable(columnIndex) {
+
+function sortOutcomeTable(columnIndex, thElem) {
     const tbody = document.getElementById('outcomes-tbody');
     if (!tbody) return;
     const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    if (currentSortColumn === columnIndex) {
+        sortAscending = !sortAscending;
+    } else {
+        currentSortColumn = columnIndex;
+        sortAscending = true;
+    }
+
+    // Sıralama İkonlarını Güncelle
+    document.querySelectorAll('#outcomes-thead .sort-icon').forEach(icon => {
+        icon.className = 'bi bi-arrow-down-up small text-muted sort-icon';
+    });
+    if (thElem) {
+        const icon = thElem.querySelector('.sort-icon');
+        if (icon) {
+            icon.className = sortAscending ? 'bi bi-sort-alpha-down text-primary sort-icon' : 'bi bi-sort-alpha-up-alt text-primary sort-icon';
+        }
+    }
     
     rows.sort((a, b) => {
         const cellA = a.children[columnIndex] ? a.children[columnIndex].innerText.trim() : '';
@@ -399,7 +421,6 @@ function sortOutcomeTable(columnIndex) {
             : cellB.localeCompare(cellA, 'tr', { numeric: true });
     });
     
-    sortAscending = !sortAscending;
     rows.forEach(row => tbody.appendChild(row));
 }
 </script>
