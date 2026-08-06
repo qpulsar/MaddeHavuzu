@@ -80,3 +80,48 @@ def test_key_templates_render_without_crash(user, item_pool):
             assert isinstance(rendered, str)
         except Exception as e:
             pytest.fail(f"Şablon render hatası ({tpl_name}): {e}")
+
+
+@pytest.mark.django_db
+def test_necatibey_corporate_template_rendering(user):
+    """
+    Necatibey Eğitim Fakültesi kurumsal sınav şablonunun oluşturulabildiğini ve
+    resmi başlık metinleri ile SVG logolarının sorunsuz render edildiğini doğrular.
+    """
+    from itempool.models import ExamTemplate, TestForm, Course
+    from itempool.services.exam_pdf import _resolve_variable
+
+    course = Course.objects.create(
+        name="Eğitimde Web 2.0 Uygulamaları",
+        code="GKN1063",
+        semester="2025-2026 Güz Dönemi",
+        created_by=user
+    )
+    test_form = TestForm.objects.create(
+        name="Yarıyıl Sonu Sınavı",
+        course=course,
+        created_by=user
+    )
+
+    nef_tpl = ExamTemplate.objects.filter(name="Necatibey Eğitim Fakültesi (Kurumsal)").first()
+    assert nef_tpl is not None, "Necatibey Eğitim Fakültesi (Kurumsal) şablonu bulunamadı."
+    assert nef_tpl.is_shared is True
+    assert nef_tpl.show_student_info_box is False
+
+    var_context = {
+        'form_name': test_form.name,
+        'course': test_form.course.name,
+        'course_code': test_form.course.code,
+        'semester': test_form.course.semester,
+        'teacher_name': user.get_full_name() or user.username,
+        'date': '13.01.2026',
+        'page': '1',
+        'total_pages': '1',
+    }
+
+    resolved_header = _resolve_variable(nef_tpl.header_html, var_context)
+    assert "BALIKESİR ÜNİVERSİTESİ NECATİBEY EĞİTİM FAKÜLTESİ" in resolved_header
+    assert "GKN1063" in resolved_header
+    assert "Eğitimde Web 2.0 Uygulamaları" in resolved_header
+    assert "NECATİBEY EĞİTİM FAKÜLTESİ" in resolved_header
+
