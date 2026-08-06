@@ -133,7 +133,9 @@
     align-items: center;
     gap: 1.1rem;
     transition: transform .2s, box-shadow .2s, border-color .2s, background-color .25s;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
 }
 .wiz-course-card:hover {
     transform: translateY(-2px);
@@ -149,11 +151,14 @@
     background: var(--mh-nav-hover);
     border: 1px solid var(--mh-border);
     border-radius: 10px;
-    padding: .75rem 1.25rem;
+    padding: .85rem 1.25rem;
     display: flex;
     align-items: center;
     gap: .75rem;
     flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+    position: relative;
+    z-index: 1;
 }
 .wiz-quick-label {
     font-size: .75rem; font-weight: 700;

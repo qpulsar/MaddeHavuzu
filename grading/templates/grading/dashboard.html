@@ -207,16 +207,93 @@
 {% endif %}
 
 {% else %}
-<div class="card">
-    <div class="card-body text-center py-5">
-        <div class="display-1 text-muted mb-4">
-            <i class="bi bi-inbox"></i>
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 14px; background: var(--mh-card-bg, #ffffff);">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center p-3" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold mb-1" style="color: var(--mh-text-main);">Madde Havuzum</h4>
+                <p class="text-muted small mb-0">Dijital Madde Bankası & Sınav Yönetim Sistemi</p>
+            </div>
         </div>
-        <h4>Henüz yükleme yapılmamış</h4>
-        <p class="text-muted mb-4">İlk okumanızı yapmak için aşağıdaki butona tıklayın.</p>
-        <a href="{% url 'new_upload' %}" class="btn btn-primary btn-lg">
-            <i class="bi bi-upload me-2"></i>Yeni Okuma
-        </a>
+        
+        <p class="text-secondary mb-4" style="line-height: 1.6; font-size: 0.95rem;">
+            Madde Havuzum, öğretmenlerin ve akademisyenlerin sınav maddelerini düzenli biçimde saklayabileceği, sınıflandırabileceği ve yönetebileceği bir dijital madde havuzu sistemidir. Öğrenme çıktılarınızı tanımlayın, maddelerinizi Bloom'un güncel taksonomisine göre etiketleyin ve belirtke tablonuzu otomatik oluşturun. Yapay zeka desteğiyle yeni maddeler üretin, global havuzdan ilham alın.
+        </p>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 border h-100 bg-light-subtle">
+                    <div class="fw-bold text-primary mb-1">
+                        <i class="bi bi-magic me-1"></i> Sihirbaz ile Başla
+                    </div>
+                    <div class="small text-muted">
+                        Sistemi ilk kez mi kullanıyorsunuz? Sihirbaz sizi adım adım yönlendirerek ilk madde havuzunuzu oluşturmanıza yardımcı olur.
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 border h-100 bg-light-subtle">
+                    <div class="fw-bold text-primary mb-1">
+                        <i class="bi bi-collection me-1"></i> Madde Havuzları
+                    </div>
+                    <div class="small text-muted">
+                        Derslerinize ait maddeleri ayrı havuzlarda saklayın. Her havuz kendi öğrenme çıktıları ve maddeleri ile ayrı yönetilir.
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 border h-100 bg-light-subtle">
+                    <div class="fw-bold text-primary mb-1">
+                        <i class="bi bi-journal-bookmark me-1"></i> Dersler
+                    </div>
+                    <div class="small text-muted">
+                        Madde havuzlarınızı derslerle ilişkilendirin. Dersleriniz için belirtke tablosu oluşturun. Ders bazlı filtreleme yapın.
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 border h-100 bg-light-subtle">
+                    <div class="fw-bold text-primary mb-1">
+                        <i class="bi bi-printer me-1"></i> Baskı Şablonları
+                    </div>
+                    <div class="small text-muted">
+                        Sınav formlarını farklı sayfa düzenlerinde ve formatlarda hazır şablonlarla baskıya hazır hale getirin.
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 border h-100 bg-light-subtle">
+                    <div class="fw-bold text-primary mb-1">
+                        <i class="bi bi-check2-square me-1"></i> Puanlama
+                    </div>
+                    <div class="small text-muted">
+                        Cevap anahtarı tanımlayın, puanlama ölçütlerini belirleyin ve sonuçları kayıt altına alın.
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 border h-100 bg-light-subtle">
+                    <div class="fw-bold text-primary mb-1">
+                        <i class="bi bi-graph-up-arrow me-1"></i> Analiz & Raporlar
+                    </div>
+                    <div class="small text-muted">
+                        Havuzunuzun madde güçlüğü, ayırt edicilik, çeldirici analizi, kopya analizi gibi psikometrik analizlere buradan ulaşın.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <a href="{% url 'itempool:wizard_landing' %}" class="btn btn-primary px-4 py-2 shadow-sm me-2">
+                <i class="bi bi-magic me-1"></i> Sihirbaz ile Başla
+            </a>
+            <a href="{% url 'itempool:pool_create' %}" class="btn btn-outline-primary px-4 py-2">
+                <i class="bi bi-plus-circle me-1"></i> Yeni Havuz Oluştur
+            </a>
+        </div>
     </div>
 </div>
 {% endif %}

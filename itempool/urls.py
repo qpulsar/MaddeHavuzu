@@ -54,6 +54,8 @@ urlpatterns = [
     # AI Öneri ve Üretim Rotaları
     path('items/<int:pk>/AI/suggest-outcomes/', views.item_suggest_outcomes, name='item_suggest_outcomes'),
     path('items/<int:pk>/AI/assign-outcome/<int:outcome_id>/', views.item_assign_outcome, name='item_assign_outcome'),
+    path('suggestions/<int:pk>/accept/', views.outcome_suggestion_accept, name='outcome_suggestion_accept'),
+    path('suggestions/<int:pk>/reject/', views.outcome_suggestion_reject, name='outcome_suggestion_reject'),
     path('outcomes/<int:pk>/AI/generate/', views.item_generate_ai, name='item_generate_ai'),
     path('AI/suggest-distractors/', views.item_suggest_distractors, name='item_suggest_distractors'),
     path('AI/check-duplicate/', views.item_check_duplicate, name='item_check_duplicate'),

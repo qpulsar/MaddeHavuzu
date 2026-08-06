@@ -28,6 +28,9 @@ import json
 from datetime import datetime
 from .api_views import LearningOutcomeListCreateAPIView, LearningOutcomeRetrieveUpdateDestroyAPIView
 
+import logging
+logger = logging.getLogger(__name__)
+
 # Grading imports
 from grading.models import UploadSession, FileFormatConfig
 from grading.services.parsing import ParsingService
@@ -97,6 +100,13 @@ class ItemPoolDetailView(PoolAccessMixin, DetailView):
         context['spec_tables'] = self.object.spec_tables.all().order_by('-created_at')
         # Yeni çıktı eklemek için form
         context['outcome_form'] = LearningOutcomeForm()
+
+        # Bekleyen AI Kazanım Önerileri
+        from .models import OutcomeSuggestion
+        context['pending_suggestions'] = OutcomeSuggestion.objects.filter(
+            item__instances__pool=self.object,
+            status=OutcomeSuggestion.Status.PENDING
+        ).select_related('item', 'learning_outcome').order_by('-score', '-created_at')
         return context
 
 @login_required
@@ -469,7 +479,39 @@ def pool_bulk_suggest_outcomes(request, pk):
             continue
             
     messages.success(request, f"{count} madde için AI önerileri hazırlandı.")
-    return redirect('itempool:pool_detail', pk=pk)
+    return redirect(f"{reverse('itempool:pool_detail', kwargs={'pk': pk})}#ai-suggestions-pane")
+
+
+@login_required
+def outcome_suggestion_accept(request, pk):
+    from .models import OutcomeSuggestion
+    suggestion = get_object_or_404(OutcomeSuggestion, pk=pk)
+    suggestion.status = OutcomeSuggestion.Status.ACCEPTED
+    suggestion.save()
+    
+    # Maddenin tüm havuz instance'larına öğrenme çıktısını ekle
+    for instance in suggestion.item.instances.all():
+        instance.learning_outcomes.add(suggestion.learning_outcome)
+        
+    messages.success(request, f"'{suggestion.learning_outcome.code}' çıktısı maddeye başarıyla atandı.")
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('itempool:pool_detail', pk=suggestion.item.instances.first().pool_id)
+
+
+@login_required
+def outcome_suggestion_reject(request, pk):
+    from .models import OutcomeSuggestion
+    suggestion = get_object_or_404(OutcomeSuggestion, pk=pk)
+    suggestion.status = OutcomeSuggestion.Status.REJECTED
+    suggestion.save()
+    
+    messages.info(request, "AI kazanım önerisi reddedildi.")
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('itempool:pool_detail', pk=suggestion.item.instances.first().pool_id)
 
 @login_required
 def item_assign_outcome(request, pk, outcome_id):
@@ -1395,7 +1437,7 @@ def _auto_select_items(test_form, course):
     Belirtke tablosu ağırlığı, zorluk ve dışlama kriterlerini uygular.
     """
     import random
-    meta = test_form.generation_metadata
+    meta = test_form.generation_metadata or {}
     difficulty = meta.get('difficulty', 'MIXED')
     type_counts = meta.get('item_type_counts', {})
     excluded_form_ids = meta.get('excluded_form_ids', [])
@@ -1424,26 +1466,48 @@ def _auto_select_items(test_form, course):
     test_form.form_items.all().delete()
     selected_instances = set()
 
-    # 1. Eğer Belirtke Tablosu seçilmişse ağırlıklarına göre seç
+    # 1. Eğer Belirtke Tablosu seçilmişse
     if spec_table_id:
         try:
-            from itempool.models import SpecificationTable
-            spec_table = SpecificationTable.objects.get(id=spec_table_id)
-            cells = spec_table.cells.filter(weight__gt=0)
-            for cell in cells:
-                n_cell_q = max(1, round((cell.weight / 100.0) * total_questions))
-                qs = list(
-                    ItemInstance.objects.filter(
-                        pool_id__in=pool_ids,
-                        learning_outcomes=cell.outcome,
-                        item__difficulty_intended__in=allowed_difficulties,
-                    ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
-                )
-                random.shuffle(qs)
-                for inst in qs[:n_cell_q]:
-                    FormItem.objects.create(form=test_form, item_instance=inst, order=order)
-                    selected_instances.add(inst.id)
-                    order += 1
+            from itempool.models import CourseSpecTable, SpecificationTable
+            course_spec = CourseSpecTable.objects.filter(id=spec_table_id).first()
+            if course_spec and course_spec.rows_json:
+                for row in course_spec.rows_json:
+                    outcomes_list = row.get('outcomes', [])
+                    for oc_item in outcomes_list:
+                        oc_id = oc_item.get('outcome_id')
+                        q_count = oc_item.get('question_count', 1)
+                        if oc_id:
+                            qs = list(
+                                ItemInstance.objects.filter(
+                                    pool_id__in=pool_ids,
+                                    learning_outcomes__id=oc_id,
+                                    item__difficulty_intended__in=allowed_difficulties,
+                                ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
+                            )
+                            random.shuffle(qs)
+                            for inst in qs[:q_count]:
+                                FormItem.objects.create(form=test_form, item_instance=inst, order=order)
+                                selected_instances.add(inst.id)
+                                order += 1
+            else:
+                spec_table = SpecificationTable.objects.filter(id=spec_table_id).first()
+                if spec_table and hasattr(spec_table, 'cells'):
+                    cells = spec_table.cells.filter(weight__gt=0)
+                    for cell in cells:
+                        n_cell_q = max(1, round((cell.weight / 100.0) * total_questions))
+                        qs = list(
+                            ItemInstance.objects.filter(
+                                pool_id__in=pool_ids,
+                                learning_outcomes=cell.outcome,
+                                item__difficulty_intended__in=allowed_difficulties,
+                            ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
+                        )
+                        random.shuffle(qs)
+                        for inst in qs[:n_cell_q]:
+                            FormItem.objects.create(form=test_form, item_instance=inst, order=order)
+                            selected_instances.add(inst.id)
+                            order += 1
         except Exception as e:
             logger.error(f"Spec Table auto select error: {e}")
 
@@ -1465,21 +1529,30 @@ def _auto_select_items(test_form, course):
                 FormItem.objects.create(form=test_form, item_instance=inst, order=order)
                 selected_instances.add(inst.id)
                 order += 1
-    elif not spec_table_id or test_form.form_items.count() == 0:
-        # Genel rastgele soru seçimi (total_questions kadar)
-        needed = total_questions - test_form.form_items.count()
-        if needed > 0:
-            qs = list(
+
+    # 3. Kalan eksik soruları havuzlardan rastgele tamamla (Fallback Logic)
+    needed = total_questions - test_form.form_items.count()
+    if needed > 0:
+        qs = list(
+            ItemInstance.objects.filter(
+                pool_id__in=pool_ids,
+                item__difficulty_intended__in=allowed_difficulties,
+            ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
+        )
+        # Eğer kısıtlı zorlukta yeterli soru çıkmazsa, zorluk sınırını kaldırıp tamamla
+        if len(qs) < needed:
+            additional_qs = list(
                 ItemInstance.objects.filter(
-                    pool_id__in=pool_ids,
-                    item__difficulty_intended__in=allowed_difficulties,
+                    pool_id__in=pool_ids
                 ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
             )
-            random.shuffle(qs)
-            for inst in qs[:needed]:
-                FormItem.objects.create(form=test_form, item_instance=inst, order=order)
-                selected_instances.add(inst.id)
-                order += 1
+            qs = additional_qs
+
+        random.shuffle(qs)
+        for inst in qs[:needed]:
+            FormItem.objects.create(form=test_form, item_instance=inst, order=order)
+            selected_instances.add(inst.id)
+            order += 1
 
 
 @login_required

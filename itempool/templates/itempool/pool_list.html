@@ -129,23 +129,23 @@
 <div class="container-fluid px-4 px-lg-5 pt-2">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item active">{% trans "Item Pools" %}</li>
+            <li class="breadcrumb-item active">Madde Havuzları</li>
         </ol>
     </nav>
 </div>
 {% endblock %}
 
 {% block content %}
-<h2 class="page-title-top">{% trans "Item Pools" %}</h2>
+<h2 class="page-title-top">Madde Havuzları</h2>
 
 <!-- Hero Banner -->
 <div class="hero-banner">
-    <h1>{% trans "Organize Your Items in Pools" %}</h1>
+    <h1>Maddelerinizi Havuzlarda Düzenleyin</h1>
     <p>
-        {% trans "Item pools help you organize your items by subject, grade level, difficulty or any other criteria. Create a new pool to start organizing your assessment items." %}
+        Madde havuzları, sınav maddelerinizi ders, zorluk düzeyi, konu veya diğer ölçütlere göre sınıflandırmanızı sağlar. Hemen yeni bir havuz oluşturarak ölçme araçlarınızı yönetmeye başlayabilirsiniz.
     </p>
     <a href="{% url 'itempool:pool_create' %}" class="btn btn-primary shadow-sm">
-        <i class="bi bi-plus fs-5 align-middle me-1"></i> {% trans "Create New Item Pool" %}
+        <i class="bi bi-plus fs-5 align-middle me-1"></i> Yeni Madde Havuzu Oluştur
     </a>
 </div>
 
@@ -164,7 +164,7 @@
                             {{ pool.name }}
                         </a>
                         {% if pool.status != 'ACTIVE' %}
-                            <span class="badge bg-secondary mt-1" style="font-size: 0.7rem;">{% trans "Archive" %}</span>
+                            <span class="badge bg-secondary mt-1" style="font-size: 0.7rem;">Arşiv</span>
                         {% endif %}
                     </div>
                 </div>
@@ -186,11 +186,11 @@
             <div class="card-footer">
                 <div class="items-count fw-medium">
                     <i class="bi bi-file-earmark-text"></i>
-                    {{ pool.item_instances.count }} {% trans "Items" %}
+                    {{ pool.item_instances.count }} Madde
                 </div>
                 <div class="btn-group border rounded-2 shadow-sm" role="group">
-                    <a href="{% url 'itempool:pool_detail' pool.id %}" class="btn btn-action btn-light border-end text-primary">{% trans "View" %}</a>
-                    <a href="{% url 'itempool:pool_update' pool.id %}" class="btn btn-action btn-light text-secondary">{% trans "Edit" %}</a>
+                    <a href="{% url 'itempool:pool_detail' pool.id %}" class="btn btn-action btn-light border-end text-primary">Görüntüle</a>
+                    <a href="{% url 'itempool:pool_update' pool.id %}" class="btn btn-action btn-light text-secondary">Düzenle</a>
                 </div>
             </div>
         </div>
@@ -199,8 +199,8 @@
     <div class="col-12">
         <div class="text-center py-5 text-muted bg-white rounded-4 border">
             <i class="bi bi-collection fs-1 text-primary opacity-50 d-block mb-3"></i>
-            <h5 class="text-dark fw-bold">{% trans "No Item Pools Yet" %}</h5>
-            <p>{% trans "You haven't created any item pools. Click the button above to get started." %}</p>
+            <h5 class="text-dark fw-bold">Henüz Madde Havuzu Yok</h5>
+            <p>Henüz hiçbir madde havuzu oluşturmadınız. Yukarıdaki butona tıklayarak ilk havuzunuzu oluşturabilirsiniz.</p>
         </div>
     </div>
     {% endfor %}
