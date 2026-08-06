@@ -7,7 +7,7 @@ class LearningOutcomeSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningOutcome
         fields = [
-            'id', 'pool', 'code', 'description', 'level', 
-            'level_display', 'weight', 'order', 'is_active'
+            'id', 'pool', 'code', 'subject', 'description', 'level', 
+            'level_display', 'order', 'is_active'
         ]
         read_only_fields = ['id', 'pool']

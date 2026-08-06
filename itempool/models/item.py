@@ -23,6 +23,7 @@ class Item(models.Model):
     class Status(models.TextChoices):
         DRAFT = 'DRAFT', 'Taslak'
         ACTIVE = 'ACTIVE', 'Aktif'
+        NEEDS_REVISION = 'NEEDS_REVISION', 'Revizyon Gerektiriyor'
         RETIRED = 'RETIRED', 'Emekli/Kullanımdan Kaldırılmış'
 
     stem = models.TextField(

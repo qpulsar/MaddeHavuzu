@@ -11,7 +11,8 @@ class TestAnalysisIntegration:
         from django.contrib.auth.models import User
         self.user = User.objects.create_superuser(username='admin', password='password', email='admin@test.com')
         self.pool = ItemPool.objects.create(name='Test Pool', owner=self.user)
-        self.form = TestForm.objects.create(name='Test Form', pool=self.pool, created_by=self.user)
+        self.form = TestForm.objects.create(name='Test Form', created_by=self.user)
+        self.form.pools.add(self.pool)
         self.format = FileFormatConfig.objects.create(
             name='Standard Format',
             is_active=True,

@@ -107,6 +107,7 @@ urlpatterns = [
     path('formlar/<int:pk>/pdf/', views.test_form_pdf, name='test_form_pdf'),
     path('formlar/<int:pk>/docx/', views.test_form_docx, name='test_form_docx'),
     path('formlar/<int:pk>/AI/auto-balance/', views.test_form_auto_balance, name='test_form_auto_balance'),
+    path('formlar/<int:pk>/booklets/generate/', views.test_form_generate_booklets, name='test_form_generate_booklets'),
 
     # Faz 13 — Değerlendirme Entegrasyonu
     path('formlar/<int:pk>/cevap-anahtari/', views.test_form_answer_key, name='test_form_answer_key'),

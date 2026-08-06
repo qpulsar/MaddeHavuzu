@@ -17,7 +17,7 @@ class TestLearningOutcomeAPI:
             pool=item_pool, 
             code='ÖÇ1', 
             description='Test Çıktısı',
-            level='KNOWLEDGE'
+            level='REMEMBERING'
         )
         
         url = reverse('itempool:api_outcome_list_create', kwargs={'pool_id': item_pool.id})
@@ -34,8 +34,7 @@ class TestLearningOutcomeAPI:
         data = {
             'code': 'ÖÇ2',
             'description': 'Yeni API Çıktısı',
-            'level': 'APPLICATION',
-            'weight': 20.0,
+            'level': 'APPLYING',
             'order': 2
         }
         response = api_client.post(url, data)

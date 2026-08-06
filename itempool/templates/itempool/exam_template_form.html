@@ -15,96 +15,266 @@
 {% endblock %}
 
 {% block extra_css %}
-<link href="https://unpkg.com/grapesjs@0.21.10/dist/css/grapes.min.css" rel="stylesheet">
 <style>
-/* GrapesJS editör özelleştirmeleri */
-.gjs-editor-cont {
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.375rem;
-    overflow: hidden;
-}
-.gjs-cv-canvas {
-    top: 0; left: 0; width: 100%; height: 100%;
-}
-.gjs-frame-wrapper { height: 100% !important; }
-.gjs-pn-panels { display: none; } /* Üst paneller gizli — minimal */
-.gjs-block { padding: 8px; min-height: auto; }
-.gjs-block__media { display: none; }
-.gjs-blocks-cs { padding: 4px; }
-.gjs-block-label { font-size: 11px; }
-
-/* Blok paneli */
-.editor-wrapper {
+/* ─── Tam Ekran Görsel Editör Overlay ─── */
+.fullscreen-editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #f1f5f9;
+    z-index: 1060;
     display: flex;
-    gap: 0;
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.5rem;
-    overflow: hidden;
-    background: #fff;
+    flex-direction: column;
 }
-.editor-blocks-panel {
-    width: 180px;
-    min-width: 180px;
-    background: #f8f9fa;
-    border-right: 1px solid var(--bs-border-color);
-    padding: 8px;
-    overflow-y: auto;
-}
-.editor-blocks-panel h6 {
-    font-size: 11px;
-    text-transform: uppercase;
-    color: #6c757d;
-    margin-bottom: 6px;
-    letter-spacing: 0.5px;
-}
-.editor-canvas-area {
-    flex: 1;
-    min-height: 300px;
-}
-.block-item {
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    padding: 6px 8px;
-    margin-bottom: 4px;
-    cursor: grab;
-    font-size: 12px;
+.fullscreen-editor-topbar {
+    min-height: 56px;
+    background: #0f172a;
+    color: #fff;
+    padding: 0.5rem 1rem;
     display: flex;
     align-items: center;
-    gap: 6px;
-    transition: all 0.15s;
-}
-.block-item:hover {
-    background: #e7f1ff;
-    border-color: #86b7fe;
-}
-.block-item i {
-    font-size: 14px;
-    color: var(--bs-primary);
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     flex-shrink: 0;
+    z-index: 1065;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
-.editor-help {
-    font-size: 11px;
-    color: #6c757d;
-    padding: 4px 8px;
-    border-top: 1px solid #dee2e6;
-    background: #f8f9fa;
+.fullscreen-editor-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
 }
 
-/* Accordion özelleştirmeleri */
-.accordion-button:not(.collapsed) {
+/* Editör Araç Çubuğu (Toolbar) */
+.editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #1e293b;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+.editor-tb-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #cbd5e1;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.editor-tb-btn:hover {
+    background: #334155;
+    color: #fff;
+    border-color: #475569;
+}
+.editor-tb-select {
+    background: #334155;
+    color: #fff;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 0.8rem;
+}
+
+/* Sol Panel: Bloklar ve Değişkenler */
+.editor-sidebar-left {
+    width: 260px;
+    min-width: 260px;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    z-index: 2;
+    overflow-y: auto;
+}
+.sidebar-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+}
+.sidebar-subtitle {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+.variable-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.var-pill {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.78rem;
+    font-family: monospace;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
     font-weight: 600;
 }
-.accordion-body { padding: 1rem; }
+.var-pill:hover {
+    background: #0284c7;
+    color: #fff;
+    border-color: #0284c7;
+    transform: translateY(-1px);
+}
+
+/* Blok İtemları */
+.custom-block-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.custom-block-item:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.1);
+}
+
+/* Orta Alan: A4 Baskı Kağıdı Simülasyonu */
+.editor-canvas-wrapper {
+    flex: 1;
+    background: #cbd5e1;
+    padding: 2rem;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+.a4-paper-container {
+    width: 100%;
+    max-width: 210mm; /* A4 Baskı Genişliği */
+    min-height: 320px;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    border-radius: 4px;
+    position: relative;
+    border: 1px dashed #94a3b8;
+    display: flex;
+    flex-direction: column;
+}
+.a4-paper-header-label {
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.a4-paper-canvas-editor {
+    flex: 1;
+    min-height: 260px;
+    padding: 16px;
+    outline: none;
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #000;
+}
+.a4-paper-canvas-editor table {
+    transition: all 0.15s ease;
+    border: 1px dashed transparent;
+}
+.a4-paper-canvas-editor table:hover,
+.a4-paper-canvas-editor table:focus-within {
+    border-color: #3b82f6 !important;
+    background-color: rgba(59, 130, 246, 0.02);
+}
+.a4-paper-canvas-editor:focus {
+    background: #fff;
+}
+.a4-paper-canvas-code {
+    flex: 1;
+    min-height: 260px;
+    padding: 14px;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.88rem;
+    background: #0f172a;
+    color: #38bdf8;
+    border: none;
+    outline: none;
+    resize: none;
+    width: 100%;
+}
+
+/* Preview kutusu */
+.template-preview-box {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 14px;
+    min-height: 80px;
+    font-size: 0.9rem;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+}
+
+/* Hazır Kalıp Kartları */
+.preset-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.preset-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+}
+.preset-card-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+.preset-card-desc {
+    font-size: 0.76rem;
+    color: #64748b;
+    margin-bottom: 8px;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center pt-3">
+<div class="row justify-content-center pt-3 mb-5">
     <div class="col-lg-10 col-xl-9">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0"><i class="bi bi-file-earmark-text text-primary"></i> {{ title }}</h4>
+            <h4 class="mb-0 fw-bold"><i class="bi bi-file-earmark-text text-primary"></i> {{ title }}</h4>
             <a href="{% url 'itempool:exam_template_list' %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Şablonlara Dön
             </a>
@@ -113,7 +283,7 @@
         <form method="post" id="template-form">
             {% csrf_token %}
 
-            {# — GrapesJS verileri için hidden inputlar — #}
+            {# — Şablon HTML / CSS verileri için hidden inputlar — #}
             <input type="hidden" name="header_html" id="input-header-html" value="{{ template.header_html|default:'' }}">
             <input type="hidden" name="header_css" id="input-header-css" value="{{ template.header_css|default:'' }}">
             <input type="hidden" name="header_design_json" id="input-header-json" value='{{ header_design_json|default:"" }}'>
@@ -121,13 +291,13 @@
             <input type="hidden" name="footer_css" id="input-footer-css" value="{{ template.footer_css|default:'' }}">
             <input type="hidden" name="footer_design_json" id="input-footer-json" value='{{ footer_design_json|default:"" }}'>
 
-            <div class="accordion shadow" id="templateAccordion">
+            <div class="accordion shadow-sm" id="templateAccordion">
 
                 {# ═══ 1. GENEL BİLGİLER ═══ #}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#section-general">
-                            <i class="bi bi-gear me-2"></i> Genel Bilgiler
+                            <i class="bi bi-gear-fill me-2 text-primary"></i> Genel Bilgiler
                         </button>
                     </h2>
                     <div id="section-general" class="accordion-collapse collapse show" data-bs-parent="#templateAccordion">
@@ -152,18 +322,18 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#section-page">
-                            <i class="bi bi-file-earmark me-2"></i> Sayfa Yapısı
+                            <i class="bi bi-file-earmark-pdf-fill me-2 text-primary"></i> Sayfa Yapısı & Düzen
                         </button>
                     </h2>
                     <div id="section-page" class="accordion-collapse collapse" data-bs-parent="#templateAccordion">
                         <div class="accordion-body">
                             <div class="row g-3 mb-3">
                                 <div class="col-md-3">
-                                    <label class="form-label">{{ form.page_size.label }}</label>
+                                    <label class="form-label fw-bold">{{ form.page_size.label }}</label>
                                     {{ form.page_size }}
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label">{{ form.column_count.label }}</label>
+                                    <label class="form-label fw-bold">{{ form.column_count.label }}</label>
                                     {{ form.column_count }}
                                 </div>
                                 <div class="col-md-3 d-flex align-items-end">
@@ -175,11 +345,11 @@
                                 <div class="col-md-4 d-flex align-items-end gap-3">
                                     <div class="form-check mb-2">
                                         {{ form.show_student_info_box }}
-                                        <label class="form-check-label small">Öğrenci Kutusu</label>
+                                        <label class="form-check-label fw-semibold">Öğrenci Bilgi Kutusu</label>
                                     </div>
                                 </div>
                             </div>
-                            <h6 class="text-muted mt-3"><i class="bi bi-border-outer"></i> Kenar Boşlukları (mm)</h6>
+                            <h6 class="text-muted mt-4 fw-bold"><i class="bi bi-bounding-box-circles me-1"></i> Kenar Boşlukları (mm)</h6>
                             <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label">Üst</label>{{ form.margin_top }}
@@ -198,60 +368,138 @@
                     </div>
                 </div>
 
-                {# ═══ 3. ÜST BİLGİ (HEADER) — GrapesJS ═══ #}
-                <div class="accordion-item">
+                {# ═══ 3. ÜST BİLGİ (HEADER) ═══ #}
+                <div class="accordion-item border-primary border-opacity-25">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#section-header">
-                            <i class="bi bi-layout-text-window me-2"></i> Üst Bilgi (Başlık)
+                        <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#section-header">
+                            <i class="bi bi-layout-text-window me-2 text-primary fs-5"></i>
+                            <div class="d-flex flex-column text-start">
+                                <span class="fw-bold">Üst Bilgi (Başlık Tasarımı)</span>
+                                <small class="text-muted font-normal" style="font-size:0.75rem;">Sınav kağıdının en üstünde yer alacak alan</small>
+                            </div>
                         </button>
                     </h2>
-                    <div id="section-header" class="accordion-collapse collapse" data-bs-parent="#templateAccordion">
-                        <div class="accordion-body p-2">
-                            <div class="d-flex justify-content-between align-items-center mb-2 px-2">
-                                <small class="text-muted">
-                                    <i class="bi bi-info-circle"></i>
-                                    Sol paneldeki blokları sürükleyerek başlığınızı oluşturun. Değişkenler:
-                                    <code>{form_name}</code> <code>{course}</code> <code>{course_code}</code> <code>{teacher_name}</code> <code>{semester}</code> <code>{date}</code>
-                                </small>
-                                <div class="form-check form-check-inline">
-                                    {{ form.show_header_line }}
-                                    <label class="form-check-label small">Alt çizgi</label>
+                    <div id="section-header" class="accordion-collapse collapse show" data-bs-parent="#templateAccordion">
+                        <div class="accordion-body">
+                            
+                            <!-- Hazır Şablon Kartları (One-Click Presets) -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-magic me-1 text-primary"></i> Tek Tıkla Hazır Başlık Kalıbı Uygula</h6>
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <div class="preset-card h-100 d-flex flex-column justify-content-between" onclick="applyDirectPreset('header', 'classic_university')">
+                                            <div>
+                                                <div class="preset-card-title"><i class="bi bi-bank text-primary me-1"></i> Klasik Üniversite (3 Sütun)</div>
+                                                <div class="preset-card-desc">Sol: Kurum, Orta: Ders & Sınav, Sağ: Tarih & Öğretmen</div>
+                                            </div>
+                                            <button type="button" class="btn btn-xs btn-outline-primary w-100 mt-2"><i class="bi bi-check2 me-1"></i> Bu Kalıbı Seç</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="preset-card h-100 d-flex flex-column justify-content-between" onclick="applyDirectPreset('header', 'logo_header')">
+                                            <div>
+                                                <div class="preset-card-title"><i class="bi bi-image text-primary me-1"></i> Logolu Kurumsal Başlık</div>
+                                                <div class="preset-card-desc">Sol: Kurum Logosu, Orta: Ders Adı, Sağ: Detaylar</div>
+                                            </div>
+                                            <button type="button" class="btn btn-xs btn-outline-primary w-100 mt-2"><i class="bi bi-check2 me-1"></i> Bu Kalıbı Seç</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="preset-card h-100 d-flex flex-column justify-content-between" onclick="applyDirectPreset('header', 'minimal_header')">
+                                            <div>
+                                                <div class="preset-card-title"><i class="bi bi-file-text text-primary me-1"></i> Minimalist Başlık</div>
+                                                <div class="preset-card-desc">Orta hizalı sade Ders ve Form adı</div>
+                                            </div>
+                                            <button type="button" class="btn btn-xs btn-outline-primary w-100 mt-2"><i class="bi bi-check2 me-1"></i> Bu Kalıbı Seç</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="editor-wrapper" style="height: 350px;">
-                                <div class="editor-blocks-panel" id="header-blocks-panel"></div>
-                                <div class="editor-canvas-area" id="header-editor"></div>
+
+                            <hr class="my-3">
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="fw-bold mb-1"><i class="bi bi-eye me-1"></i> Mevcut Üst Bilgi Önizlemesi</h6>
+                                    <span class="text-muted small">Tam ekran görsel editör ile özelleştirebilirsiniz.</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="form-check form-switch mb-0">
+                                        {{ form.show_header_line }}
+                                        <label class="form-check-label small fw-bold">Alt Çizgi Ekle</label>
+                                    </div>
+                                    <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm" onclick="openFullscreenEditor('header')">
+                                        <i class="bi bi-arrows-fullscreen me-1"></i> Görsel Editörde Düzenle
+                                    </button>
+                                </div>
                             </div>
-                            <div class="editor-help">
-                                <i class="bi bi-lightbulb"></i> İpucu: Bileşeni seçip <kbd>Delete</kbd> ile silebilirsiniz. Resimleri panelden sürükleyip bırakın.
+
+                            <div class="template-preview-box shadow-sm" id="header-html-preview">
+                                {{ template.header_html|safe|default:'<span class="text-muted fst-italic">Henüz özel üst bilgi tasarlanmamış. Varsayılan başlık kullanılacak.</span>' }}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {# ═══ 4. ALT BİLGİ (FOOTER) — GrapesJS ═══ #}
-                <div class="accordion-item">
+                {# ═══ 4. ALT BİLGİ (FOOTER) ═══ #}
+                <div class="accordion-item border-info border-opacity-25">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#section-footer">
-                            <i class="bi bi-layout-text-window-reverse me-2"></i> Alt Bilgi
+                        <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#section-footer">
+                            <i class="bi bi-layout-text-window-reverse me-2 text-info fs-5"></i>
+                            <div class="d-flex flex-column text-start">
+                                <span class="fw-bold">Alt Bilgi (Footer Tasarımı)</span>
+                                <small class="text-muted font-normal" style="font-size:0.75rem;">Sayfa numarası, tarih ve dipnot alanı</small>
+                            </div>
                         </button>
                     </h2>
                     <div id="section-footer" class="accordion-collapse collapse" data-bs-parent="#templateAccordion">
-                        <div class="accordion-body p-2">
-                            <div class="d-flex justify-content-between align-items-center mb-2 px-2">
-                                <small class="text-muted">
-                                    <i class="bi bi-info-circle"></i>
-                                    Alt bilgi tasarımı. Değişkenler:
-                                    <code>{page}</code> <code>{total_pages}</code> <code>{date}</code>
-                                </small>
-                                <div class="form-check form-check-inline">
-                                    {{ form.show_footer_line }}
-                                    <label class="form-check-label small">Üst çizgi</label>
+                        <div class="accordion-body">
+                            
+                            <!-- Hazır Şablon Kartları (One-Click Presets) -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-magic me-1 text-info"></i> Tek Tıkla Hazır Alt Bilgi Kalıbı Uygula</h6>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <div class="preset-card h-100 d-flex flex-column justify-content-between" onclick="applyDirectPreset('footer', 'standard_footer')">
+                                            <div>
+                                                <div class="preset-card-title"><i class="bi bi-hash text-info me-1"></i> Standart Alt Bilgi</div>
+                                                <div class="preset-card-desc">Sol: Ders Adı, Orta: Sayfa {page}/{total_pages}, Sağ: Tarih</div>
+                                            </div>
+                                            <button type="button" class="btn btn-xs btn-outline-info w-100 mt-2"><i class="bi bi-check2 me-1"></i> Bu Kalıbı Seç</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="preset-card h-100 d-flex flex-column justify-content-between" onclick="applyDirectPreset('footer', 'wishing_footer')">
+                                            <div>
+                                                <div class="preset-card-title"><i class="bi bi-heart text-info me-1"></i> Başarı Dilekli Alt Bilgi</div>
+                                                <div class="preset-card-desc">Sol: Başarılar Dileriz, Orta: Sayfa {page}/{total_pages}, Sağ: Tarih</div>
+                                            </div>
+                                            <button type="button" class="btn btn-xs btn-outline-info w-100 mt-2"><i class="bi bi-check2 me-1"></i> Bu Kalıbı Seç</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="editor-wrapper" style="height: 250px;">
-                                <div class="editor-blocks-panel" id="footer-blocks-panel"></div>
-                                <div class="editor-canvas-area" id="footer-editor"></div>
+
+                            <hr class="my-3">
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="fw-bold mb-1"><i class="bi bi-eye me-1"></i> Mevcut Alt Bilgi Önizlemesi</h6>
+                                    <span class="text-muted small">Sayfa numarası ve dipnot alanlarını tasarlayın.</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="form-check form-switch mb-0">
+                                        {{ form.show_footer_line }}
+                                        <label class="form-check-label small fw-bold">Üst Çizgi Ekle</label>
+                                    </div>
+                                    <button type="button" class="btn btn-info text-white btn-sm px-3 shadow-sm" onclick="openFullscreenEditor('footer')">
+                                        <i class="bi bi-arrows-fullscreen me-1"></i> Görsel Editörde Düzenle
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="template-preview-box shadow-sm" id="footer-html-preview">
+                                {{ template.footer_html|safe|default:'<span class="text-muted fst-italic">Henüz özel alt bilgi tasarlanmamış.</span>' }}
                             </div>
                         </div>
                     </div>
@@ -261,36 +509,36 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#section-questions">
-                            <i class="bi bi-list-ol me-2"></i> Soru Görünümü
+                            <i class="bi bi-list-ol me-2 text-primary"></i> Soru Görünümü & Tipografi
                         </button>
                     </h2>
                     <div id="section-questions" class="accordion-collapse collapse" data-bs-parent="#templateAccordion">
                         <div class="accordion-body">
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label class="form-label">{{ form.font_family.label }}</label>
+                                    <label class="form-label fw-bold">{{ form.font_family.label }}</label>
                                     {{ form.font_family }}
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label">Font Boyutu</label>
+                                    <label class="form-label fw-bold">Font Boyutu</label>
                                     {{ form.font_size }}
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label">Soru Aralığı</label>
+                                    <label class="form-label fw-bold">Soru Aralığı</label>
                                     {{ form.question_spacing }}
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label">Şık Aralığı</label>
+                                    <label class="form-label fw-bold">Şık Aralığı</label>
                                     {{ form.choice_spacing }}
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">{{ form.choice_layout.label }}</label>
+                                    <label class="form-label fw-bold">{{ form.choice_layout.label }}</label>
                                     {{ form.choice_layout }}
                                 </div>
                                 <div class="col-md-3 d-flex align-items-end">
                                     <div class="form-check mb-2">
                                         {{ form.show_question_points }}
-                                        <label class="form-check-label">Puan Göster</label>
+                                        <label class="form-check-label fw-semibold">Puan Göster</label>
                                     </div>
                                 </div>
                             </div>
@@ -304,209 +552,344 @@
                 <a href="{% url 'itempool:exam_template_list' %}" class="btn btn-outline-secondary">
                     <i class="bi bi-x-lg"></i> İptal
                 </a>
-                <button type="submit" class="btn btn-primary px-4" id="btn-save">
-                    <i class="bi bi-check-lg"></i> Kaydet
+                <button type="submit" class="btn btn-primary px-4 shadow" id="btn-save">
+                    <i class="bi bi-check-lg"></i> Şablonu Kaydet
                 </button>
             </div>
         </form>
 
     </div>
 </div>
+
+{# ═══ YERLİ & KÖKLÜ GÖRSEL EDİTÖR MODALI (NATIVE WYSIWYG A4 EDITOR) ═══ #}
+<div id="fullscreen-editor-modal" class="fullscreen-editor-overlay" style="display: none;">
+    <div class="fullscreen-editor-topbar">
+        <div class="d-flex align-items-center gap-2">
+            <h5 class="mb-0 text-white fw-bold" id="modal-editor-title">
+                <i class="bi bi-layout-text-window me-2"></i> Üst Bilgi (Başlık) Editörü
+            </h5>
+            <span class="badge bg-primary font-monospace" id="modal-editor-type-badge">HEADER</span>
+        </div>
+
+        <!-- Editör Araç Çubuğu (Rich Text Toolbar) -->
+        <div class="editor-toolbar" id="visual-editor-toolbar">
+            <button type="button" class="editor-tb-btn text-warning" onclick="execCmd('undo')" title="Geri Al (Ctrl+Z)"><i class="bi bi-arrow-counterclockwise me-1"></i> Geri Al</button>
+            <button type="button" class="editor-tb-btn text-warning" onclick="execCmd('redo')" title="Yinele (Ctrl+Y)"><i class="bi bi-arrow-clockwise me-1"></i> İleri</button>
+            <div class="vr bg-secondary mx-1"></div>
+            <button type="button" class="editor-tb-btn" onclick="execCmd('bold')" title="Kalın (Bold)"><i class="bi bi-type-bold"></i></button>
+            <button type="button" class="editor-tb-btn" onclick="execCmd('italic')" title="İtalik"><i class="bi bi-type-italic"></i></button>
+            <button type="button" class="editor-tb-btn" onclick="execCmd('underline')" title="Altı Çizili"><i class="bi bi-type-underline"></i></button>
+            <div class="vr bg-secondary mx-1"></div>
+            <button type="button" class="editor-tb-btn" onclick="execCmd('justifyLeft')" title="Sola Hizala"><i class="bi bi-text-left"></i></button>
+            <button type="button" class="editor-tb-btn" onclick="execCmd('justifyCenter')" title="Ortala"><i class="bi bi-text-center"></i></button>
+            <button type="button" class="editor-tb-btn" onclick="execCmd('justifyRight')" title="Sağa Hizala"><i class="bi bi-text-right"></i></button>
+            <div class="vr bg-secondary mx-1"></div>
+            <select class="editor-tb-select" onchange="execCmd('fontSize', this.value)">
+                <option value="2">Küçük Font</option>
+                <option value="3" selected>Normal Font</option>
+                <option value="4">Orta Font</option>
+                <option value="5">Büyük Font</option>
+            </select>
+            <button type="button" class="editor-tb-btn" onclick="insertTable()" title="Tablo Ekle"><i class="bi bi-table"></i></button>
+            <button type="button" class="editor-tb-btn" onclick="execCmd('insertHorizontalRule')" title="Ayırıcı Çizgi"><i class="bi bi-hr"></i></button>
+            <div class="vr bg-secondary mx-1"></div>
+            <button type="button" class="btn btn-xs btn-outline-danger" onclick="deleteSelectedElement()" title="İmlecin bulunduğu tabloyu veya yapıyı sil"><i class="bi bi-trash me-1"></i> Yapıyı Sil</button>
+            <button type="button" class="btn btn-xs btn-outline-warning text-dark" onclick="clearCanvas()" title="Tuvaldeki tüm içeriği temizle"><i class="bi bi-eraser me-1"></i> Tümünü Sil</button>
+            <div class="vr bg-secondary mx-1"></div>
+            <button type="button" class="btn btn-xs btn-outline-info text-white" id="toggle-editor-mode-btn" onclick="toggleEditorMode()">
+                <i class="bi bi-code-slash me-1"></i> HTML Kodu
+            </button>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <!-- Hazır Şablon Kalıpları Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-outline-light btn-sm dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-magic me-1"></i> Hazır Kalıp Seç
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="z-index: 1070;">
+                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="applyPreset('classic_university')"><i class="bi bi-bank me-2 text-primary"></i>🎓 Klasik Üniversite Sınav Başlığı (3 Sütun)</a></li>
+                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="applyPreset('logo_header')"><i class="bi bi-image me-2 text-primary"></i>🏢 Logolu Kurum Başlığı</a></li>
+                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="applyPreset('minimal_header')"><i class="bi bi-file-text me-2 text-primary"></i>📄 Minimalist Ders & Form Başlığı</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="applyPreset('standard_footer')"><i class="bi bi-hash me-2 text-info"></i>🔢 Standart Alt Bilgi (Sayfa {page}/{total_pages})</a></li>
+                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="applyPreset('wishing_footer')"><i class="bi bi-heart me-2 text-info"></i>📝 Başarı Dilekli Alt Bilgi</a></li>
+                </ul>
+            </div>
+
+            <button type="button" class="btn btn-success btn-sm px-3 shadow-sm fw-bold" onclick="saveAndCloseFullscreenEditor()">
+                <i class="bi bi-check-lg me-1"></i> Uygula ve Kapat
+            </button>
+            <button type="button" class="btn btn-outline-light btn-sm" onclick="closeFullscreenEditor()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="fullscreen-editor-body">
+        <!-- Sol Panel: Bloklar ve Değişkenler -->
+        <div class="editor-sidebar-left">
+            <div class="sidebar-section">
+                <h6 class="sidebar-title"><i class="bi bi-code-square me-1"></i> Dinamik Değişkenler</h6>
+                <p class="sidebar-subtitle">Tıklayarak editöre ekleyin:</p>
+                <div class="variable-pills">
+                    <span class="var-pill" onclick="insertVariable('{course}')" title="Ders Adı">{course}</span>
+                    <span class="var-pill" onclick="insertVariable('{course_code}')" title="Ders Kodu">{course_code}</span>
+                    <span class="var-pill" onclick="insertVariable('{form_name}')" title="Form Adı">{form_name}</span>
+                    <span class="var-pill" onclick="insertVariable('{teacher_name}')" title="Öğretmen">{teacher_name}</span>
+                    <span class="var-pill" onclick="insertVariable('{semester}')" title="Dönem">{semester}</span>
+                    <span class="var-pill" onclick="insertVariable('{date}')" title="Sınav Tarihi">{date}</span>
+                    <span class="var-pill" onclick="insertVariable('{page}')" title="Mevcut Sayfa">{page}</span>
+                    <span class="var-pill" onclick="insertVariable('{total_pages}')" title="Toplam Sayfa">{total_pages}</span>
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <div class="sidebar-section flex-grow-1">
+                <h6 class="sidebar-title"><i class="bi bi-boxes me-1"></i> Şablon Blokları (1-Tık Ekleyin)</h6>
+                <div id="custom-blocks-list">
+                    <div class="custom-block-item" onclick="insertBlock('three_col')">
+                        <i class="bi bi-layout-three-columns text-primary fs-5"></i>
+                        <div>3 Sütunlu Başlık</div>
+                    </div>
+                    <div class="custom-block-item" onclick="insertBlock('logo_header')">
+                        <i class="bi bi-image text-primary fs-5"></i>
+                        <div>Logo + Başlık Satırı</div>
+                    </div>
+                    <div class="custom-block-item" onclick="insertBlock('course_title')">
+                        <i class="bi bi-book text-primary fs-5"></i>
+                        <div>Ders & Form Adı</div>
+                    </div>
+                    <div class="custom-block-item" onclick="insertBlock('teacher_info')">
+                        <i class="bi bi-person text-primary fs-5"></i>
+                        <div>Öğretmen Bilgisi</div>
+                    </div>
+                    <div class="custom-block-item" onclick="insertBlock('page_info')">
+                        <i class="bi bi-hash text-info fs-5"></i>
+                        <div>Sayfa No Satırı</div>
+                    </div>
+                    <div class="custom-block-item" onclick="insertBlock('divider')">
+                        <i class="bi bi-dash-lg text-secondary fs-5"></i>
+                        <div>Ayırıcı Çizgi</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orta Alan: A4 Baskı Kağıdı Simülasyonu -->
+        <div class="editor-canvas-wrapper">
+            <div class="a4-paper-container">
+                <div class="a4-paper-header-label">
+                    <span id="paper-section-label"><i class="bi bi-file-earmark-pdf me-1"></i> A4 BASKI ALANI (ÜST BİLGİ)</span>
+                    <span class="badge bg-secondary font-monospace" style="font-size:0.65rem;">WEASYPRINT PDF UYUMLU</span>
+                </div>
+
+                <!-- Canlı Görsel Editör Tuvali -->
+                <div id="visual-paper-editor" class="a4-paper-canvas-editor" contenteditable="true" spellcheck="false"></div>
+
+                <!-- HTML Kod Modu Editörü (Gizli başlar) -->
+                <textarea id="code-paper-editor" class="a4-paper-canvas-code" style="display: none;"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://unpkg.com/grapesjs@0.21.10"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ─── Ortak blok tanımları ───
-    const examBlocks = [
-        {
-            id: 'three-col-header', label: '3 Sütunlu Başlık', icon: 'bi-layout-three-columns',
-            content: `<table width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;">
-                <tr>
-                    <td style="width:33%;text-align:left;padding:4px;vertical-align:middle;">
-                        <span style="font-size:10pt;color:#333;">Kurum Adı</span>
-                    </td>
-                    <td style="width:34%;text-align:center;padding:4px;vertical-align:middle;">
-                        <strong style="font-size:12pt;">{form_name}</strong>
-                    </td>
-                    <td style="width:33%;text-align:right;padding:4px;vertical-align:middle;">
-                        <span style="font-size:10pt;color:#333;">Tarih: {date}</span>
-                    </td>
-                </tr>
-            </table>`
-        },
-        {
-            id: 'logo-header', label: 'Logo + Başlık', icon: 'bi-image',
-            content: `<table width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;">
-                <tr>
-                    <td style="width:80px;vertical-align:middle;padding:4px;">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23ddd'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%23999' font-size='10'%3ELOGO%3C/text%3E%3C/svg%3E" style="max-height:60px;" data-gjs-type="image"/>
-                    </td>
-                    <td style="text-align:center;vertical-align:middle;padding:4px;">
-                        <div style="font-size:14pt;font-weight:bold;">{course}</div>
-                        <div style="font-size:11pt;">{form_name}</div>
-                    </td>
-                    <td style="width:100px;text-align:right;vertical-align:middle;padding:4px;">
-                        <div style="font-size:9pt;color:#555;">Tarih: {date}</div>
-                        <div style="font-size:9pt;color:#555;">Dönem: {semester}</div>
-                    </td>
-                </tr>
-            </table>`
-        },
-        {
-            id: 'course-name', label: 'Ders Adı', icon: 'bi-book',
-            content: `<div style="text-align:center;font-size:14pt;font-weight:bold;padding:4px;">{course} ({course_code})</div>`
-        },
-        {
-            id: 'teacher-name', label: 'Öğretmen', icon: 'bi-person',
-            content: `<div style="font-size:10pt;">Öğretmen: {teacher_name}</div>`
-        },
-        {
-            id: 'form-name', label: 'Form Adı', icon: 'bi-file-text',
-            content: `<div style="text-align:center;font-size:12pt;font-weight:bold;padding:2px;">{form_name}</div>`
-        },
-        {
-            id: 'date-block', label: 'Tarih', icon: 'bi-calendar3',
-            content: `<span style="font-size:10pt;">Tarih: {date}</span>`
-        },
-        {
-            id: 'page-info', label: 'Sayfa No', icon: 'bi-hash',
-            content: `<span style="font-size:9pt;color:#666;">Sayfa {page} / {total_pages}</span>`
-        },
-        {
-            id: 'free-text', label: 'Serbest Metin', icon: 'bi-cursor-text',
-            content: `<p style="font-size:10pt;padding:2px;">Metin yazın...</p>`
-        },
-        {
-            id: 'image-block', label: 'Resim', icon: 'bi-card-image',
-            content: { type: 'image' }
-        },
-        {
-            id: 'divider', label: 'Ayırıcı Çizgi', icon: 'bi-dash-lg',
-            content: `<hr style="border-top:1px solid #000;margin:4px 0;">`
-        },
-        {
-            id: 'two-col', label: '2 Sütun', icon: 'bi-layout-split',
-            content: `<table width="100%" style="border-collapse:collapse;">
-                <tr>
-                    <td style="width:50%;vertical-align:top;padding:4px;">Sol alan</td>
-                    <td style="width:50%;vertical-align:top;padding:4px;">Sağ alan</td>
-                </tr>
-            </table>`
-        },
-    ];
+    // Presets Sözlüğü (HTML Hazır Kalıplar)
+    const presets = {
+        classic_university: `<table width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;margin-bottom:10px;"><tr><td style="width:33%;text-align:left;vertical-align:middle;font-size:10pt;">T.C.<br><strong>ÜNİVERSİTE ADI</strong><br><small style="color:#666;">Fakülte / Bölüm</small></td><td style="width:34%;text-align:center;vertical-align:middle;"><div style="font-size:13pt;font-weight:bold;">{course} ({course_code})</div><div style="font-size:11pt;font-weight:600;margin-top:2px;">{form_name}</div></td><td style="width:33%;text-align:right;vertical-align:middle;font-size:9.5pt;color:#333;"><strong>Tarih:</strong> {date}<br><strong>Dönem:</strong> {semester}<br><strong>Öğretmen:</strong> {teacher_name}</td></tr></table>`,
+        logo_header: `<table width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;margin-bottom:10px;"><tr><td style="width:75px;vertical-align:middle;"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='28' fill='%230d6efd'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%23fff' font-size='11' font-family='sans-serif' font-weight='bold'%3ELOGO%3C/text%3E%3C/svg%3E" style="max-height:60px;"/></td><td style="padding-left:12px;vertical-align:middle;"><div style="font-size:14pt;font-weight:bold;color:#111;">{course} ({course_code})</div><div style="font-size:11pt;color:#444;">{form_name}</div></td><td style="text-align:right;vertical-align:middle;font-size:9pt;color:#555;"><div><strong>Tarih:</strong> {date}</div><div><strong>Öğretmen:</strong> {teacher_name}</div></td></tr></table>`,
+        minimal_header: `<div style="text-align:center;font-family:Arial,sans-serif;padding:8px 0;border-bottom:1px solid #ccc;margin-bottom:10px;"><div style="font-size:15pt;font-weight:bold;">{course}</div><div style="font-size:11pt;color:#555;margin-top:2px;">{form_name} • {semester} • {date}</div></div>`,
+        standard_footer: `<table width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:9pt;color:#555;padding-top:6px;border-top:1px solid #ccc;"><tr><td style="width:33%;text-align:left;">{course} — {form_name}</td><td style="width:34%;text-align:center;font-weight:bold;">Sayfa {page} / {total_pages}</td><td style="width:33%;text-align:right;">Tarih: {date}</td></tr></table>`,
+        wishing_footer: `<table width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:9.5pt;color:#444;padding-top:6px;border-top:1px solid #ccc;"><tr><td style="width:33%;text-align:left;font-weight:bold;color:#0d6efd;">Başarılar Dileriz.</td><td style="width:34%;text-align:center;">Sayfa {page} / {total_pages}</td><td style="width:33%;text-align:right;">Tarih: {date}</td></tr></table>`
+    };
 
-    // ─── GrapesJS editör oluşturma fonksiyonu ───
-    function createEditor(containerId, blocksPanelId, existingJson, existingHtml) {
-        const editor = grapesjs.init({
-            container: '#' + containerId,
-            height: '100%',
-            width: 'auto',
-            fromElement: false,
-            storageManager: false,
-            panels: { defaults: [] },
-            canvas: {
-                styles: [
-                    'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap',
-                ],
-            },
-            assetManager: {
-                upload: '{% url "itempool:template_image_upload" %}',
-                uploadName: 'files[]',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                multiUpload: true,
-                autoAdd: true,
-            },
-            styleManager: {
-                sectors: [{
-                    name: 'Genel',
-                    open: true,
-                    properties: ['width', 'height', 'max-width', 'min-height', 'margin', 'padding'],
-                }, {
-                    name: 'Metin',
-                    properties: ['font-family', 'font-size', 'font-weight', 'text-align', 'color'],
-                }, {
-                    name: 'Kenarlık',
-                    properties: ['border', 'border-radius'],
-                }]
-            },
-            blockManager: {
-                appendTo: '#' + blocksPanelId,
-            },
-        });
+    let currentMode = 'header'; // 'header' veya 'footer'
+    let isCodeMode = false;
 
-        // Blokları ekle
-        examBlocks.forEach(b => {
-            editor.BlockManager.add(b.id, {
-                label: `<i class="bi ${b.icon}"></i> ${b.label}`,
-                content: b.content,
-                category: false,
-                attributes: { class: 'block-item' },
-            });
-        });
+    const visualEditor = document.getElementById('visual-paper-editor');
+    const codeEditor = document.getElementById('code-paper-editor');
 
-        // Mevcut veriyi yükle
-        if (existingJson) {
-            try {
-                const data = typeof existingJson === 'string' ? JSON.parse(existingJson) : existingJson;
-                editor.loadProjectData(data);
-            } catch(e) {
-                // JSON parse hatası → HTML'den yükle
-                if (existingHtml) {
-                    editor.setComponents(existingHtml);
-                }
+    // ─── Modal Açma ───
+    window.openFullscreenEditor = function(mode) {
+        currentMode = mode;
+        isCodeMode = false;
+
+        const modal = document.getElementById('fullscreen-editor-modal');
+        const titleEl = document.getElementById('modal-editor-title');
+        const badgeEl = document.getElementById('modal-editor-type-badge');
+        const paperLabel = document.getElementById('paper-section-label');
+
+        if (mode === 'header') {
+            titleEl.innerHTML = '<i class="bi bi-layout-text-window me-2"></i> Üst Bilgi (Başlık) Editörü';
+            badgeEl.innerText = 'HEADER';
+            badgeEl.className = 'badge bg-primary font-monospace';
+            paperLabel.innerText = 'A4 BASKI ALANI (ÜST BİLGİ)';
+        } else {
+            titleEl.innerHTML = '<i class="bi bi-layout-text-window-reverse me-2"></i> Alt Bilgi (Footer) Editörü';
+            badgeEl.innerText = 'FOOTER';
+            badgeEl.className = 'badge bg-info text-dark font-monospace';
+            paperLabel.innerText = 'A4 BASKI ALANI (ALT BİLGİ)';
+        }
+
+        // Modu varsayılan Görsel moda getir
+        visualEditor.style.display = 'block';
+        codeEditor.style.display = 'none';
+        document.getElementById('toggle-editor-mode-btn').innerHTML = '<i class="bi bi-code-slash me-1"></i> HTML Kodu';
+
+        // Veriyi Yükle
+        const htmlId = mode === 'header' ? 'input-header-html' : 'input-footer-html';
+        let htmlVal = document.getElementById(htmlId).value;
+
+        if (!htmlVal || htmlVal.trim() === '') {
+            htmlVal = mode === 'header' ? presets.classic_university : presets.standard_footer;
+        }
+
+        visualEditor.innerHTML = htmlVal;
+        codeEditor.value = htmlVal;
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeFullscreenEditor = function() {
+        document.getElementById('fullscreen-editor-modal').style.display = 'none';
+        document.body.style.overflow = '';
+    };
+
+    // ─── Kaydet ve Kapat ───
+    window.saveAndCloseFullscreenEditor = function() {
+        let contentHtml = isCodeMode ? codeEditor.value : visualEditor.innerHTML;
+
+        if (currentMode === 'header') {
+            document.getElementById('input-header-html').value = contentHtml;
+            const prevBox = document.getElementById('header-html-preview');
+            prevBox.innerHTML = contentHtml || '<span class="text-muted fst-italic">Henüz özel üst bilgi tasarlanmamış.</span>';
+        } else {
+            document.getElementById('input-footer-html').value = contentHtml;
+            const prevBox = document.getElementById('footer-html-preview');
+            prevBox.innerHTML = contentHtml || '<span class="text-muted fst-italic">Henüz özel alt bilgi tasarlanmamış.</span>';
+        }
+
+        closeFullscreenEditor();
+    };
+
+    // ─── Ana Sayfadan Tek Tıkla Kalıp Seçme ───
+    window.applyDirectPreset = function(mode, presetKey) {
+        if (!presets[presetKey]) return;
+        const htmlVal = presets[presetKey];
+        if (mode === 'header') {
+            document.getElementById('input-header-html').value = htmlVal;
+            document.getElementById('header-html-preview').innerHTML = htmlVal;
+        } else {
+            document.getElementById('input-footer-html').value = htmlVal;
+            document.getElementById('footer-html-preview').innerHTML = htmlVal;
+        }
+        if (document.getElementById('fullscreen-editor-modal').style.display !== 'none') {
+            applyPreset(presetKey);
+        }
+    };
+
+    // ─── Modal İçinden Kalıp Seçme ───
+    window.applyPreset = function(presetKey) {
+        if (!presets[presetKey]) return;
+        const htmlVal = presets[presetKey];
+        visualEditor.innerHTML = htmlVal;
+        codeEditor.value = htmlVal;
+    };
+
+    // ─── Rich Text Komutları ───
+    window.execCmd = function(command, value = null) {
+        visualEditor.focus();
+        document.execCommand(command, false, value);
+    };
+
+    // ─── Tablo Ekleme ───
+    window.insertTable = function() {
+        const tableHtml = `<table width="100%" style="border-collapse:collapse;border:1px solid #ccc;margin:5px 0;"><tr><td style="padding:6px;border:1px solid #ccc;">Hücre 1</td><td style="padding:6px;border:1px solid #ccc;">Hücre 2</td></tr></table>`;
+        execCmd('insertHTML', tableHtml);
+    };
+
+    // ─── Dinamik Değişken Ekleme ───
+    window.insertVariable = function(varCode) {
+        if (isCodeMode) {
+            const start = codeEditor.selectionStart;
+            const end = codeEditor.selectionEnd;
+            const val = codeEditor.value;
+            codeEditor.value = val.substring(0, start) + varCode + val.substring(end);
+        } else {
+            execCmd('insertHTML', `<span style="font-family:monospace;font-weight:bold;color:#0284c7;">${varCode}</span> `);
+        }
+    };
+
+    // ─── Şablon Bloğu Ekleme ───
+    window.insertBlock = function(blockKey) {
+        let blockHtml = '';
+        if (blockKey === 'three_col') blockHtml = presets.classic_university;
+        else if (blockKey === 'logo_header') blockHtml = presets.logo_header;
+        else if (blockKey === 'course_title') blockHtml = `<div style="text-align:center;font-size:13pt;font-weight:bold;padding:4px;">{course} ({course_code})</div>`;
+        else if (blockKey === 'teacher_info') blockHtml = `<div style="font-size:9.5pt;color:#333;"><strong>Öğretmen:</strong> {teacher_name}</div>`;
+        else if (blockKey === 'page_info') blockHtml = `<div style="text-align:center;font-size:9pt;color:#666;">Sayfa {page} / {total_pages}</div>`;
+        else if (blockKey === 'divider') blockHtml = `<hr style="border-top:1px solid #000;margin:6px 0;">`;
+
+        if (blockHtml) {
+            if (isCodeMode) {
+                codeEditor.value += '\n' + blockHtml;
+            } else {
+                execCmd('insertHTML', blockHtml);
             }
-        } else if (existingHtml) {
-            editor.setComponents(existingHtml);
         }
+    };
 
-        return editor;
-    }
-
-    // ─── Editörleri accordion açıldığında oluştur (lazy init) ───
-    let headerEditor = null;
-    let footerEditor = null;
-
-    const headerSection = document.getElementById('section-header');
-    const footerSection = document.getElementById('section-footer');
-
-    headerSection.addEventListener('shown.bs.collapse', function() {
-        if (!headerEditor) {
-            const jsonStr = document.getElementById('input-header-json').value;
-            const htmlStr = document.getElementById('input-header-html').value;
-            headerEditor = createEditor('header-editor', 'header-blocks-panel', jsonStr, htmlStr);
+    // ─── Seçili Bloğu / Tabloyu Sil ───
+    window.deleteSelectedElement = function() {
+        if (isCodeMode) return;
+        visualEditor.focus();
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+        let node = sel.getRangeAt(0).commonAncestorContainer;
+        if (node.nodeType === 3) node = node.parentNode;
+        
+        const container = node.closest('table, img, hr, div, p');
+        if (container && container !== visualEditor && visualEditor.contains(container)) {
+            container.remove();
+        } else {
+            document.execCommand('delete');
         }
-    });
+    };
 
-    footerSection.addEventListener('shown.bs.collapse', function() {
-        if (!footerEditor) {
-            const jsonStr = document.getElementById('input-footer-json').value;
-            const htmlStr = document.getElementById('input-footer-html').value;
-            footerEditor = createEditor('footer-editor', 'footer-blocks-panel', jsonStr, htmlStr);
+    // ─── Tüm Tuvali Temizle ───
+    window.clearCanvas = function() {
+        if (confirm('Tüm tuval içeriğini silip temizlemek istediğinizden emin misiniz?')) {
+            visualEditor.innerHTML = '<p><br></p>';
+            codeEditor.value = '';
         }
-    });
+    };
 
-    // ─── Form submit → GrapesJS verilerini hidden inputlara yaz ───
-    document.getElementById('template-form').addEventListener('submit', function(e) {
-        if (headerEditor) {
-            document.getElementById('input-header-html').value = headerEditor.getHtml();
-            document.getElementById('input-header-css').value = headerEditor.getCss();
-            try {
-                document.getElementById('input-header-json').value = JSON.stringify(headerEditor.getProjectData());
-            } catch(err) {}
+    // ─── Editör Modu Değiştirme (Görsel / Code) ───
+    window.toggleEditorMode = function() {
+        const btn = document.getElementById('toggle-editor-mode-btn');
+        if (isCodeMode) {
+            // Code -> Visual
+            visualEditor.innerHTML = codeEditor.value;
+            codeEditor.style.display = 'none';
+            visualEditor.style.display = 'block';
+            btn.innerHTML = '<i class="bi bi-code-slash me-1"></i> HTML Kodu';
+            isCodeMode = false;
+        } else {
+            // Visual -> Code
+            codeEditor.value = visualEditor.innerHTML;
+            visualEditor.style.display = 'none';
+            codeEditor.style.display = 'block';
+            btn.innerHTML = '<i class="bi bi-eye me-1"></i> Görsel Editör';
+            isCodeMode = true;
         }
-        if (footerEditor) {
-            document.getElementById('input-footer-html').value = footerEditor.getHtml();
-            document.getElementById('input-footer-css').value = footerEditor.getCss();
-            try {
-                document.getElementById('input-footer-json').value = JSON.stringify(footerEditor.getProjectData());
-            } catch(err) {}
-        }
-    });
+    };
 
 });
 </script>

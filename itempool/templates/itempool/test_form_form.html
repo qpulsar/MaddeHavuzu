@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Yeni Test Formu - {{ pool.name }}{% endblock %}
+{% block title %}Yeni Test Formu{% if pool %} - {{ pool.name }}{% endif %}{% endblock %}
 
 {% block breadcrumb %}
 <div class="container-fluid px-4 px-lg-5 pt-2">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
+            {% if pool %}
             <li class="breadcrumb-item"><a href="{% url 'itempool:pool_list' %}">Madde Havuzları</a></li>
             <li class="breadcrumb-item"><a href="{% url 'itempool:pool_detail' pool.id %}">{{ pool.name }}</a></li>
+            {% else %}
+            <li class="breadcrumb-item"><a href="{% url 'itempool:test_form_list_all' %}">Sınav Formları</a></li>
+            {% endif %}
             <li class="breadcrumb-item active">Yeni Test Formu</li>
         </ol>
     </nav>
@@ -69,7 +73,11 @@
                     </div>
                     
                     <div class="d-flex justify-content-end gap-2 border-top pt-4">
+                        {% if pool %}
                         <a href="{% url 'itempool:pool_detail' pool.id %}" class="btn btn-light px-4">Vazgeç</a>
+                        {% else %}
+                        <a href="{% url 'itempool:test_form_list_all' %}" class="btn btn-light px-4">Vazgeç</a>
+                        {% endif %}
                         <button type="submit" class="btn btn-primary px-5">
                             Devam Et <i class="bi bi-chevron-right ms-1"></i>
                         </button>

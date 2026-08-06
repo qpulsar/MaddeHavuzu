@@ -9,21 +9,20 @@ class TestPoolAuthorization:
     def setup_method(self):
         # Users
         self.admin = User.objects.create_superuser(username='admin', password='password')
-        UserProfile.objects.create(user=self.admin, role=UserRole.ADMIN, status='APPROVED')
+        UserProfile.objects.update_or_create(user=self.admin, defaults={'role': UserRole.ADMIN, 'status': 'APPROVED'})
         
         self.owner = User.objects.create_user(username='owner', password='password')
-        UserProfile.objects.create(user=self.owner, role=UserRole.INSTRUCTOR, status='APPROVED')
+        UserProfile.objects.update_or_create(user=self.owner, defaults={'role': UserRole.INSTRUCTOR, 'status': 'APPROVED'})
         
         self.viewer = User.objects.create_user(username='viewer', password='password')
-        UserProfile.objects.create(user=self.viewer, role=UserRole.INSTRUCTOR, status='APPROVED')
+        UserProfile.objects.update_or_create(user=self.viewer, defaults={'role': UserRole.INSTRUCTOR, 'status': 'APPROVED'})
         
         self.stranger = User.objects.create_user(username='stranger', password='password')
-        UserProfile.objects.create(user=self.stranger, role=UserRole.INSTRUCTOR, status='APPROVED')
+        UserProfile.objects.update_or_create(user=self.stranger, defaults={'role': UserRole.INSTRUCTOR, 'status': 'APPROVED'})
 
         # Pool
         self.pool = ItemPool.objects.create(
             name='Protected Pool',
-            course='Test Course',
             owner=self.owner
         )
         

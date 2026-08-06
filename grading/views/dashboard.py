@@ -184,6 +184,16 @@ class NewUploadView(LoginRequiredMixin, View):
                 f'Dosya başarıyla işlendi! {session.student_count} öğrenci, '
                 f'{session.question_count} soru.'
             )
+            # Sınav formu ile soru sayısı uyum kontrolü
+            if linked_test_form and session.question_count:
+                tf_count = linked_test_form.form_items.count()
+                if tf_count and tf_count != session.question_count:
+                    messages.warning(
+                        request,
+                        f'Soru Sayısı Uyumsuzluğu: Optik dosyadan {session.question_count} soru ayrıştırıldı, '
+                        f'ancak seçilen test formu ({linked_test_form.name}) {tf_count} soru içeriyor.'
+                    )
+
             # Sınav formu bağlıysa otomatik madde analizi tetikle
             if linked_test_form and session.is_processed:
                 try:

@@ -84,9 +84,26 @@ class ParsingService:
                 wrong_to_correct_ratio=upload_session.wrong_to_correct_ratio or 0
             )
             
+            # Kitapçık bazlı cevap anahtarları (Eğer sınav formunda A, B, C, D kitapçıkları türetilmişse)
+            booklet_keys = {}
+            if upload_session.test_form:
+                try:
+                    from itempool.services.answer_key import generate_answer_key_from_form
+                    master_form = upload_session.test_form.parent_form or upload_session.test_form
+                    all_forms = [master_form] + list(master_form.booklets.all())
+                    for tf in all_forms:
+                        code = (tf.booklet_code or 'A').upper()
+                        key = generate_answer_key_from_form(tf)
+                        if key:
+                            booklet_keys[code] = key
+                except Exception:
+                    pass
+
             # Grade and save student results
             for student in parsed_data.students:
-                grading_result = grading_service.grade_student(student.answers, answer_key)
+                student_b_code = (student.booklet or 'A').strip().upper()
+                student_key = booklet_keys.get(student_b_code, answer_key)
+                grading_result = grading_service.grade_student(student.answers, student_key)
                 
                 StudentResult.objects.create(
                     upload_session=upload_session,

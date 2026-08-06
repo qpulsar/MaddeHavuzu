@@ -44,6 +44,8 @@ class ItemAnalysisService:
                 incorrect_responses = total_responses - option_counts.get(correct_ans, 0)
                 dist_eff = (incorrect_responses / total_responses) if total_responses > 0 else 0
                 
+                data['student_sample_size'] = results.count()
+
                 analysis_result = ItemAnalysisResult.objects.create(
                     item_instance=instance,
                     upload_session=session,

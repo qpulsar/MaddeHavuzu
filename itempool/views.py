@@ -1434,7 +1434,7 @@ def course_test_form_create(request, course_pk):
 def _auto_select_items(test_form, course):
     """
     generation_metadata'ya göre havuzlardan otomatik madde seçer.
-    Belirtke tablosu ağırlığı, zorluk ve dışlama kriterlerini uygular.
+    Belirtke tablosu ağırlığı, zorluk, geçmiş sınav ve risk dışlama kriterlerini uygular.
     """
     import random
     meta = test_form.generation_metadata or {}
@@ -1443,6 +1443,10 @@ def _auto_select_items(test_form, course):
     excluded_form_ids = meta.get('excluded_form_ids', [])
     spec_table_id = meta.get('spec_table_id')
     total_questions = meta.get('total_questions', 20)
+    exclude_applied = meta.get('exclude_applied', True)
+    exclude_risk_flagged = meta.get('exclude_risk_flagged', True)
+
+    warnings = []
 
     # Dışlanan sınavlardaki maddelerin ID'leri
     excluded_instance_ids = set(
@@ -1450,8 +1454,12 @@ def _auto_select_items(test_form, course):
         .values_list('item_instance_id', flat=True)
     )
 
+    # Eğer ders genelinde geçmiş sorulmuş sorular engellenmek isteniyorsa
+    if exclude_applied and course:
+        excluded_instance_ids.update(course.get_applied_item_instance_ids())
+
     pool_ids = list(test_form.pools.values_list('id', flat=True))
-    if not pool_ids:
+    if not pool_ids and course:
         pool_ids = list(course.pools.values_list('id', flat=True))
 
     difficulty_map = {
@@ -1466,6 +1474,11 @@ def _auto_select_items(test_form, course):
     test_form.form_items.all().delete()
     selected_instances = set()
 
+    # Baz filtre (Riskli sorular hariç tutulabilir)
+    base_qs = ItemInstance.objects.filter(pool_id__in=pool_ids)
+    if exclude_risk_flagged:
+        base_qs = base_qs.exclude(item__status='NEEDS_REVISION')
+
     # 1. Eğer Belirtke Tablosu seçilmişse
     if spec_table_id:
         try:
@@ -1479,12 +1492,13 @@ def _auto_select_items(test_form, course):
                         q_count = oc_item.get('question_count', 1)
                         if oc_id:
                             qs = list(
-                                ItemInstance.objects.filter(
-                                    pool_id__in=pool_ids,
+                                base_qs.filter(
                                     learning_outcomes__id=oc_id,
                                     item__difficulty_intended__in=allowed_difficulties,
                                 ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
                             )
+                            if len(qs) < q_count:
+                                warnings.append(f"ÖÇ#{oc_id} için istenen {q_count} sorudan sadece {len(qs)} soru temin edilebildi.")
                             random.shuffle(qs)
                             for inst in qs[:q_count]:
                                 FormItem.objects.create(form=test_form, item_instance=inst, order=order)
@@ -1497,12 +1511,13 @@ def _auto_select_items(test_form, course):
                     for cell in cells:
                         n_cell_q = max(1, round((cell.weight / 100.0) * total_questions))
                         qs = list(
-                            ItemInstance.objects.filter(
-                                pool_id__in=pool_ids,
+                            base_qs.filter(
                                 learning_outcomes=cell.outcome,
                                 item__difficulty_intended__in=allowed_difficulties,
                             ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
                         )
+                        if len(qs) < n_cell_q:
+                            warnings.append(f"Çıktı {cell.outcome.code} için istenen {n_cell_q} sorudan sadece {len(qs)} soru temin edilebildi.")
                         random.shuffle(qs)
                         for inst in qs[:n_cell_q]:
                             FormItem.objects.create(form=test_form, item_instance=inst, order=order)
@@ -1518,12 +1533,13 @@ def _auto_select_items(test_form, course):
             if count <= 0:
                 continue
             qs = list(
-                ItemInstance.objects.filter(
-                    pool_id__in=pool_ids,
+                base_qs.filter(
                     item__item_type=itype,
                     item__difficulty_intended__in=allowed_difficulties,
                 ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
             )
+            if len(qs) < count:
+                warnings.append(f"{itype} tipinde istenen {count} sorudan {len(qs)} soru temin edilebildi.")
             random.shuffle(qs)
             for inst in qs[:count]:
                 FormItem.objects.create(form=test_form, item_instance=inst, order=order)
@@ -1534,25 +1550,28 @@ def _auto_select_items(test_form, course):
     needed = total_questions - test_form.form_items.count()
     if needed > 0:
         qs = list(
-            ItemInstance.objects.filter(
-                pool_id__in=pool_ids,
+            base_qs.filter(
                 item__difficulty_intended__in=allowed_difficulties,
             ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
         )
         # Eğer kısıtlı zorlukta yeterli soru çıkmazsa, zorluk sınırını kaldırıp tamamla
         if len(qs) < needed:
             additional_qs = list(
-                ItemInstance.objects.filter(
-                    pool_id__in=pool_ids
-                ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
+                base_qs.exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
             )
             qs = additional_qs
+            if len(qs) < needed:
+                warnings.append(f"Toplam {total_questions} soru hedeflendi ancak havuzlarda kriterlere uyan yalnızca {test_form.form_items.count() + len(qs)} soru bulundu.")
 
         random.shuffle(qs)
         for inst in qs[:needed]:
             FormItem.objects.create(form=test_form, item_instance=inst, order=order)
             selected_instances.add(inst.id)
             order += 1
+
+    meta['warnings'] = warnings
+    test_form.generation_metadata = meta
+    test_form.save(update_fields=['generation_metadata'])
 
 
 @login_required
@@ -1701,7 +1720,13 @@ def exam_template_create(request):
             messages.error(request, f'Şablon oluşturulamadı: {form.errors.as_text()}')
     else:
         form = ExamTemplateForm()
-    return render(request, 'itempool/exam_template_form.html', {'form': form, 'title': 'Yeni Şablon'})
+    return render(request, 'itempool/exam_template_form.html', {
+        'form': form,
+        'title': 'Yeni Şablon',
+        'template': None,
+        'header_design_json': '',
+        'footer_design_json': '',
+    })
 
 
 @login_required
@@ -1892,7 +1917,43 @@ def test_form_auto_balance(request, pk):
         response['HX-Refresh'] = 'true'
         return response
         
+@login_required
+@transaction.atomic
+def test_form_generate_booklets(request, pk):
+    """
+    TestForm için A, B, C, D kitapçıklarını üretir.
+    """
+    test_form = get_object_or_404(TestForm, id=pk)
+    
+    if test_form.status == TestForm.Status.APPLIED:
+        messages.error(request, 'Uygulanmış bir sınav için yeni kitapçık türetilemez.')
+        return redirect('itempool:test_form_detail', pk=pk)
+
+    if request.method == 'POST':
+        booklet_count = request.POST.get('booklet_count', '2')
+        shuffle_questions = request.POST.get('shuffle_questions') == 'on'
+        shuffle_choices = request.POST.get('shuffle_choices') == 'on'
+
+        codes = ['A', 'B', 'C', 'D'][:int(booklet_count) if booklet_count.isdigit() else 2]
+        
+        booklets = FormService.generate_booklets(
+            master_test_form=test_form,
+            booklet_codes=codes,
+            shuffle_questions=shuffle_questions,
+            shuffle_choices=shuffle_choices
+        )
+        messages.success(
+            request,
+            f'{len(booklets)} adet kitapçık ({", ".join(codes)}) başarıyla oluşturuldu.'
+        )
+
+    if request.headers.get('HX-Request') == 'true':
+        response = HttpResponse("")
+        response['HX-Refresh'] = 'true'
+        return response
+
     return redirect('itempool:test_form_detail', pk=pk)
+
 
 @login_required
 def test_form_pdf(request, pk):

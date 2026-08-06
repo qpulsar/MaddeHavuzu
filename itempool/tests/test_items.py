@@ -103,7 +103,7 @@ class TestItemModels:
         
         # Yeni havuz
         from itempool.models import ItemPool
-        pool2 = ItemPool.objects.create(name='P2', course='C2', semester='S2', level='L', owner=user)
+        pool2 = ItemPool.objects.create(name='P2', level='L', owner=user)
         
         # Fork (kopyalama) işlemi
         item2 = Item.objects.create(stem='Orijinal Soru (Kopya)', author=user, version=2)

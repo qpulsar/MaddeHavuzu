@@ -60,6 +60,17 @@ class ItemAnalysisResult(models.Model):
         
         self.risk_score = min(risk, 100)
         self.flagged = self.risk_score > 60
+
+        # Faz 3: Risk skoru Kırmızı (flagged) ise bağlı Item'ı Revizyon Gerektiriyor olarak işaretle
+        try:
+            if self.flagged and self.item_instance and self.item_instance.item:
+                item = self.item_instance.item
+                if item.status == 'ACTIVE':
+                    item.status = 'NEEDS_REVISION'
+                    item.save(update_fields=['status'])
+        except Exception:
+            pass
+
         return self.risk_score
 
     @property
@@ -80,6 +91,15 @@ class ItemAnalysisResult(models.Model):
         if self.discrimination_r < 0.29: return "Zayıf Ayırt Edici"
         if self.discrimination_r < 0.39: return "İyi Ayırt Edici"
         return "Çok İyi Ayırt Edici"
+
+    @property
+    def student_sample_size(self):
+        return self.analysis_data_json.get('student_sample_size') or (self.upload_session.student_count if self.upload_session else 0)
+
+    @property
+    def is_small_sample(self):
+        size = self.student_sample_size
+        return size > 0 and size < 30
 
     def __str__(self):
         return f"Analiz #{self.id} (Madde {self.item_instance.item_id})"

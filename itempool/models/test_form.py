@@ -43,6 +43,22 @@ class TestForm(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # Kitapçık yapısı (A, B, C, D)
+    parent_form = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='booklets',
+        verbose_name='Ana Sınav Formu'
+    )
+    booklet_code = models.CharField(
+        max_length=10,
+        default='A',
+        verbose_name='Kitapçık Kodu',
+        help_text='Örn: A, B, C, D'
+    )
+
     # Oluşturma kuralı (JSON olarak saklanabilir veya Blueprint FK olabilir)
     generation_metadata = models.JSONField(default=dict, blank=True, verbose_name='Oluşturma Kuralları')
 
