@@ -43,6 +43,7 @@ urlpatterns = [
     # Madde (Item) Rotaları
     path('<int:pool_id>/items/yeni/', views.item_create, name='item_create'),
     path('items/<int:pk>/', views.item_detail, name='item_detail'),
+    path('items/<int:pk>/preview-modal/', views.item_preview_modal, name='item_preview_modal'),
     path('items/<int:pk>/sil/', views.item_delete, name='item_delete'),
     path('items/upload-image/', views.item_image_upload, name='item_image_upload'),
 

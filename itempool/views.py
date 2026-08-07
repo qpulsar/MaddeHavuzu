@@ -245,6 +245,22 @@ def item_detail(request, pk):
     })
 
 @login_required
+def item_preview_modal(request, pk):
+    """
+    Maddenin tüm metnini, tüm seçeneklerini (şıklarını) ve detaylarını gösteren popup modal içeriği.
+    pk: Item.id
+    """
+    item = get_object_or_404(
+        Item.objects.prefetch_related('choices', 'instances__learning_outcomes', 'instances__pool'),
+        pk=pk
+    )
+    instance = item.instances.first()
+    return render(request, 'itempool/partials/item_preview_modal.html', {
+        'item': item,
+        'instance': instance,
+    })
+
+@login_required
 def item_delete(request, pk):
     item_instance = get_object_or_404(ItemInstance, id=pk)
     pool_id = item_instance.pool.id

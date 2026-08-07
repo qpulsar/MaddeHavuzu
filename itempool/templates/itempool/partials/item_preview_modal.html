@@ -1,0 +1,96 @@
+<div class="modal-content shadow-lg border-0">
+    <div class="modal-header bg-primary text-white py-3">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="itemPreviewModalLabel">
+            <i class="bi bi-question-circle-fill fs-5"></i>
+            <span>Madde #{{ item.id }} — Detaylı Görünüm</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+    </div>
+    <div class="modal-body p-4">
+        <!-- Meta Rozetler -->
+        <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+            <span class="badge bg-secondary px-3 py-2 fs-7">{{ item.get_item_type_display }}</span>
+            <span class="badge bg-info text-dark px-3 py-2 fs-7">
+                <i class="bi bi-speedometer2 me-1"></i> Hedef Zorluk: {{ item.get_difficulty_intended_display }}
+            </span>
+            <span class="badge bg-light text-dark border px-3 py-2 fs-7">Sürüm {{ item.version }}</span>
+            <span class="badge bg-dark px-3 py-2 fs-7">{{ item.get_status_display }}</span>
+        </div>
+
+        <!-- Soru Kökü -->
+        <div class="card bg-light-subtle border mb-4">
+            <div class="card-header bg-light py-2 fw-bold text-secondary">
+                <i class="bi bi-file-text me-1"></i> Soru Kökü (Madde Metni)
+            </div>
+            <div class="card-body py-3 fs-6 text-dark" style="white-space: pre-line; line-height: 1.6;">{{ item.stem }}</div>
+        </div>
+
+        <!-- Seçenekler / Şıklar -->
+        {% if item.item_type == 'MCQ' or item.item_type == 'TF' %}
+        <div class="mb-4">
+            <h6 class="fw-bold text-secondary mb-2">
+                <i class="bi bi-ui-checks me-1"></i> Seçenekler (Şıklar)
+            </h6>
+            <div class="list-group shadow-sm">
+                {% for choice in item.choices.all %}
+                <div class="list-group-item d-flex justify-content-between align-items-center py-3 {% if choice.is_correct %}list-group-item-success border-success fw-bold{% endif %}">
+                    <div class="d-flex align-items-center me-2">
+                        <span class="badge {% if choice.is_correct %}bg-success{% else %}bg-secondary{% endif %} me-3 fs-6 px-3 py-2">
+                            {{ choice.label }}
+                        </span>
+                        <span class="fs-6">{{ choice.text }}</span>
+                    </div>
+                    {% if choice.is_correct %}
+                    <span class="badge bg-success text-white px-3 py-2">
+                        <i class="bi bi-check-circle-fill me-1"></i> Doğru Cevap
+                    </span>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="list-group-item text-muted small py-3">Bu soru için tanımlanmış seçenek bulunamadı.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% elif item.item_type == 'SHORT_ANSWER' %}
+        <div class="card border-info mb-4">
+            <div class="card-header bg-info-subtle text-info fw-bold py-2">
+                <i class="bi bi-key me-1"></i> Beklenen Cevap
+            </div>
+            <div class="card-body fs-6">{{ item.expected_answer|default:"Tanımlanmamış" }}</div>
+        </div>
+
+        {% elif item.item_type == 'OPEN' %}
+        <div class="card border-warning mb-4">
+            <div class="card-header bg-warning-subtle text-warning-emphasis fw-bold py-2">
+                <i class="bi bi-journal-text me-1"></i> Puanlama Kılavuzu (Rubrik)
+            </div>
+            <div class="card-body fs-6" style="white-space: pre-line;">{{ item.scoring_rubric|default:"Tanımlanmamış" }}</div>
+        </div>
+        {% endif %}
+
+        <!-- İlişkili Öğrenme Çıktıları -->
+        {% if instance and instance.learning_outcomes.exists %}
+        <div class="border-top pt-3">
+            <h6 class="fw-bold text-secondary mb-2">
+                <i class="bi bi-bullseye me-1"></i> İlişkili Öğrenme Çıktıları (Kazanımlar)
+            </h6>
+            <div class="d-flex flex-wrap gap-2">
+                {% for oc in instance.learning_outcomes.all %}
+                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle p-2 fs-7" title="{{ oc.description }}">
+                    <strong>{{ oc.code }}</strong> — {{ oc.subject|default:oc.name }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="modal-footer bg-light">
+        {% if instance %}
+        <a href="{% url 'itempool:item_detail' instance.id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Madde Detay Sayfasına Git
+        </a>
+        {% endif %}
+        <button type="button" class="btn btn-sm btn-secondary px-4" data-bs-dismiss="modal">Kapat</button>
+    </div>
+</div>
