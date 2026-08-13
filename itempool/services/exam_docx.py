@@ -94,8 +94,12 @@ def generate_exam_docx(test_form, template: "ExamTemplate", with_answer_key: boo
         doc.add_paragraph().add_run("_" * 80).bold = True
 
 
+    form_items = test_form.form_items.select_related(
+        'item_instance__item'
+    ).prefetch_related('item_instance__item__choices', 'item_instance__learning_outcomes').order_by('order')
+
     # 3. Öğrenci Bilgi Kutusu
-    if template.show_student_info_box:
+    if not with_answer_key and template.show_student_info_box:
         box_table = doc.add_table(rows=1, cols=3)
         box_table.style = 'Table Grid'
         b_cells = box_table.rows[0].cells
@@ -105,82 +109,130 @@ def generate_exam_docx(test_form, template: "ExamTemplate", with_answer_key: boo
         doc.add_paragraph() # Spacer
 
     # 4. Sütun Ayarı (Sorular için)
-    if template.column_count > 1:
+    if not with_answer_key and template.column_count > 1:
         _set_columns(section, template.column_count, template.column_divider)
 
     # 5. Sorular
-    form_items = test_form.form_items.select_related(
-        'item_instance__item'
-    ).prefetch_related('item_instance__item__choices').order_by('order')
-
-    for fi in form_items:
-        item = fi.item_instance.item
-        
-        # Soru Kökü
-        p_stem = doc.add_paragraph()
-        run_num = p_stem.add_run(f"{fi.order}. ")
-        run_num.bold = True
-        
-        if template.show_question_points:
-            run_pts = p_stem.add_run(f"({fi.points} puan) ")
-            run_pts.italic = True
+    if not with_answer_key:
+        for fi in form_items:
+            item = fi.item_instance.item
             
-        p_stem.add_run(item.stem)
-        
-        # Şıklar (MCQ/TF)
-        if item.item_type in ['MCQ', 'TF']:
-            if fi.choice_overrides:
-                choices = fi.choice_overrides
+            # Soru Kökü
+            p_stem = doc.add_paragraph()
+            run_num = p_stem.add_run(f"{fi.order}. ")
+            run_num.bold = True
+            
+            p_stem.add_run(item.stem)
+            
+            if template.show_question_points:
+                run_pts = p_stem.add_run(f" ({fi.points} puan)")
+                run_pts.italic = True
+                run_pts.font.size = Pt(8)
+                
+            # Kazanımlar
+            outcomes = fi.item_instance.learning_outcomes.all()
+            if outcomes:
+                outcome_str = ", ".join([o.code for o in outcomes])
+                run_outcomes = p_stem.add_run(f" ({outcome_str})")
+                run_outcomes.italic = True
+                run_outcomes.font.size = Pt(8)
+            
+            # Şıklar (MCQ/TF)
+            if item.item_type in ['MCQ', 'TF']:
+                if fi.choice_overrides:
+                    choices = fi.choice_overrides
+                else:
+                    choices = [{'label': c.label, 'text': c.text} for c in item.choices.all()]
+                
+                # Layout seçimi (Sayfa sütununa göre daraltılmış eşikler)
+                max_len = max([len(str(c.get('text', ''))) for c in choices]) if choices else 0
+                col_factor = template.column_count
+                
+                t_vert = 45 if col_factor == 1 else (28 if col_factor == 2 else 18)
+                t_grid3 = 20 if col_factor == 1 else (10 if col_factor == 2 else 6)
+                
+                # 1 Sütun (Vertical)
+                if max_len > t_vert or template.choice_layout == 'vertical':
+                    for c in choices:
+                        p_choice = doc.add_paragraph()
+                        p_choice.paragraph_format.left_indent = Pt(15)
+                        p_choice.paragraph_format.space_after = Pt(template.choice_spacing)
+                        p_choice.add_run(f"{c['label']}) ").bold = True
+                        p_choice.add_run(str(c['text']))
+                
+                # Grid (2 veya 3 Sütun)
+                else:
+                    cols_count = 3 if max_len < t_grid3 else 2
+                    choice_table = doc.add_table(rows=0, cols=cols_count)
+                    for i in range(0, len(choices), cols_count):
+                        row_cells = choice_table.add_row().cells
+                        for j in range(cols_count):
+                            if i + j < len(choices):
+                                c = choices[i+j]
+                                row_cells[j].text = f"{c['label']}) {c['text']}"
+                    
+                    # Spacer
+                    p_spacer = doc.add_paragraph()
+                    p_spacer.paragraph_format.space_before = Pt(0)
+                    p_spacer.paragraph_format.space_after = Pt(template.question_spacing)
+            
+            elif item.item_type == 'SHORT_ANSWER':
+                p_sa = doc.add_paragraph("_________________________________________________")
+                p_sa.paragraph_format.space_after = Pt(template.question_spacing)
             else:
-                choices = [{'label': c.label, 'text': c.text} for c in item.choices.all()]
-            
-            # Layout seçimi (Sayfa sütununa göre daraltılmış eşikler)
-            max_len = max([len(str(c.get('text', ''))) for c in choices]) if choices else 0
-            col_factor = template.column_count
-            
-            t_vert = 45 if col_factor == 1 else (28 if col_factor == 2 else 18)
-            t_grid3 = 20 if col_factor == 1 else (10 if col_factor == 2 else 6)
-            
-            # 1 Sütun (Vertical)
-            if max_len > t_vert or template.choice_layout == 'vertical':
-                for c in choices:
-                    p_choice = doc.add_paragraph()
-                    p_choice.paragraph_format.left_indent = Pt(15)
-                    p_choice.paragraph_format.space_after = Pt(template.choice_spacing)
-                    p_choice.add_run(f"{c['label']}) ").bold = True
-                    p_choice.add_run(str(c['text']))
-            
-            # Grid (2 veya 3 Sütun)
-            else:
-                cols_count = 3 if max_len < t_grid3 else 2
-                choice_table = doc.add_table(rows=0, cols=cols_count)
-                for i in range(0, len(choices), cols_count):
-                    row_cells = choice_table.add_row().cells
-                    for j in range(cols_count):
-                        if i + j < len(choices):
-                            c = choices[i+j]
-                            row_cells[j].text = f"{c['label']}) {c['text']}"
-                doc.add_paragraph() # Spacer after table
-
-        elif item.item_type == 'SHORT_ANSWER':
-            doc.add_paragraph("_________________________________________________")
-
-        # Sorular arası boşluk
-        doc.add_paragraph().paragraph_format.space_after = Pt(template.question_spacing)
+                # Diğer tipler veya boşluk
+                p_space = doc.add_paragraph()
+                p_space.paragraph_format.space_before = Pt(0)
+                p_space.paragraph_format.space_after = Pt(template.question_spacing)
 
     # 6. Cevap Anahtarı
     if with_answer_key:
-        doc.add_page_break()
-        doc.add_heading('Cevap Anahtarı', level=1)
-        key_table = doc.add_table(rows=1, cols=2)
-        key_table.style = 'Table Grid'
-        key_table.rows[0].cells[0].text = "Soru No"
-        key_table.rows[0].cells[1].text = "Doğru Cevap"
+        p_title = doc.add_paragraph()
+        run_title = p_title.add_run(f"CEVAP ANAHTARI — {test_form.name}")
+        run_title.bold = True
+        run_title.font.size = Pt(14)
+        p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_title.paragraph_format.space_after = Pt(12)
         
+        # 5 sütunlu grid tablo oluşturalım
+        cols_count = 5
+        key_table = doc.add_table(rows=0, cols=cols_count)
+        key_table.style = 'Table Grid'
+        
+        import math
+        num_items = len(form_items)
+        num_rows = math.ceil(num_items / cols_count)
+        
+        grid_data = []
         for fi in form_items:
-            row = key_table.add_row().cells
-            row[0].text = str(fi.order)
-            row[1].text = str(fi.item_instance.item.expected_answer or "-")
+            # Doğru şıkkı bul
+            correct_ans = ""
+            choices = fi.get_choices()
+            if choices:
+                correct_choice = next((c for c in choices if c.get('is_correct')), None)
+                if correct_choice:
+                    correct_ans = correct_choice.get('label', '')
+            
+            if not correct_ans:
+                item = fi.item_instance.item
+                if item.item_type == 'SHORT_ANSWER':
+                    correct_ans = item.expected_answer or "Kısa Cevap"
+                elif item.item_type == 'OPEN':
+                    correct_ans = "Açık"
+                else:
+                    correct_ans = "-"
+            
+            grid_data.append(f"{fi.order}. {correct_ans}")
+            
+        for r in range(num_rows):
+            row_cells = key_table.add_row().cells
+            for c in range(cols_count):
+                idx = r * cols_count + c
+                if idx < len(grid_data):
+                    row_cells[c].text = grid_data[idx]
+                    row_cells[c].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                else:
+                    row_cells[c].text = ""
 
     # Çıktı
     target_stream = io.BytesIO()

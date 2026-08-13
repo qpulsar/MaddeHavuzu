@@ -98,10 +98,11 @@ body {
 }
 
 .question-points {
-    float: right;
     font-size: 8pt;
     color: #555;
     font-style: italic;
+    margin-left: 4pt;
+    display: inline;
 }
 
 .question-stem {
@@ -223,16 +224,20 @@ body {
 </div>
 {% endif %}
 
+{% if not with_answer_key %}
 <div class="questions-container">
 {% for fi in form_items %}
     {% with item=fi.item_instance.item %}
     <div class="question-block">
         <div class="question-stem">
             <span class="question-number">{{ fi.order }}.</span>
-            {% if template.show_question_points %}
-            <span class="question-points">({{ fi.points }} puan)</span>
-            {% endif %}
             {{ item.stem }}
+            {% if template.show_question_points %}
+            <span class="question-points">({{ fi.points|floatformat:2 }} puan)</span>
+            {% endif %}
+            {% if fi.item_instance.learning_outcomes.all %}
+            <span class="question-points">({% for outcome in fi.item_instance.learning_outcomes.all %}{{ outcome.code }}{% if not forloop.last %}, {% endif %}{% endfor %})</span>
+            {% endif %}
         </div>
 
         {% if item.item_type == 'MCQ' or item.item_type == 'TF' %}
@@ -263,9 +268,10 @@ body {
     {% endwith %}
 {% endfor %}
 </div>
+{% endif %}
 
 {% if with_answer_key %}
-<div class="answer-key-page">
+<div class="answer-key-page" style="page-break-before: avoid;">
     <div class="answer-key-title">CEVAP ANAHTARI — {{ test_form.name }}</div>
     <div class="answer-key-grid">
         {% for fi in form_items %}
