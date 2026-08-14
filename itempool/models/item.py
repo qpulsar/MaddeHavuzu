@@ -146,11 +146,13 @@ class ItemInstance(models.Model):
         related_name='instances',
         verbose_name='Madde'
     )
-    learning_outcomes = models.ManyToManyField(
+    learning_outcome = models.ForeignKey(
         LearningOutcome,
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
         related_name='assigned_items',
-        verbose_name='Öğrenme Çıktıları (Kazanımlar)'
+        verbose_name='Öğrenme Çıktısı (Kazanım)'
     )
     is_fork = models.BooleanField(
         default=False,

@@ -90,7 +90,7 @@ class ItemAdmin(admin.ModelAdmin):
 
 @admin.register(ItemInstance)
 class ItemInstanceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'pool', 'item_id', 'get_outcomes', 'is_fork', 'added_by', 'added_at')
+    list_display = ('id', 'pool', 'item_id', 'get_outcome', 'is_fork', 'added_by', 'added_at')
     list_filter = ('pool', 'is_fork')
     search_fields = ('item__stem', 'pool__name')
     date_hierarchy = 'added_at'
@@ -99,9 +99,9 @@ class ItemInstanceAdmin(admin.ModelAdmin):
         return f"Madde #{obj.item.id}"
     item_id.short_description = 'Madde'
 
-    def get_outcomes(self, obj):
-        return ", ".join([o.code for o in obj.learning_outcomes.all()])
-    get_outcomes.short_description = 'Öğrenme Çıktıları'
+    def get_outcome(self, obj):
+        return obj.learning_outcome.code if obj.learning_outcome else '—'
+    get_outcome.short_description = 'Öğrenme Çıktısı'
 
 @admin.register(AIPrompt)
 class AIPromptAdmin(admin.ModelAdmin):

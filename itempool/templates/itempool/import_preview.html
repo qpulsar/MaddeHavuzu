@@ -82,15 +82,15 @@
                                 </div>
                                 <div class="col-md-5 border-start">
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold">Öğrenme Çıktıları</label>
-                                        <select name="outcomes_{{ item.id }}" class="form-select" multiple size="5">
+                                        <label class="form-label fw-bold">Öğrenme Çıktısı</label>
+                                        <select name="outcome_{{ item.id }}" class="form-select">
+                                            <option value="">--- Seçiniz ---</option>
                                             {% for outcome in outcomes %}
-                                            <option value="{{ outcome.id }}" {% if outcome in item.learning_outcomes.all %}selected{% endif %}>
+                                            <option value="{{ outcome.id }}" {% if outcome == item.learning_outcome %}selected{% endif %}>
                                                 {{ outcome.code }}: {{ outcome.description|truncatechars:50 }}
                                             </option>
                                             {% endfor %}
                                         </select>
-                                        <div class="form-text">Birden fazla seçmek için Ctrl/Cmd tuşuna basılı tutun.</div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Doğru Cevap</label>

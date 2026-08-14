@@ -35,11 +35,12 @@ class TestItemModels:
             item=item,
             added_by=user
         )
-        instance.learning_outcomes.add(outcome)
+        instance.learning_outcome = outcome
+        instance.save()
         
         assert instance.pool == item_pool
         assert instance.item == item
-        assert instance.learning_outcomes.filter(id=outcome.id).exists()
+        assert instance.learning_outcome == outcome
 
     def test_item_instance_unique_constraint(self, item_pool, user):
         item = Item.objects.create(stem='Soru 1', author=user)

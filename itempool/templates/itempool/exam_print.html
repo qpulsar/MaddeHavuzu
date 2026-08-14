@@ -235,8 +235,8 @@ body {
             {% if template.show_question_points %}
             <span class="question-points">({{ fi.points|floatformat:2 }} puan)</span>
             {% endif %}
-            {% if fi.item_instance.learning_outcomes.all %}
-            <span class="question-points">({% for outcome in fi.item_instance.learning_outcomes.all %}{{ outcome.code }}{% if not forloop.last %}, {% endif %}{% endfor %})</span>
+            {% if fi.item_instance.learning_outcome %}
+            <span class="question-points">({{ fi.item_instance.learning_outcome.code }})</span>
             {% endif %}
         </div>
 

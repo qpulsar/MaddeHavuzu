@@ -69,18 +69,16 @@
         </div>
         {% endif %}
 
-        <!-- İlişkili Öğrenme Çıktıları -->
-        {% if instance and instance.learning_outcomes.exists %}
+        <!-- İlişkili Öğrenme Çıktısı -->
+        {% if instance and instance.learning_outcome %}
         <div class="border-top pt-3">
             <h6 class="fw-bold text-secondary mb-2">
-                <i class="bi bi-bullseye me-1"></i> İlişkili Öğrenme Çıktıları (Kazanımlar)
+                <i class="bi bi-bullseye me-1"></i> İlişkili Öğrenme Çıktısı (Kazanım)
             </h6>
             <div class="d-flex flex-wrap gap-2">
-                {% for oc in instance.learning_outcomes.all %}
-                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle p-2 fs-7" title="{{ oc.description }}">
-                    <strong>{{ oc.code }}</strong> — {{ oc.subject|default:oc.name }}
+                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle p-2 fs-7" title="{{ instance.learning_outcome.description }}">
+                    <strong>{{ instance.learning_outcome.code }}</strong> — {{ instance.learning_outcome.subject|default:instance.learning_outcome.name }}
                 </span>
-                {% endfor %}
             </div>
         </div>
         {% endif %}

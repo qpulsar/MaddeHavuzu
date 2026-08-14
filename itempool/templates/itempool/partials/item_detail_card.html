@@ -47,7 +47,7 @@
 {% elif section == 'outcomes' %}
 <div class="card shadow-sm mb-4 border-primary" id="outcomes-card">
     <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
-        <span>İlişkili Öğrenme Çıktıları</span>
+        <span>İlişkili Öğrenme Çıktısı</span>
         <button class="btn btn-sm btn-light py-0" 
                 hx-get="{% url 'itempool:item_detail_edit' instance.id 'outcomes' %}" 
                 hx-target="#outcomes-card" hx-swap="outerHTML">
@@ -55,15 +55,15 @@
         </button>
     </div>
     <div class="list-group list-group-flush">
-        {% for outcome in instance.learning_outcomes.all %}
+        {% if instance.learning_outcome %}
         <div class="list-group-item">
-            <h6 class="mb-1 fw-bold">{{ outcome.code }}</h6>
-            <p class="mb-1 small">{{ outcome.description }}</p>
-            <span class="badge bg-light text-primary border">{{ outcome.get_level_display }}</span>
+            <h6 class="mb-1 fw-bold">{{ instance.learning_outcome.code }}</h6>
+            <p class="mb-1 small">{{ instance.learning_outcome.description }}</p>
+            <span class="badge bg-light text-primary border">{{ instance.learning_outcome.get_level_display }}</span>
         </div>
-        {% empty %}
+        {% else %}
         <div class="list-group-item text-muted small">Öğrenme çıktısı atanmadı.</div>
-        {% endfor %}
+        {% endif %}
     </div>
 </div>
 {% endif %}

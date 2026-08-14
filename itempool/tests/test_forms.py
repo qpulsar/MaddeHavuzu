@@ -56,7 +56,8 @@ class TestFormViews:
         for i in range(5):
             it = Item.objects.create(stem=f'Soru {i}', author=user)
             inst = ItemInstance.objects.create(pool=item_pool, item=it, added_by=user)
-            inst.learning_outcomes.add(oc)
+            inst.learning_outcome = oc
+            inst.save()
 
         url = reverse('itempool:blueprint_clone', kwargs={'pk': blueprint.id})
         response = client.post(url)

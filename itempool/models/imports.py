@@ -88,10 +88,12 @@ class DraftItem(models.Model):
         blank=True, 
         verbose_name='AI Önerileri'
     )
-    learning_outcomes = models.ManyToManyField(
+    learning_outcome = models.ForeignKey(
         'LearningOutcome',
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
-        verbose_name='Öğrenme Çıktıları'
+        verbose_name='Öğrenme Çıktısı'
     )
     status = models.CharField(
         max_length=20,

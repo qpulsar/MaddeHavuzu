@@ -2,40 +2,23 @@
 
 from django.db import migrations
 
-BAUN_LOGO_SVG = '''<svg width="75" height="75" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="50" cy="50" r="48" fill="none" stroke="#0f7b88" stroke-width="3"/>
-  <circle cx="50" cy="50" r="44" fill="#0f7b88"/>
-  <circle cx="50" cy="50" r="32" fill="#ffffff"/>
-  <circle cx="50" cy="50" r="30" fill="#0f7b88"/>
-  <path id="topArcBAUN" fill="none" d="M 12 50 A 38 38 0 1 1 88 50" />
-  <text font-family="Arial, sans-serif" font-size="7.5" font-weight="bold" fill="#ffffff">
-    <textPath href="#topArcBAUN" startOffset="50%" text-anchor="middle">BALIKESİR ÜNİVERSİTESİ</textPath>
-  </text>
-  <path id="botArcBAUN" fill="none" d="M 88 50 A 38 38 0 0 1 12 50" />
-  <text font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#ffffff">
-    <textPath href="#botArcBAUN" startOffset="50%" text-anchor="middle">★ 1992 ★</textPath>
-  </text>
-  <path d="M 32 55 Q 50 40 68 55 Q 50 62 32 55 Z" fill="#ffffff"/>
-  <circle cx="50" cy="42" r="5" fill="#ffffff"/>
-  <path d="M 36 60 Q 50 68 64 60" stroke="#ffffff" stroke-width="2" fill="none"/>
+BAUN_LOGO_SVG = '''<svg width="70" height="70" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="46" fill="#0f7b88" />
+  <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-width="2" />
+  <path d="M 30 55 Q 50 42 70 55 Q 50 64 30 55 Z" fill="#ffffff"/>
+  <circle cx="50" cy="40" r="6" fill="#ffffff"/>
+  <path d="M 35 62 Q 50 70 65 62" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+  <polygon points="50,15 53,22 60,22 55,26 57,33 50,29 43,33 45,26 40,22 47,22" fill="#ffffff" />
 </svg>'''
 
 
-NEF_LOGO_SVG = '''<svg width="75" height="75" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="50" cy="50" r="48" fill="none" stroke="#b84c7d" stroke-width="3"/>
-  <circle cx="50" cy="50" r="44" fill="#b84c7d"/>
-  <circle cx="50" cy="50" r="32" fill="#ffffff"/>
-  <circle cx="50" cy="50" r="30" fill="#0f7b88"/>
-  <path id="topArcNEF" fill="none" d="M 10 50 A 40 40 0 1 1 90 50" />
-  <text font-family="Arial, sans-serif" font-size="6.2" font-weight="bold" fill="#ffffff">
-    <textPath href="#topArcNEF" startOffset="50%" text-anchor="middle">NECATİBEY EĞİTİM FAKÜLTESİ</textPath>
-  </text>
-  <path id="botArcNEF" fill="none" d="M 88 50 A 38 38 0 0 1 12 50" />
-  <text font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#ffffff">
-    <textPath href="#botArcNEF" startOffset="50%" text-anchor="middle">★ 1910 ★</textPath>
-  </text>
-  <path d="M 35 56 C 42 50, 48 53, 50 56 C 52 53, 58 50, 65 56 L 65 44 C 58 40, 52 42, 50 45 C 48 42, 42 40, 35 44 Z" fill="#ffffff"/>
-  <circle cx="50" cy="38" r="4" fill="#ffffff"/>
+NEF_LOGO_SVG = '''<svg width="70" height="70" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="46" fill="#b84c7d" />
+  <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-width="2" />
+  <path d="M 30 55 Q 50 42 70 55 Q 50 64 30 55 Z" fill="#ffffff"/>
+  <circle cx="50" cy="40" r="6" fill="#ffffff"/>
+  <path d="M 35 62 Q 50 70 65 62" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+  <polygon points="50,15 53,22 60,22 55,26 57,33 50,29 43,33 45,26 40,22 47,22" fill="#ffffff" />
 </svg>'''
 
 
@@ -58,10 +41,10 @@ def _make_nef_header_html():
 <table width="100%" style="border-collapse:collapse; font-family:Arial, sans-serif; font-size:9.5pt; color:#000; margin-top:6px; line-height:1.5;">
 <tr>
 <td style="text-align:left;">
-<strong>Ders Kodu ve Adı:</strong> <span style="text-decoration:underline; font-weight:bold;">{{course_code}} {{course}}</span>
+<strong>Ders Kodu ve Adı:</strong> <span style="font-weight:bold;">{{course_code}} {{course}}</span>
 </td>
 <td style="text-align:right;">
-<strong>Ders Sorumlusu:</strong> <span style="text-decoration:underline; font-weight:bold;">{{teacher_name}}</span>
+<strong>Ders Sorumlusu:</strong> <span style="font-weight:bold;">{{teacher_name}}</span>
 </td>
 </tr>
 <tr>

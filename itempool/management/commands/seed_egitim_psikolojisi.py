@@ -343,7 +343,8 @@ class Command(BaseCommand):
                 )
         inst, _ = ItemInstance.objects.get_or_create(pool=pool, item=item,
                                                       defaults=dict(added_by=user))
-        inst.learning_outcomes.set(outcomes)
+        inst.learning_outcome = outcomes[0] if outcomes else None
+        inst.save()
         return inst
 
     def _tf(self, user, pool, outcomes, stem, correct_is_true):
@@ -360,7 +361,8 @@ class Command(BaseCommand):
                                       is_correct=not correct_is_true, order=1)
         inst, _ = ItemInstance.objects.get_or_create(pool=pool, item=item,
                                                       defaults=dict(added_by=user))
-        inst.learning_outcomes.set(outcomes)
+        inst.learning_outcome = outcomes[0] if outcomes else None
+        inst.save()
         return inst
 
     def _short(self, user, pool, outcomes, stem, expected_answer):
@@ -372,7 +374,8 @@ class Command(BaseCommand):
         )
         inst, _ = ItemInstance.objects.get_or_create(pool=pool, item=item,
                                                       defaults=dict(added_by=user))
-        inst.learning_outcomes.set(outcomes)
+        inst.learning_outcome = outcomes[0] if outcomes else None
+        inst.save()
         return inst
 
     def _open(self, user, pool, outcomes, stem, scoring_rubric):
@@ -384,5 +387,6 @@ class Command(BaseCommand):
         )
         inst, _ = ItemInstance.objects.get_or_create(pool=pool, item=item,
                                                       defaults=dict(added_by=user))
-        inst.learning_outcomes.set(outcomes)
+        inst.learning_outcome = outcomes[0] if outcomes else None
+        inst.save()
         return inst

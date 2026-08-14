@@ -95,8 +95,9 @@ def generate_exam_docx(test_form, template: "ExamTemplate", with_answer_key: boo
 
 
     form_items = test_form.form_items.select_related(
-        'item_instance__item'
-    ).prefetch_related('item_instance__item__choices', 'item_instance__learning_outcomes').order_by('order')
+        'item_instance__item',
+        'item_instance__learning_outcome'
+    ).prefetch_related('item_instance__item__choices').order_by('order')
 
     # 3. Öğrenci Bilgi Kutusu
     if not with_answer_key and template.show_student_info_box:
@@ -130,10 +131,9 @@ def generate_exam_docx(test_form, template: "ExamTemplate", with_answer_key: boo
                 run_pts.font.size = Pt(8)
                 
             # Kazanımlar
-            outcomes = fi.item_instance.learning_outcomes.all()
-            if outcomes:
-                outcome_str = ", ".join([o.code for o in outcomes])
-                run_outcomes = p_stem.add_run(f" ({outcome_str})")
+            outcome = fi.item_instance.learning_outcome
+            if outcome:
+                run_outcomes = p_stem.add_run(f" ({outcome.code})")
                 run_outcomes.italic = True
                 run_outcomes.font.size = Pt(8)
             

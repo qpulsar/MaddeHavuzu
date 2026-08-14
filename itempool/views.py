@@ -17,7 +17,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from .mixins import PoolAccessMixin
 from .forms import (
     ItemPoolForm, LearningOutcomeForm, ItemForm, ItemChoiceFormSet, TestFormForm, BlueprintForm,
-    CourseForm, CourseSpecTableForm, TestFormCreateForm, ExamApplicationForm
+    CourseForm, CourseSpecTableForm, TestFormCreateForm, ExamApplicationForm, ItemDetailEditForm
 )
 from .services.import_docx import DocxImportService
 from .services.llm_client import get_llm_client, parse_json_from_llm
@@ -89,7 +89,7 @@ class ItemPoolDetailView(PoolAccessMixin, DetailView):
         context['outcomes'] = self.object.outcomes.filter(is_active=True).order_by('code', 'id')
         
         # Havuzdaki maddeler (Pagination + Select Related)
-        items_qs = self.object.item_instances.select_related('item').prefetch_related('learning_outcomes').all()
+        items_qs = self.object.item_instances.select_related('item', 'learning_outcome').all()
         
         paginator = Paginator(items_qs, 20)
         page_number = self.request.GET.get('page')
@@ -207,7 +207,8 @@ def item_create(request, pool_id):
                 if outcome_id:
                     outcome = LearningOutcome.objects.filter(id=outcome_id, pool=pool).first()
                     if outcome:
-                        item_instance.learning_outcomes.add(outcome)
+                        item_instance.learning_outcome = outcome
+                        item_instance.save()
 
                 # Log kaydı
                 ItemAuditLog.objects.create(
@@ -251,7 +252,7 @@ def item_preview_modal(request, pk):
     pk: Item.id
     """
     item = get_object_or_404(
-        Item.objects.prefetch_related('choices', 'instances__learning_outcomes', 'instances__pool'),
+        Item.objects.prefetch_related('choices', 'instances__learning_outcome', 'instances__pool'),
         pk=pk
     )
     instance = item.instances.first()
@@ -362,7 +363,7 @@ def import_commit(request, batch_id):
             
         stem = request.POST.get(f'stem_{draft.id}', draft.stem)
         correct_answer = request.POST.get(f'correct_{draft.id}', draft.correct_answer)
-        outcome_ids = request.POST.getlist(f'outcomes_{draft.id}')
+        outcome_id = request.POST.get(f'outcome_{draft.id}')
         
         # Gerçek Item oluştur
         item = Item.objects.create(
@@ -389,10 +390,12 @@ def import_commit(request, batch_id):
             added_by=request.user
         )
         
-        # Öğrenme çıktılarını ekle
-        if outcome_ids:
-            outcomes = LearningOutcome.objects.filter(id__in=outcome_ids)
-            instance.learning_outcomes.set(outcomes)
+        # Öğrenme çıktısını ekle
+        if outcome_id:
+            outcome = LearningOutcome.objects.filter(id=outcome_id).first()
+            if outcome:
+                instance.learning_outcome = outcome
+                instance.save()
         
         draft.status = DraftItem.Status.APPROVED
         draft.save()
@@ -458,7 +461,7 @@ def item_suggest_outcomes(request, pk):
 def pool_bulk_suggest_outcomes(request, pk):
     pool = get_object_or_404(ItemPool, pk=pk)
     # Öğrenme çıktısı atanmamış instance'lar
-    instances = pool.item_instances.filter(learning_outcomes__isnull=True).distinct()
+    instances = pool.item_instances.filter(learning_outcome__isnull=True).distinct()
     
     if not instances.exists():
         messages.info(request, "Tüm maddelere zaten öğrenme çıktısı atanmış.")
@@ -507,7 +510,8 @@ def outcome_suggestion_accept(request, pk):
     
     # Maddenin tüm havuz instance'larına öğrenme çıktısını ekle
     for instance in suggestion.item.instances.all():
-        instance.learning_outcomes.add(suggestion.learning_outcome)
+        instance.learning_outcome = suggestion.learning_outcome
+        instance.save()
         
     messages.success(request, f"'{suggestion.learning_outcome.code}' çıktısı maddeye başarıyla atandı.")
     referer = request.META.get('HTTP_REFERER')
@@ -534,9 +538,10 @@ def item_assign_outcome(request, pk, outcome_id):
     item = get_object_or_404(Item, pk=pk)
     outcome = get_object_or_404(LearningOutcome, pk=outcome_id)
     
-    # Tüm instance'lar için güncelle (M2M ekle)
+    # Tüm instance'lar için güncelle (ForeignKey ata)
     for instance in item.instances.all():
-        instance.learning_outcomes.add(outcome)
+        instance.learning_outcome = outcome
+        instance.save()
     
     # Öneriyi kabul et
     OutcomeSuggestion.objects.filter(item=item, learning_outcome=outcome).update(status=OutcomeSuggestion.Status.ACCEPTED)
@@ -593,9 +598,9 @@ def item_generate_ai(request, pk):
                     stem=data.get('stem'),
                     choices_json=data.get('choices'),
                     correct_answer=data.get('correct_answer'),
+                    learning_outcome=outcome,
                     status=DraftItem.Status.PENDING
                 )
-                draft.learning_outcomes.add(outcome)
             
             messages.success(request, f'AI tarafından {len(data_list)} yeni soru taslağı oluşturuldu.')
             return redirect('itempool:import_preview', batch_id=batch.id)
@@ -773,11 +778,9 @@ def item_clone_variation(request, pk):
             stem=data.get('stem', 'Soru kökü alınamadı'),
             choices_json=data.get('choices', []),
             correct_answer=data.get('correct_answer'),
+            learning_outcome=item_instance.learning_outcome,
             status=DraftItem.Status.PENDING
         )
-        # Mevcut kazanımları kopyala
-        for outcome in item_instance.learning_outcomes.all():
-            draft.learning_outcomes.add(outcome)
             
         messages.success(request, 'AI tarafından sorunun bir varyasyonu oluşturuldu. Önizleyip onaylayabilirsiniz.')
         return redirect('itempool:import_preview', batch_id=batch.id)
@@ -852,9 +855,10 @@ def item_detail_save(request, pk, section):
                     'instance': instance, 'section': section
                 })
         elif section == 'outcomes':
-            outcome_ids = request.POST.getlist('outcomes')
-            outcomes = LearningOutcome.objects.filter(id__in=outcome_ids)
-            instance.learning_outcomes.set(outcomes)
+            outcome_id = request.POST.get('outcome')
+            outcome = LearningOutcome.objects.filter(id=outcome_id).first() if outcome_id else None
+            instance.learning_outcome = outcome
+            instance.save()
             return render(request, 'itempool/partials/item_detail_card.html', {
                 'instance': instance, 'section': section
             })
@@ -1040,7 +1044,7 @@ def _generate_items_from_blueprint(test_form, blueprint):
         for oc_id, count in distribution.items():
             items = ItemInstance.objects.filter(
                 pool=blueprint.pool, 
-                learning_outcomes__id=oc_id
+                learning_outcome__id=oc_id
             ).exclude(id__in=used_ids).order_by('?')[:count]
             
             for inst in items:
@@ -1509,7 +1513,7 @@ def _auto_select_items(test_form, course):
                         if oc_id:
                             qs = list(
                                 base_qs.filter(
-                                    learning_outcomes__id=oc_id,
+                                    learning_outcome__id=oc_id,
                                     item__difficulty_intended__in=allowed_difficulties,
                                 ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
                             )
@@ -1528,7 +1532,7 @@ def _auto_select_items(test_form, course):
                         n_cell_q = max(1, round((cell.weight / 100.0) * total_questions))
                         qs = list(
                             base_qs.filter(
-                                learning_outcomes=cell.outcome,
+                                learning_outcome=cell.outcome,
                                 item__difficulty_intended__in=allowed_difficulties,
                             ).exclude(id__in=excluded_instance_ids).exclude(id__in=selected_instances)
                         )

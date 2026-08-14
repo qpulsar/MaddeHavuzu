@@ -166,11 +166,8 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <p class="mb-0 small text-muted">
                                         Zorluk: <span class="badge bg-light text-dark">{{ inst.item.get_difficulty_intended_display }}</span>
-                                        {% if inst.learning_outcomes.exists %}
-                                        | Çıktı:
-                                        {% for oc in inst.learning_outcomes.all %}
-                                            <span class="badge bg-info text-dark">{{ oc.code }}</span>
-                                        {% endfor %}
+                                        {% if inst.learning_outcome %}
+                                        | Çıktı: <span class="badge bg-info text-dark">{{ inst.learning_outcome.code }}</span>
                                         {% endif %}
                                         {% with latest_analysis=inst.analysis_results.first %}
                                             {% if latest_analysis %}

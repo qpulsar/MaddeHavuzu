@@ -91,8 +91,9 @@ def generate_exam_pdf(test_form, template: "ExamTemplate", with_answer_key: bool
     }
 
     form_items = test_form.form_items.select_related(
-        'item_instance__item'
-    ).prefetch_related('item_instance__item__choices', 'item_instance__learning_outcomes').order_by('order')
+        'item_instance__item',
+        'item_instance__learning_outcome'
+    ).prefetch_related('item_instance__item__choices').order_by('order')
 
     # Her soru için layout sınıfını hesapla
     for fi in form_items:

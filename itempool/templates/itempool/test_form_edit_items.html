@@ -41,9 +41,9 @@
                                 </div>
                                 <div class="fw-normal mb-2">{{ inst.item.stem|truncatewords:20 }}</div>
                                 <div>
-                                    {% for oc in inst.learning_outcomes.all %}
-                                    <span class="badge bg-info text-dark x-small">{{ oc.code }}</span>
-                                    {% endfor %}
+                                    {% if inst.learning_outcome %}
+                                    <span class="badge bg-info text-dark x-small">{{ inst.learning_outcome.code }}</span>
+                                    {% endif %}
                                 </div>
                             </div>
                             <button class="btn btn-sm btn-outline-success ms-3" 

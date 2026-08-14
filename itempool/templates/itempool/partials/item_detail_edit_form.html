@@ -10,6 +10,13 @@
             </div>
         </div>
         <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label fw-bold mb-0">Madde Kökü (Soru)</label>
+                <button type="button" class="btn btn-xs btn-outline-secondary" onclick="document.getElementById('stemDetailImageInput').click();">
+                    <i class="bi bi-image"></i> Görsel / Grafik Ekle
+                </button>
+                <input type="file" id="stemDetailImageInput" class="d-none" accept="image/*" onchange="uploadDetailStemImage(this)">
+            </div>
             {{ form.stem }}
             <div style="display:none">{{ form.difficulty_intended }}{{ form.status }}</div>
         </div>
@@ -42,22 +49,52 @@
     {% elif section == 'outcomes' %}
     <div class="card shadow-sm mb-4 border-warning" id="outcomes-card">
         <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-pencil-square"></i> Düzenle: Öğrenme Çıktıları</span>
+            <span><i class="bi bi-pencil-square"></i> Düzenle: Öğrenme Çıktısı</span>
             <div>
                 <button type="submit" class="btn btn-sm btn-success py-0 me-1">Kaydet</button>
                 <button type="button" class="btn btn-sm btn-secondary py-0" hx-get="{% url 'itempool:item_detail_save' instance.id 'outcomes' %}" hx-target="#outcomes-card" hx-swap="outerHTML">İptal</button>
             </div>
         </div>
         <div class="card-body">
-            <select name="outcomes" class="form-select" multiple size="8">
+            <select name="outcome" class="form-select">
+                <option value="">--- Seçiniz ---</option>
                 {% for outcome in outcomes %}
-                <option value="{{ outcome.id }}" {% if outcome in instance.learning_outcomes.all %}selected{% endif %}>
+                <option value="{{ outcome.id }}" {% if outcome == instance.learning_outcome %}selected{% endif %}>
                     {{ outcome.code }}: {{ outcome.description|truncatechars:100 }}
                 </option>
                 {% endfor %}
             </select>
-            <div class="form-text small">Çoklu seçim için Ctrl/Cmd tuşunu kullanın.</div>
         </div>
     </div>
     {% endif %}
 </form>
+
+<script>
+function uploadDetailStemImage(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch('{% url "itempool:item_image_upload" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.url) {
+            const stemTextarea = document.querySelector('#stem-card textarea[name="stem"]');
+            if (stemTextarea) {
+                const imgTag = `<img src="${data.url}" class="img-fluid rounded my-2" alt="Görsel">`;
+                stemTextarea.value = stemTextarea.value ? stemTextarea.value + '\n' + imgTag : imgTag;
+            }
+        } else {
+            alert('Görsel yüklenemedi: ' + (data.error || 'Bilinmeyen hata'));
+        }
+    })
+    .catch(err => {
+        alert('Görsel yüklenirken bir ağ hatası oluştu.');
+    });
+}
+</script>

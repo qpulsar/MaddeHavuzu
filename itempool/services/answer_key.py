@@ -61,11 +61,12 @@ def get_outcome_performance(upload_session) -> list[dict]:
     outcome_questions: dict[int, list[int]] = {}  # outcome_id → [soru order listesi]
 
     form_items = test_form.form_items.select_related(
-        'item_instance'
-    ).prefetch_related('item_instance__learning_outcomes').order_by('order')
+        'item_instance__learning_outcome'
+    ).order_by('order')
 
     for fi in form_items:
-        for outcome in fi.item_instance.learning_outcomes.all():
+        outcome = fi.item_instance.learning_outcome
+        if outcome:
             outcome_questions.setdefault(outcome.id, []).append(fi.order)
 
     if not outcome_questions:
