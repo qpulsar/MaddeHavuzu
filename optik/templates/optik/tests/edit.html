@@ -1,0 +1,38 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+{% block optik_title %}Test Bilgileri - {{ test.course_code }}{% endblock %}
+{% block optik_css %}<link rel="stylesheet" href="{% static 'css/optik/wizard_pages.css' %}">{% endblock %}
+{% block optik_crumbs %}<li class="breadcrumb-item active" aria-current="page">{{ test.course_code }} - {{ test.exam_type }}</li>{% endblock %}
+
+{% block optik_content %}
+<h1 class="h3 fw-bold mb-3">Test Bilgileri</h1>
+
+{% if is_approved %}
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="alert">
+    <div><i class="bi bi-lock-fill me-1"></i><strong>Onaylı test düzenlenemez.</strong> Önce onayı kaldırın.</div>
+    <form method="post" action="{% url 'optik:test_remove_approval' test_id %}"
+          onsubmit="return confirm('Test onayını kaldırmak istediğinize emin misiniz?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-unlock me-1"></i>Onayı Kaldır</button>
+    </form>
+</div>
+{% else %}
+<div class="alert alert-warning" role="alert">
+    <i class="bi bi-exclamation-triangle me-1"></i><strong>Dikkat:</strong> Test bilgilerini değiştirmek mevcut form sonuçlarını etkileyebilir.
+</div>
+{% endif %}
+
+<form method="post" action="{% url 'optik:test_edit' test_id %}" id="testForm" novalidate>
+    {% csrf_token %}
+    <fieldset {% if is_approved %}disabled{% endif %}>
+        {% include "optik/tests/_test_form.html" %}
+        {% if not is_approved %}
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Kaydet</button>
+        </div>
+        {% endif %}
+    </fieldset>
+</form>
+{% endblock %}
+
+{% block optik_js %}{% if not is_approved %}{% include "optik/tests/_test_form_js.html" %}{% endif %}{% endblock %}

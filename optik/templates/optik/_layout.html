@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static %}
+{# Optik Okuma sayfalarının ortak iskeleti. Alt şablonlar: optik_title, optik_crumbs, optik_content, optik_js #}
+
+{% block title %}{% block optik_title %}Optik Okuma{% endblock %} - Madde Havuzu{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/optik/optik.css' %}">
+{% block optik_css %}{% endblock %}
+{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Ana Sayfa</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'optik:index' %}" class="text-decoration-none">Optik Okuma</a></li>
+            {% block optik_crumbs %}{% endblock %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="optik-page pt-3">
+    {% if wizard_steps %}{% include "optik/_stepper.html" %}{% endif %}
+    {% block optik_content %}{% endblock %}
+    {% if wizard_steps %}{% include "optik/_wizard_nav.html" %}{% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% block optik_js %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,2 @@
+{# Kayıt/puanlama sayfaları için ortak breadcrumb: test → (isteğe bağlı) sayfa #}
+<li class="breadcrumb-item"><a href="{% url 'optik:test_detail' test_id %}" class="text-decoration-none">{{ course_code|default:test_id }}</a></li>

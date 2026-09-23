@@ -1,0 +1,7 @@
+{% extends "kopya/_layout.html" %}
+{% block kopya_title %}Hata{% endblock %}
+{% block kopya_crumbs %}<li class="breadcrumb-item active">Hata</li>{% endblock %}
+{% block kopya_content %}
+<div class="ch-warn"><i class="bi bi-exclamation-triangle-fill me-1"></i><b>Hata:</b> {{ message }}</div>
+<a href="{{ back_url }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>{{ back_label }}</a>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "kopya/_layout.html" %}
+{% block kopya_title %}{{ course_code }} — Kopya Analizi{% endblock %}
+{% block kopya_crumbs %}<li class="breadcrumb-item active">{{ course_code|default:source_id }}</li>{% endblock %}
+{% block kopya_content %}
+{% if warnings %}
+<div class="ch-warn"><b>Uyarı:</b>
+    <ul class="mb-0 mt-1">{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="ch-note">
+    Bu göstergeler <b>istatistiksel şüphe işaretidir, kopya kanıtı değildir.</b>
+    Rakamlar hocanın incelemesine yardımcı olur; disiplin kararı için yeterli değildir.
+    α = {{ alpha_disp }}, çoklu-karşılaştırma düzeltmesi: Benjamini-Hochberg (FDR).
+</div>
+
+<div class="ch-header">
+    <h1>Kopya Analizi — {{ course_code }} — {{ course_name }}</h1>
+    <div class="sub">
+        {{ exam_type }} · Kaynak: <code>{{ source_id }}</code>
+        · Sürüm {{ module_version }} · Hesaplama {{ computed_at }}
+    </div>
+</div>
+
+<div class="ch-stats">
+    <div class="ch-stat"><div class="ch-stat-val">{{ stats.n_valid }}</div><div class="ch-stat-lbl">Öğrenci</div></div>
+    <div class="ch-stat"><div class="ch-stat-val">{{ stats.n_items }}</div><div class="ch-stat-lbl">Madde</div></div>
+    <div class="ch-stat"><div class="ch-stat-val">{{ stats.n_booklets }}</div><div class="ch-stat-lbl">Kitapçık</div></div>
+    <div class="ch-stat"><div class="ch-stat-val">{{ stats.n_pairs }}</div><div class="ch-stat-lbl">Yönlü Çift</div></div>
+</div>
+
+{% if sensitivity_message %}
+<div class="ch-note"><i class="bi bi-bar-chart me-1"></i>{{ sensitivity_message }}</div>
+{% endif %}
+
+{% if seating %}
+{% if seating.active %}
+<div class="ch-note ch-note--green">
+    <i class="bi bi-geo-alt me-1"></i><b>Oturma filtresi aktif</b>: kapsam %{{ seating.coverage_pct }}
+    ({{ seating.n_with_seat }}/{{ seating.n_total }} öğrenci), {{ seating.n_halls }} salon.
+    Moore komşuluğu (8 komşu) uygulandı.
+    {% if seating.n_collisions %}
+    <div class="ch-text-warning mt-1"><i class="bi bi-exclamation-triangle me-1"></i>{{ seating.n_collisions }} koltuk çakışması tespit edildi
+        (aynı salonda aynı koltuk). İlgili çiftler birincil katmana alındı. Ör.: {{ seating.collision_detail }}</div>
+    {% endif %}
+    {% if seating.n_parse_errors %}
+    <div class="ch-text-warning mt-1"><i class="bi bi-exclamation-triangle me-1"></i>{{ seating.n_parse_errors }} oturma kodu okunamadı
+        (format hatası). Ör.: {{ seating.parse_error_detail }}</div>
+    {% endif %}
+</div>
+{% else %}
+<div class="ch-note ch-note--gray">
+    <i class="bi bi-geo-alt me-1"></i><b>Oturma filtresi devre dışı</b>: {{ seating.reason }}. Tüm çiftler birincil katmandadır.
+</div>
+{% endif %}
+{% endif %}
+
+{% if top %}
+<div class="ch-panel ch-panel--red" id="top-suspicious">
+    <h2><i class="bi bi-search me-1"></i>En Şüpheli {{ top.top_n }} Çift — İnceleme Önceliği
+        <span class="ch-count">({{ top.m_couples }} ikili içinden)</span></h2>
+    <div class="mb-2">
+        {% for b in top.buttons %}
+        <a href="{{ b.url }}" class="btn btn-sm {% if b.active %}btn-primary{% else %}btn-outline-secondary{% endif %} me-1">Top {{ b.n }}</a>
+        {% endfor %}
+    </div>
+    <p class="ch-muted small mb-2">
+        Sıralama: <b>5 indeksin ham p-değerlerinin minimumu</b>. Hangi indeks minimumu verdi rozetle gösterilir.
+        ★ FDR: aynı ikili için BH-FDR düzeltilmiş p ≤ α (nadir). <b>Karar aracı değildir</b> — inceleme öncelik listesidir.
+    </p>
+    <div class="table-responsive">
+    <table class="ch-pairs">
+        <thead><tr><th>Şüpheli</th><th>Kaynak</th><th class="text-center">min p</th><th class="text-center">İndeks</th><th class="text-center">Ortak Y.</th></tr></thead>
+        <tbody>
+        {% for r in top.rows %}
+        <tr>
+            <td>{% if r.url %}<a href="{{ r.url }}">{{ r.copier }}</a>{% else %}{{ r.copier }}{% endif %}{% if r.fdr_hit %}<span class="ch-badge ch-badge--red ms-1">★ FDR</span>{% endif %}</td>
+            <td>{% if r.url %}<a href="{{ r.url }}">{{ r.source }}</a>{% else %}{{ r.source }}{% endif %}</td>
+            <td class="text-center ch-mono">{{ r.min_p }}</td>
+            <td class="text-center"><span class="ch-badge ch-badge--indigo">{{ r.driving }}</span></td>
+            <td class="text-center">{{ r.common_wrong }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% if top.chance %}{% with c=top.chance %}
+    <div class="ch-chance ch-chance--{{ c.tone }}">
+        <b>Şans referansı:</b> Bu sınavda gözlenen en düşük p-değeri <b>{{ c.observed }}</b>.
+        Hiç kopya olmayan bir sınıfta bile <b>{{ c.m }} karşılaştırmada</b> en düşük p-değerinin
+        <b>~{{ c.expected }}</b> civarında olması beklenir (bağımsız test varsayımı: <code>E[min] ≈ 1/(m+1)</code>).
+        Yorum: {{ c.interp_lead }}{% if c.interp_bold %}<b>{{ c.interp_bold }}</b>{% endif %}{{ c.interp_tail }}.
+        <b>Listedeki sıralama göreli önceliği gösterir, kanıt gücünü değil.</b>
+        <div class="ch-caveat">
+            <i class="bi bi-exclamation-triangle me-1"></i>Yaklaşım varsayımları: (i) p-değerleri uniform, (ii) testler bağımsız.
+            Bu sınav için ikisi de tam sağlanmıyor — indeksler uniformity baseline'da muhafazakâr
+            (empirik α .0002–.0028 &lt; nominal .01), ve aynı öğrenciyi paylaşan çiftler bağımlı.
+            İkisi de beklenen minimumu yukarı kaydırır, dolayısıyla referansımız <b>olduğundan katı</b>;
+            gözlenen değerin "beklentinin altında" görünmesi kısmen bunun sonucu olabilir.
+        </div>
+    </div>
+    {% endwith %}{% endif %}
+</div>
+{% endif %}
+
+<div class="ch-panel" id="primary-table">
+    <h2>Birincil — Komşu Çiftler
+        <span class="ch-count">(karar katmanı — {{ primary.n_total }} çift, tabloda ilk {{ primary.limit }})</span></h2>
+    <p class="ch-muted small mb-2">
+        Sütunlarda <b>ham p-değerleri</b> (p_raw). <span class="ch-p hit">Kırmızı</span> = BH-FDR düzeltilmiş
+        p ≤ α ({{ alpha_disp }}). Düzeltme <b>{{ primary.n_couples }} öğrenci ikilisi</b> üzerinden uygulanmıştır
+        (aynı ikilinin iki yönü tek test sayılır; SIM-17). Hücre üzerine gelince düzeltilmiş değer görünür.
+    </p>
+    <div class="table-responsive">
+    <table class="ch-pairs">
+        <thead><tr>
+            <th>Şüpheli</th><th>Kaynak</th><th class="text-center">Ortak Y.</th>
+            {% for h in primary.headers %}<th class="text-center">{{ h }}</th>{% endfor %}
+            <th class="text-center">Gösterge</th>
+        </tr></thead>
+        <tbody>
+        {% for r in primary.rows %}
+        <tr>
+            <td>{% if r.url %}<a href="{{ r.url }}">{{ r.copier }}</a>{% else %}{{ r.copier }}{% endif %}{% if r.is_neighbor %}<span class="ch-badge ch-badge--blue ms-1">komşu</span>{% endif %}</td>
+            <td>{% if r.url %}<a href="{{ r.url }}">{{ r.source }}</a>{% else %}{{ r.source }}{% endif %}</td>
+            <td class="text-center">{{ r.common_wrong }}</td>
+            {% for c in r.cells %}<td class="text-center"><span class="ch-p {{ c.cls }}"{% if c.title %} title="{{ c.title }}"{% endif %}>{{ c.text }}</span></td>{% endfor %}
+            <td class="text-center">{% if r.flags %}<span class="ch-flags">{{ r.flags }}</span>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="10" class="ch-muted text-center">Birincil katmanda çift yok.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% if secondary %}
+<div class="ch-panel ch-panel--amber" id="secondary-table">
+    <h2>İkincil — Komşuluk Dışı Dikkat Çekenler
+        <span class="ch-count">({{ secondary.n_total }} çift, tabloda ilk {{ secondary.limit }})</span></h2>
+    <p class="ch-callout-amber">
+        Bu çiftler için <b>istatistiksel karar üretilmemiştir</b>. p-değeri yalnız <b>sıralama için</b> gösteriliyor —
+        <b>karar iddiası yok</b>. FDR düzeltmesi ve gösterge sayımı <b>uygulanmıyor</b>. Sıralama K1 ham p-değerine
+        göre artan (ham sayım yetenekle konfound — yetenek-normalize edilmiş sinyal daha doğru).
+    </p>
+    <div class="table-responsive">
+    <table class="ch-pairs">
+        <thead><tr>
+            <th>Şüpheli</th><th>Kaynak</th><th class="text-center">K1 p (yalnız sıralama)</th>
+            <th class="text-center">Ortak Y.</th><th class="text-center">Ortak Boş</th><th class="text-center">En Uzun Blok</th>
+        </tr></thead>
+        <tbody>
+        {% for r in secondary.rows %}
+        <tr>
+            <td>{% if r.url %}<a href="{{ r.url }}">{{ r.copier }}</a>{% else %}{{ r.copier }}{% endif %}{% if r.extreme %}<span class="ch-badge ch-badge--amber ms-1">üst %1</span>{% endif %}</td>
+            <td>{% if r.url %}<a href="{{ r.url }}">{{ r.source }}</a>{% else %}{{ r.source }}{% endif %}</td>
+            <td class="text-center ch-mono">{{ r.p_disp }}</td>
+            <td class="text-center">{{ r.common_wrong }}</td>
+            <td class="text-center">{{ r.common_blank }}</td>
+            <td class="text-center">{{ r.run }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

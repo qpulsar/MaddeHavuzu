@@ -1,0 +1,81 @@
+{% extends "kopya/_layout.html" %}
+{% block kopya_crumbs %}<li class="breadcrumb-item active">Sınavlar</li>{% endblock %}
+{% block kopya_content %}
+<div class="ch-header">
+    <h1><i class="bi bi-shield-exclamation me-2"></i>Kopya Analizi</h1>
+    {% if n_shown %}
+    <p class="sub">{{ n_shown }} sınav batch'i, {{ groups|length }} yıl/dönem grubunda. Duyarlılık göstergesi (K1 tespit gücü) panel sayfasında görünür.</p>
+    {% elif uploads %}
+    <p class="sub">Optik batch'i yok. {{ uploads|length }} Excel yüklemesi listelendi.</p>
+    {% else %}
+    <p class="sub">Henüz analiz edilebilir sınav batch'iniz yok.</p>
+    {% endif %}
+</div>
+
+{% if not n_shown and not uploads %}
+<div class="ch-note">
+    İki seçenek: (1) <a href="{% url 'optik:index' %}">Optik Okuma</a> modülünden bir sınav oluşturup
+    optik formları okutun ve puanlayın, sonra buradan analiz edin.
+    (2) <a href="{% url 'kopya:excel_upload' %}">Excel dosyasıyla yükleyin</a> — yanıtları, oturmayı ve
+    anahtarı .xlsx olarak sağlayın.
+</div>
+{% endif %}
+
+<div class="mb-3">
+    <a href="{% url 'kopya:excel_upload' %}" class="btn btn-success"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel'den Yükle{% if n_shown or uploads %} ve Analiz Et{% endif %}</a>
+</div>
+
+{% for g in groups %}
+<div class="ch-panel">
+    <h2><i class="bi bi-calendar3 me-1"></i>{{ g.term }} <span class="ch-count">({{ g.rows|length }} batch)</span></h2>
+    <div class="table-responsive">
+    <table class="ch-pairs">
+        <thead><tr>
+            <th>Ders</th><th>Sınav Türü</th><th>Batch</th><th>Öğrenci</th><th>Tarih</th>
+            {% if is_admin %}<th>Sahip</th>{% endif %}<th></th>
+        </tr></thead>
+        <tbody>
+        {% for r in g.rows %}
+        <tr>
+            <td><b>{{ r.course_code }}</b>{% if r.course_name %} <span class="ch-muted">{{ r.course_name }}</span>{% endif %}</td>
+            <td>{{ r.exam_type|default:"—" }}</td>
+            <td>{% if r.scored %}<a href="{% url 'kopya:panel' r.batch_id %}">{{ r.name }}</a>{% else %}{{ r.name }}{% endif %}</td>
+            <td><span class="ch-gate">{{ r.n_students }} öğrenci</span></td>
+            <td>{{ r.date }}</td>
+            {% if is_admin %}<td>{{ r.owner }}</td>{% endif %}
+            <td class="text-end">{% url 'kopya:panel' r.batch_id as burl %}{% include "kopya/_state_button.html" with state=r.state url=burl %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% if g.n_unscored %}
+    <p class="ch-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>{{ g.n_unscored }} batch henüz puanlanmadığı için analiz edilemez. Kopya analizi puanlanmış cevaplar üzerinden yapılır; önce <a href="{% url 'optik:index' %}">Optik Okuma</a> modülünde puanlamayı tamamlayın.</p>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% if uploads %}
+<div class="ch-panel ch-panel--green">
+    <h2><i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel Yüklemeleri <span class="ch-count">({{ uploads|length }} dosya)</span></h2>
+    <p class="ch-muted small mb-2">Bu liste optik okuma üzerinden gelmeyen, doğrudan Excel ile yüklenmiş sınav dosyalarını gösterir.
+       Yükleyen ve tarih bilgisi ile sıralıdır (yenisi önce).</p>
+    <div class="table-responsive">
+    <table class="ch-pairs">
+        <thead><tr><th>Dosya</th><th>Yükleyen</th><th>Tarih (UTC)</th><th>Öğrenci</th><th></th></tr></thead>
+        <tbody>
+        {% for u in uploads %}
+        <tr>
+            <td><a href="{% url 'kopya:panel' u.upload_id %}"><b>{{ u.fname }}</b></a></td>
+            <td>{{ u.uploader }}</td>
+            <td>{{ u.date }}</td>
+            <td><span class="ch-gate">{{ u.n_students }} öğrenci</span></td>
+            <td class="text-end">{% url 'kopya:panel' u.upload_id as uurl %}{% include "kopya/_state_button.html" with state=u.state url=uurl open_label="Aç" %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

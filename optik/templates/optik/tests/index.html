@@ -1,0 +1,72 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+{% block optik_title %}Optik Okuma{% endblock %}
+{% block optik_css %}<link rel="stylesheet" href="{% static 'css/optik/wizard_pages.css' %}">{% endblock %}
+
+{% block optik_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="h3 fw-bold mb-0"><i class="bi bi-ui-checks-grid me-2"></i>Optik Okuma</h1>
+    <a href="{% url 'optik:test_new' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Yeni Test</a>
+</div>
+
+{% if is_admin %}
+<form method="get" action="{% url 'optik:index' %}" class="d-flex flex-wrap align-items-center gap-2 mb-4" id="instructorFilterForm">
+    <label for="instructor-select" class="form-label fw-semibold mb-0">Öğretim Elemanı:</label>
+    <select id="instructor-select" name="instructor" class="form-select w-auto" style="min-width:240px">
+        <option value="">Tüm Öğretim Elemanları</option>
+        {% for uid, name in instructor_options %}
+        <option value="{{ uid }}"{% if uid == instructor_filter %} selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+    </select>
+    <noscript><button type="submit" class="btn btn-outline-secondary">Filtrele</button></noscript>
+</form>
+{% endif %}
+
+{% if total_count == 0 %}
+<div class="alert alert-info">
+    <p class="mb-2">Henüz test oluşturulmamış.</p>
+    <a href="{% url 'optik:test_new' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>İlk Testi Oluştur</a>
+</div>
+{% else %}
+{% for group in groups %}
+<h2 class="optik-group-title h5 fw-bold{% if not forloop.first %} mt-4{% endif %}">{{ group.label }}</h2>
+<div class="row g-3">
+    {% for t in group.tests %}
+    <div class="col-12">
+        <div class="card optik-test-card optik-test-card--{{ t.status.key }}">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                    <h3 class="h5 fw-bold mb-1">{{ t.course_code }} - {{ t.exam_type }}</h3>
+                    <span class="badge rounded-pill {{ t.status.css }}">{{ t.status.label }}</span>
+                </div>
+                <p class="fw-semibold mb-1">{{ t.course_name }}</p>
+                <p class="small text-muted mb-3">
+                    Kitapçıklar: {{ t.booklets|default:"-" }} | Oluşturma: {{ t.created_at }}
+                    {% if t.creator %} | Öğretim Elemanı: <strong>{{ t.creator }}</strong>{% endif %}
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'optik:test_edit' t.test_id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-info-circle me-1"></i>Test Bilgileri</a>
+                    <a href="{% url 'optik:answer_key' t.test_id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-key me-1"></i>Madde Bilgileri</a>
+                    <a href="{% url 'optik:upload_forms' t.test_id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-upload me-1"></i>Form Yükle</a>
+                    {% if t.has_batch %}
+                    <a href="{% url 'optik:scoring' t.test_id %}" class="btn btn-sm btn-success"><i class="bi bi-calculator me-1"></i>Puanlama</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block optik_js %}
+<script src="{% static 'js/optik/wizard_pages.js' %}"></script>
+<script>
+(function () {
+    var sel = document.getElementById('instructor-select');
+    if (sel) sel.addEventListener('change', function () { this.form.submit(); });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,127 @@
+/* Optik Okuma — kayıt listesi / düzenleme / puanlama sayfaları.
+   Renkler base.css değişkenlerinden (aydınlık/karanlık tema). */
+
+/* Özet rozetleri */
+.optik-pill {
+    display: inline-block; padding: .5rem 1rem; border-radius: .5rem;
+    font-weight: 600; font-size: .875rem; border: 1px solid transparent;
+}
+.optik-pill--info   { background: rgba(59,130,246,.12); color: #2563eb; border-color: rgba(59,130,246,.25); }
+.optik-pill--ok     { background: rgba(34,197,94,.12);  color: #16a34a; border-color: rgba(34,197,94,.25); }
+.optik-pill--warn   { background: rgba(234,179,8,.15);  color: #a16207; border-color: rgba(234,179,8,.3); }
+.optik-pill--danger { background: rgba(239,68,68,.12);  color: #dc2626; border-color: rgba(239,68,68,.25); }
+.optik-pill--temp   { background: rgba(249,115,22,.12); color: #c2410c; border-color: rgba(249,115,22,.25); }
+[data-theme="dark"] .optik-pill--info   { color: #93c5fd; }
+[data-theme="dark"] .optik-pill--ok     { color: #86efac; }
+[data-theme="dark"] .optik-pill--warn   { color: #fde047; }
+[data-theme="dark"] .optik-pill--danger { color: #fca5a5; }
+[data-theme="dark"] .optik-pill--temp   { color: #fdba74; }
+
+.optik-badge-err  { background: rgba(249,115,22,.15); color: #c2410c; font-weight: 600; }
+.optik-badge-temp { background: rgba(234,179,8,.18); color: #a16207; font-weight: 500; }
+[data-theme="dark"] .optik-badge-err  { color: #fdba74; }
+[data-theme="dark"] .optik-badge-temp { color: #fde047; }
+
+/* Uyarılı satır */
+.optik-row-warn > * { background: rgba(239,68,68,.07) !important; }
+.optik-row-changed > * { background: rgba(234,179,8,.12) !important; }
+
+/* Kaydırmalı tablo kutusu (başlık yapışkan) */
+.optik-scroll-box {
+    max-height: 60vh; overflow-y: auto;
+    border: 1px solid var(--mh-border); border-radius: .5rem;
+}
+.optik-scroll-box--both { overflow: auto; }
+.optik-scroll-box thead th {
+    position: sticky; top: 0; z-index: 3;
+    background: var(--mh-card-bg); color: var(--mh-text-muted);
+    font-size: .8rem; text-transform: uppercase; letter-spacing: .02em;
+    box-shadow: inset 0 -1px 0 var(--mh-border);
+}
+.optik-scores-table { white-space: nowrap; font-size: .85rem; }
+.optik-sticky-col { position: sticky; left: 0; z-index: 2; background: var(--mh-card-bg) !important; }
+.optik-scroll-box thead th.optik-sticky-col { z-index: 4; }
+
+/* Bilgi kartları (kayıt detay) */
+.optik-info-card {
+    background: var(--mh-table-stripe); border: 1px solid var(--mh-border);
+    border-left: 4px solid var(--mh-primary); border-radius: .5rem; padding: .85rem 1rem; height: 100%;
+}
+.optik-info-card__label { font-size: .8rem; color: var(--mh-text-muted); margin-bottom: .2rem; }
+.optik-info-card__value { font-size: 1.2rem; font-weight: 600; color: var(--mh-text-main); word-break: break-all; }
+
+/* Cevap ızgarası (kayıt detay) */
+.optik-answer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: .5rem; }
+.optik-answer-cell {
+    border: 1px solid var(--mh-border); border-radius: .5rem;
+    padding: .5rem .35rem; text-align: center; background: var(--mh-card-bg);
+}
+.optik-cell-filled { background: rgba(59,130,246,.1) !important; }
+.optik-answer-cell__q   { font-size: .72rem; color: var(--mh-text-muted); }
+.optik-answer-cell__ans { font-size: 1.2rem; font-weight: 700; color: var(--mh-text-main); }
+.optik-answer-cell__key { font-size: .68rem; color: #16a34a; font-weight: 500; }
+[data-theme="dark"] .optik-answer-cell__key { color: #86efac; }
+.optik-legend {
+    display: inline-block; width: .9rem; height: .9rem; border-radius: .2rem;
+    border: 1px solid var(--mh-border); vertical-align: -2px;
+}
+
+.optik-image-panel {
+    border: 1px solid var(--mh-border); border-radius: .5rem; padding: 1rem;
+    background: var(--mh-table-stripe); height: 100%;
+}
+.optik-zoomable { cursor: zoom-in; transition: opacity .2s; }
+.optik-zoomable:hover { opacity: .9; }
+
+/* Düzenleme sayfası: ana panel + görüntü kenar çubuğu */
+.optik-edit-layout { display: flex; gap: 1.25rem; align-items: flex-start; }
+.optik-edit-main { flex: 1; min-width: 0; }
+.optik-image-sidebar {
+    width: 400px; flex-shrink: 0; position: sticky; top: 1rem;
+    max-height: calc(100vh - 2rem); overflow-y: auto;
+}
+.optik-image-sidebar.collapsed { width: 64px; overflow: hidden; }
+.optik-image-sidebar.collapsed .optik-sidebar-image,
+.optik-image-sidebar.collapsed .optik-sidebar-title,
+.optik-image-sidebar.collapsed .optik-sidebar-zoom { display: none; }
+.optik-image-sidebar.collapsed [data-sidebar-toggle] i { transform: rotate(180deg); }
+.optik-sidebar-image { width: 100%; }
+@media (max-width: 1000px) { .optik-image-sidebar { display: none; } }
+
+.optik-opt-btn {
+    width: 34px; height: 34px; border: 2px solid var(--mh-border); border-radius: .4rem;
+    background: var(--mh-card-bg); color: var(--mh-text-main); font-weight: 600; font-size: .85rem;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: all .1s; padding: 0;
+}
+.optik-opt-btn:hover { border-color: var(--mh-primary); background: var(--mh-primary-light); color: var(--mh-primary-text); }
+.optik-opt-btn.correct { border-color: #22c55e; }
+.optik-opt-btn.selected { background: var(--mh-primary); border-color: var(--mh-primary); color: #fff; }
+.optik-opt-btn.correct.selected { background: #16a34a; border-color: #16a34a; color: #fff; }
+.optik-opt-empty { color: var(--mh-text-muted); font-size: 1rem; }
+.optik-raw-tag {
+    background: var(--mh-code-bg); color: var(--mh-text-muted);
+    padding: 2px 6px; border-radius: 3px; font-size: .75rem;
+}
+.optik-open-input { width: 76px; }
+
+
+/* Tam ekran görüntü (koyu katman her iki temada da uygundur) */
+.optik-zoom {
+    display: none; position: fixed; inset: 0; z-index: 2000;
+    background: rgba(0,0,0,.92); overflow: auto; padding: 3rem 1rem 1rem;
+    text-align: center; cursor: zoom-out;
+}
+.optik-zoom.open { display: block; }
+.optik-zoom__img { max-width: 100%; height: auto; cursor: zoom-in; transform-origin: 0 0; transition: transform .15s ease; border-radius: 4px; }
+.optik-zoom.zoomed .optik-zoom__img { cursor: zoom-out; }
+.optik-zoom__title { position: fixed; top: .9rem; left: 1.25rem; color: #fff; font-size: 1rem; }
+.optik-zoom__close {
+    position: fixed; top: .5rem; right: 1rem; background: none; border: 0;
+    color: #fff; font-size: 1.6rem; cursor: pointer; z-index: 1;
+}
+.optik-zoom__help {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,.6); color: #fff; padding: 6px 14px; border-radius: 999px;
+    font-size: .78rem; pointer-events: none;
+}

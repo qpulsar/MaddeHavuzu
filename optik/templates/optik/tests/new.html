@@ -1,0 +1,23 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+{% block optik_title %}Yeni Test Oluştur{% endblock %}
+{% block optik_css %}<link rel="stylesheet" href="{% static 'css/optik/wizard_pages.css' %}">{% endblock %}
+{% block optik_crumbs %}<li class="breadcrumb-item active" aria-current="page">Yeni Test</li>{% endblock %}
+
+{% block optik_content %}
+{% include "optik/_stepper.html" with wizard_steps=wizard_steps_static %}
+<h1 class="h3 fw-bold mb-4">Yeni Test Oluştur</h1>
+
+<form action="{% url 'optik:test_create' %}" method="post" id="testForm" novalidate>
+    {% csrf_token %}
+    {% if prefill_locked %}<input type="hidden" name="prefill_locked" value="1">{% endif %}
+    {% include "optik/tests/_test_form.html" %}
+
+    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+        <a href="{% url 'optik:index' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg me-1"></i>İptal</a>
+        <button type="submit" class="btn btn-primary" id="submitBtn">Test Oluştur<i class="bi bi-arrow-right ms-1"></i></button>
+    </div>
+</form>
+{% endblock %}
+
+{% block optik_js %}{% include "optik/tests/_test_form_js.html" %}{% endblock %}

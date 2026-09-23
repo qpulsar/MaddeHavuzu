@@ -1,0 +1,29 @@
+{% extends "kopya/_layout.html" %}
+{% block kopya_title %}Excel Yükleme{% endblock %}
+{% block kopya_crumbs %}<li class="breadcrumb-item active">Excel Yükleme</li>{% endblock %}
+{% block kopya_content %}
+<div class="ch-header">
+    <h1><i class="bi bi-file-earmark-spreadsheet me-2"></i>Excel'den Kopya Analizi</h1>
+    <p class="sub">Yanıtları .xlsx dosyasıyla yükleyip analiz edin. Optik okumaya alternatif akış — Excel dosyanız
+       3 sayfalı olmalı: <b>Yanitlar</b>, <b>Anahtar</b>, <b>Kitapcik_Eslestirme</b> (kitapçık &gt; 1 ise zorunlu).</p>
+</div>
+<div class="ch-panel">
+    <h2>Yükleme</h2>
+    <form action="{% url 'kopya:excel_upload' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3" style="max-width:480px;">
+            <label for="kopya-file" class="form-label small fw-bold">.xlsx dosyası (en fazla {{ max_mb }} MB)</label>
+            <input id="kopya-file" type="file" name="file" accept=".xlsx" required class="form-control">
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Yükle ve Doğrula</button>
+            <a href="{% url 'kopya:excel_template' %}" class="btn btn-success"><i class="bi bi-download me-1"></i>Şablon İndir</a>
+            <a href="{% url 'kopya:index' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Sınav Listesine Dön</a>
+        </div>
+    </form>
+</div>
+<div class="ch-note">
+    <b>Beklenen format:</b> 3 sayfa (Yanitlar, Anahtar, Kitapcik_Eslestirme). Yanıtlar A-E veya 1-5.
+    Oturma kodu A1..H9. Tam açıklama şablon dosyasında (Aciklama sayfası).
+</div>
+{% endblock %}

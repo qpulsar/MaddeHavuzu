@@ -1,0 +1,61 @@
+<script>
+/* Test formu: puan hesaplayıcı ve gönderim öncesi doğrulama (kaynak: updateCalculator/validateForm). */
+(function () {
+    var form = document.getElementById('testForm');
+    if (!form) return;
+    function num(id) { var el = document.getElementById(id); return parseInt(el && el.value, 10) || 0; }
+
+    function lockPoints(countId, pointsId, msg) {
+        var count = num(countId), input = document.getElementById(pointsId);
+        if (count === 0) {
+            if ((parseInt(input.value, 10) || 0) > 0) { alert(msg); input.value = 0; }
+            input.readOnly = true;           // disabled değil: değer yine gönderilsin
+            input.classList.add('bg-body-secondary');
+        } else {
+            input.readOnly = false;
+            input.classList.remove('bg-body-secondary');
+        }
+    }
+
+    function updateCalculator() {
+        lockPoints('mcq_count', 'mcq_points', 'Çoktan seçmeli madde sayısı 0 olduğu için puan girilemez!');
+        lockPoints('open_count', 'open_points', 'Açık uçlu madde sayısı 0 olduğu için puan girilemez!');
+        var mcqCount = num('mcq_count'), openCount = num('open_count');
+        var mcqPoints = num('mcq_points'), openPoints = num('open_points');
+
+        document.getElementById('total_questions').textContent = mcqCount + openCount;
+        document.getElementById('mcq_per_item').textContent =
+            mcqCount > 0 ? 'Her madde: ' + (mcqPoints / mcqCount).toFixed(2) + ' puan' : 'Madde yok';
+        document.getElementById('open_per_item').textContent =
+            openCount > 0 ? 'Her madde: ' + (openPoints / openCount).toFixed(2) + ' puan' : 'Madde yok';
+        document.getElementById('calc_mcq').textContent = mcqPoints;
+        document.getElementById('calc_open').textContent = openPoints;
+
+        var total = mcqPoints + openPoints, ok = total === 100;
+        document.getElementById('total_points').textContent = total;
+        var row = document.getElementById('total_row');
+        row.classList.toggle('text-success', ok);
+        row.classList.toggle('text-danger', !ok);
+        document.getElementById('errorAlert').classList.toggle('d-none', ok);
+        document.getElementById('successAlert').classList.toggle('d-none', !ok);
+    }
+
+    ['mcq_count', 'open_count', 'mcq_points', 'open_points'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', updateCalculator);
+        document.getElementById(id).addEventListener('input', updateCalculator);
+    });
+
+    form.addEventListener('submit', function (e) {
+        var fail = function (m) { alert(m); e.preventDefault(); };
+        if (!form.querySelectorAll('input[name="booklets"]:checked').length) return fail('En az bir kitapçık seçmelisiniz!');
+        var mcqPoints = num('mcq_points'), openPoints = num('open_points');
+        var mcqCount = num('mcq_count'), openCount = num('open_count');
+        if (mcqPoints + openPoints !== 100) return fail('Toplam puan 100 olmalıdır! Şu an: ' + (mcqPoints + openPoints));
+        if (mcqCount === 0 && openCount === 0) return fail('En az bir soru türü için sayı girilmelidir!');
+        if (mcqCount > 0 && mcqPoints === 0) return fail('MCQ soru sayısı girdiniz ama puan 0. Lütfen MCQ puanını girin.');
+        if (openCount > 0 && openPoints === 0) return fail('Açık uçlu soru sayısı girdiniz ama puan 0. Lütfen OPEN puanını girin.');
+    });
+
+    updateCalculator();
+})();
+</script>

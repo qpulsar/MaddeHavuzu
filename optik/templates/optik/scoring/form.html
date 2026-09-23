@@ -1,0 +1,67 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+
+{% block optik_title %}Puanlama - {{ course_code }}{% endblock %}
+
+{% block optik_css %}
+<link rel="stylesheet" href="{% static 'css/optik/records_scoring.css' %}">
+{% endblock %}
+
+{% block optik_crumbs %}
+{% include "optik/records/_crumbs.html" %}
+<li class="breadcrumb-item active" aria-current="page">Puanlama</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm">
+<div class="card-body p-4">
+    <h1 class="h3 mb-3"><i class="bi bi-calculator me-2"></i>Puanlama</h1>
+
+    {% if empty_heading %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox display-5 d-block mb-3"></i>
+        <h2 class="h5">{{ empty_heading }}</h2>
+        <a href="{% url 'optik:upload_forms' test_id %}" class="btn btn-primary mt-2"><i class="bi bi-upload me-1"></i>Form Yükleme</a>
+    </div>
+
+    {% elif missing_keys %}
+    <div class="alert alert-warning text-center py-4" role="alert">
+        <h2 class="h5"><i class="bi bi-key me-1"></i>Cevap Anahtarı Eksik</h2>
+        <p class="mb-2">Şu kitapçıklar için cevap anahtarı bulunamadı: {{ missing_keys|join:", " }}</p>
+        <a href="{% url 'optik:answer_key' test_id %}" class="btn btn-warning btn-sm">Cevap Anahtarı Sayfasına Dön</a>
+    </div>
+
+    {% elif show_form %}
+    {% if duplicates %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Mükerrer Kayıt Uyarısı:</strong>
+        Şu öğrenci numaralarına ait birden fazla kayıt var: <strong>{{ duplicates|join:", " }}</strong>.
+        Puanlama öncesi <a href="{% url 'optik:records' test_id %}" class="alert-link">Kayıt Listesi</a>
+        sayfasından fazla kayıtları silmeniz önerilir.
+    </div>
+    {% endif %}
+
+    <div class="alert alert-primary" role="alert">
+        <strong><i class="bi bi-info-circle me-1"></i>Puanlama Bilgisi:</strong>
+        {{ records_count }} kayıt puanlanacak. {{ info_text }}
+    </div>
+
+    <form action="{% url 'optik:do_scoring' batch_id %}" method="post" id="scoringForm">
+        {% csrf_token %}
+        {% if open_items %}
+        <div class="mt-4 pt-3 border-top">
+            <h2 class="h5 mb-3"><i class="bi bi-pencil me-2"></i>Açık Uçlu Puan Girişi</h2>
+            <div class="alert alert-warning py-2" role="alert">
+                <strong>Bu testte {{ open_count }} açık uçlu soru vardır.</strong> Her öğrenci için puanları girin.
+            </div>
+            {% include "optik/scoring/_open_table.html" %}
+        </div>
+        {% endif %}
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-play-fill me-1"></i>{{ submit_text }}</button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

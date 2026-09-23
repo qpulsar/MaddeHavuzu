@@ -1,0 +1,106 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+
+{% block optik_title %}Kayıt Detay - {{ student_no }}{% endblock %}
+
+{% block optik_css %}
+<link rel="stylesheet" href="{% static 'css/optik/records_scoring.css' %}">
+{% endblock %}
+
+{% block optik_crumbs %}
+{% include "optik/records/_crumbs.html" %}
+<li class="breadcrumb-item"><a href="{% url 'optik:records' test_id %}" class="text-decoration-none">Kayıt Listesi</a></li>
+<li class="breadcrumb-item active" aria-current="page">Kayıt Detayı</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm">
+<div class="card-body p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-1"><i class="bi bi-file-earmark-text me-2"></i>Kayıt Detayı</h1>
+            <p class="text-muted mb-0">{{ batch.test_name|default:test_label }}</p>
+        </div>
+        <a href="{{ back_url }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Kayıt Listesi</a>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3"><div class="optik-info-card"><div class="optik-info-card__label">Öğrenci Numarası</div><div class="optik-info-card__value">{{ student_no|default:"-" }}</div></div></div>
+        <div class="col-6 col-lg-3"><div class="optik-info-card"><div class="optik-info-card__label">Sınıf Kodu</div><div class="optik-info-card__value">{{ class_code }}</div></div></div>
+        <div class="col-6 col-lg-3"><div class="optik-info-card"><div class="optik-info-card__label">Kitapçık</div><div class="optik-info-card__value">{{ booklet|default:"-" }}</div></div></div>
+        <div class="col-6 col-lg-3"><div class="optik-info-card"><div class="optik-info-card__label">Oturma Düzeni</div><div class="optik-info-card__value">{{ seating_id }}</div></div></div>
+    </div>
+
+    {% if has_overrides %}
+    <div class="alert alert-warning" role="alert">
+        <strong><i class="bi bi-exclamation-triangle me-1"></i>Bu kayıtta manuel düzeltme yapılmış!</strong>
+        <div class="small mt-1">Düzeltilen alanlar: {{ override_fields|join:", " }}</div>
+    </div>
+    {% endif %}
+
+    <div class="row g-3 mb-4">
+        <div class="col-4"><div class="optik-stat text-center"><div class="optik-stat__value">{{ total_answered }}</div><div class="optik-stat__label">Cevaplanmış</div></div></div>
+        <div class="col-4"><div class="optik-stat text-center"><div class="optik-stat__value">{{ total_blank }}</div><div class="optik-stat__label">Boş</div></div></div>
+        <div class="col-4"><div class="optik-stat text-center"><div class="optik-stat__value">{{ completion }}%</div><div class="optik-stat__label">Tamamlanma</div></div></div>
+    </div>
+
+    <h2 class="h5 mb-3"><i class="bi bi-ui-checks-grid me-2"></i>Cevaplar</h2>
+    {% if cells %}
+    <div class="optik-answer-grid optik-grid mb-2">
+        {% for c in cells %}
+        <div class="optik-answer-cell {{ c.css }}">
+            <div class="optik-answer-cell__q">Q{{ c.q }}{% if c.overridden %} <i class="bi bi-pencil-square" title="Düzeltildi"></i>{% endif %}</div>
+            <div class="optik-answer-cell__ans">{{ c.answer }}</div>
+            {% if c.key %}<div class="optik-answer-cell__key">Anahtar: {{ c.key }}</div>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="small text-muted mb-4 d-flex flex-wrap gap-3">
+        <span><span class="optik-legend optik-cell-correct"></span> Doğru</span>
+        <span><span class="optik-legend optik-cell-wrong"></span> Yanlış</span>
+        <span><span class="optik-legend optik-cell-blank"></span> Boş</span>
+        <span><span class="optik-legend optik-cell-multi"></span> Çoklu işaret</span>
+    </div>
+    {% else %}
+    <p class="text-muted">Henüz cevap verisi yok (OMR işlenmemiş).</p>
+    {% endif %}
+
+    <div class="border-top pt-4 mt-2">
+        <h2 class="h5 mb-3"><i class="bi bi-images me-2"></i>Form Görüntüleri</h2>
+        {% if has_image or has_overlay %}
+        <div class="row g-3">
+            {% if has_image %}
+            <div class="col-lg-6">
+                <div class="optik-image-panel">
+                    <h3 class="h6"><i class="bi bi-file-earmark-image me-1"></i>Orijinal Form</h3>
+                    <img src="{% url 'optik:record_image' batch_id record_id %}" class="optik-form-image optik-zoomable" alt="Orijinal form" data-zoom-title="{{ student_no }}" loading="lazy">
+                </div>
+            </div>
+            {% endif %}
+            {% if has_overlay %}
+            <div class="col-lg-6">
+                <div class="optik-image-panel">
+                    <h3 class="h6"><i class="bi bi-search me-1"></i>OMR Overlay</h3>
+                    <p class="small text-muted mb-1">Kırmızı daireler sorunlu/boş alanları gösterir</p>
+                    <img src="{% url 'optik:record_overlay' batch_id record_id %}" class="optik-form-image optik-zoomable" alt="OMR overlay" data-zoom-title="{{ student_no }}" loading="lazy">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="text-muted">Form görüntüsü bulunamadı.</p>
+        {% endif %}
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        <a href="{{ edit_url }}" class="btn btn-warning"><i class="bi bi-pencil me-1"></i>Düzenle</a>
+        <a href="{{ back_url }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>{% if return_url %}Geri{% else %}Kayıt Listesi{% endif %}</a>
+    </div>
+</div>
+</div>
+{% include "optik/records/_zoom.html" %}
+{% endblock %}
+
+{% block optik_js %}
+<script src="{% static 'js/optik/records_scoring.js' %}"></script>
+{% endblock %}

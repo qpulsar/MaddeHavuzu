@@ -1,0 +1,18 @@
+{% extends "kopya/_layout.html" %}
+{% block kopya_title %}Hesaplanıyor{% endblock %}
+{% block kopya_head %}<meta http-equiv="refresh" content="3">{% endblock %}
+{% block kopya_crumbs %}<li class="breadcrumb-item active">Hesaplanıyor</li>{% endblock %}
+{% block kopya_content %}
+<div class="ch-computing">
+    <div class="ch-spinner" aria-hidden="true"></div>
+    <h2>Kopya Analizi Hesaplanıyor…</h2>
+    <p>Bu sınav ilk kez analiz ediliyor. Öğrenci sayısına göre
+       <b>10 saniye – 3 dakika</b> sürebilir.</p>
+    <p class="ch-muted small mt-2">Sayfa 3 saniyede bir otomatik yenilenir. Bekleme süresi:
+       <b>{{ elapsed }} sn</b>.</p>
+    {% if hint %}<div class="ch-muted small mt-2">{{ hint }}</div>{% endif %}
+    <div class="mt-3">
+        <a href="{% url 'kopya:index' %}" class="text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Sınav listesine dön</a>
+    </div>
+</div>
+{% endblock %}

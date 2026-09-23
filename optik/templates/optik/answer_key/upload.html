@@ -1,0 +1,56 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+{% block optik_title %}Excel ile Cevap Anahtarı Yükle{% endblock %}
+{% block optik_crumbs %}
+<li class="breadcrumb-item"><a href="{% url 'optik:answer_key' test_id %}" class="text-decoration-none">{{ test.course_code }} - Madde Bilgileri</a></li>
+<li class="breadcrumb-item active" aria-current="page">Excel ile Yükle</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card mx-auto" style="max-width: 820px;">
+    <div class="card-header">
+        <h1 class="h5 fw-bold mb-1"><i class="bi bi-file-earmark-excel me-2"></i>Excel ile Cevap Anahtarı Yükle</h1>
+        <p class="mb-0"><strong>{{ test.course_code }}</strong> - {{ test.course_name }}</p>
+    </div>
+    <div class="card-body">
+        {% if error %}
+        <div class="alert alert-danger" role="alert"><i class="bi bi-x-circle me-1"></i><strong>Hata:</strong> {{ error }}</div>
+        {% endif %}
+
+        <div class="alert alert-info">
+            <strong>Excel Formatı:</strong>
+            <div class="table-responsive my-2">
+                <table class="table table-sm table-bordered text-center mb-0 small">
+                    <thead><tr><th>item</th><th>booklet_A</th><th>booklet_B</th><th>points</th></tr></thead>
+                    <tbody>
+                        <tr><td>Q1</td><td>A</td><td>C</td><td>5.0</td></tr>
+                        <tr><td>Q2</td><td>B</td><td>A</td><td>5.0</td></tr>
+                        <tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="small">
+                <strong>Sütunlar:</strong>
+                <ul class="mb-2">
+                    <li><code>item</code> - Soru numarası (Q1, Q2, ... veya 1, 2, ...)</li>
+                    <li><code>booklet_A</code>, <code>booklet_B</code> - Her kitapçık için doğru cevap</li>
+                    <li><code>points</code> - Madde puanı (opsiyonel)</li>
+                </ul>
+                <strong>Mevcut kitapçıklar:</strong> {{ booklets }}
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" action="{% url 'optik:answer_key_upload' test_id %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="file" class="form-label fw-semibold">Excel Dosyası (.xlsx)</label>
+                <input type="file" class="form-control" id="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Yükle ve Kaydet</button>
+        </form>
+    </div>
+    <div class="card-footer bg-transparent">
+        <a href="{% url 'optik:answer_key' test_id %}" class="text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Manuel Giriş Sayfasına Dön</a>
+    </div>
+</div>
+{% endblock %}

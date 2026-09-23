@@ -1,0 +1,113 @@
+{# Test oluşturma/düzenleme ortak alanları. Bağlam: form, *_options, booklet_choices, prefill_locked #}
+{% if errors %}
+<div class="alert alert-danger" role="alert">
+    <strong><i class="bi bi-exclamation-triangle me-1"></i>Form kaydedilemedi:</strong>
+    <ul class="mb-0 mt-1">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header"><h2 class="h6 fw-bold mb-0"><i class="bi bi-info-circle me-2"></i>Temel Bilgiler</h2></div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="academic_year">Akademik Yıl *</label>
+                <input class="form-control" list="academicYearList" id="academic_year" name="academic_year"
+                       value="{{ form.academic_year }}" required placeholder="Örn: 2025-2026" maxlength="20">
+                <datalist id="academicYearList">
+                    {% for y in academic_year_options %}<option value="{{ y }}">{% endfor %}
+                </datalist>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="semester">Dönem *</label>
+                <select class="form-select" id="semester" name="semester" required>
+                    {% for s in semester_options %}
+                    <option value="{{ s }}"{% if s == form.semester %} selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="course_code">Ders Kodu *</label>
+                <input type="text" class="form-control text-uppercase" id="course_code" name="course_code"
+                       value="{{ form.course_code }}" required placeholder="Örn: PDN1001" maxlength="50"
+                       {% if prefill_locked %}readonly{% endif %}>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="course_name">Ders Adı *</label>
+                <input type="text" class="form-control" id="course_name" name="course_name"
+                       value="{{ form.course_name }}" required placeholder="Örn: Eğitimde Ölçme ve Değerlendirme" maxlength="255"
+                       {% if prefill_locked %}readonly{% endif %}>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="exam_type">Sınav Türü *</label>
+                {% if prefill_locked and form.exam_type %}
+                <select class="form-select" id="exam_type" disabled>
+                    <option selected>{{ form.exam_type }}</option>
+                </select>
+                <input type="hidden" name="exam_type" value="{{ form.exam_type }}">
+                {% else %}
+                <select class="form-select" id="exam_type" name="exam_type" required>
+                    {% for et in exam_type_options %}
+                    <option value="{{ et }}"{% if et == form.exam_type %} selected{% endif %}>{{ et }}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <span class="form-label fw-semibold d-block">Kitapçıklar *</span>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for b in booklet_choices %}
+                    <input type="checkbox" class="btn-check" name="booklets" value="{{ b }}" id="booklet_{{ b }}" autocomplete="off"
+                           {% if b in form.booklets %}checked{% endif %}>
+                    <label class="btn btn-outline-primary fw-semibold px-4" for="booklet_{{ b }}">{{ b }}</label>
+                    {% endfor %}
+                </div>
+                <div class="form-text">En az bir kitapçık seçin</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><h2 class="h6 fw-bold mb-0"><i class="bi bi-123 me-2"></i>Soru Sayıları</h2></div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="mcq_count">Çoktan Seçmeli (MCQ) Sayısı *</label>
+                <input type="number" class="form-control" name="mcq_count" id="mcq_count" required min="0" value="{{ form.mcq_count }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="open_count">Açık Uçlu (OPEN) Sayısı</label>
+                <input type="number" class="form-control" name="open_count" id="open_count" min="0" value="{{ form.open_count }}">
+            </div>
+        </div>
+        <div class="optik-calc mt-3">
+            <div class="d-flex justify-content-between"><span>Toplam Soru Sayısı:</span><strong id="total_questions">-</strong></div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><h2 class="h6 fw-bold mb-0"><i class="bi bi-percent me-2"></i>Puan Dağılımı</h2></div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="mcq_points">Çoktan Seçmeli (MCQ) Toplam Puanı *</label>
+                <input type="number" class="form-control" name="mcq_points" id="mcq_points" required min="0" max="100" value="{{ form.mcq_points }}">
+                <div class="form-text" id="mcq_per_item"></div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" for="open_points">Açık Uçlu (OPEN) Toplam Puanı</label>
+                <input type="number" class="form-control" name="open_points" id="open_points" min="0" max="100" value="{{ form.open_points }}">
+                <div class="form-text" id="open_per_item"></div>
+            </div>
+        </div>
+        <div class="optik-calc mt-3">
+            <div class="d-flex justify-content-between py-1"><span>MCQ Puanı:</span><span id="calc_mcq">-</span></div>
+            <div class="d-flex justify-content-between py-1"><span>OPEN Puanı:</span><span id="calc_open">-</span></div>
+            <div class="d-flex justify-content-between optik-calc__total" id="total_row"><span>TOPLAM:</span><span id="total_points">-</span></div>
+        </div>
+        <div class="alert alert-danger mt-3 mb-0 d-none" id="errorAlert"><i class="bi bi-exclamation-triangle me-1"></i>Toplam puan 100 olmalıdır!</div>
+        <div class="alert alert-success mt-3 mb-0 d-none" id="successAlert"><i class="bi bi-check-circle me-1"></i>Puan dağılımı doğru (Toplam: 100)</div>
+    </div>
+</div>

@@ -1,0 +1,82 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+
+{% block optik_title %}Puanlama Sonuçları - {{ course_code }}{% endblock %}
+
+{% block optik_css %}
+<link rel="stylesheet" href="{% static 'css/optik/records_scoring.css' %}">
+{% endblock %}
+
+{% block optik_crumbs %}
+{% include "optik/records/_crumbs.html" %}
+<li class="breadcrumb-item active" aria-current="page">Puanlama Sonuçları</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm">
+<div class="card-body p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 mb-0"><i class="bi bi-trophy me-2"></i>Puanlama Sonuçları</h1>
+    </div>
+
+    {% if dup_snos %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Mükerrer Kayıt Uyarısı:</strong>
+        Aşağıdaki öğrenci numaralarına ait birden fazla kayıt puanlandı: <strong>{{ dup_snos|join:", " }}</strong>.
+        Kayıt Listesi sayfasından fazla kayıtları silip yeniden puanlayın.
+    </div>
+    {% endif %}
+
+    {% include "optik/scoring/_stats.html" %}
+
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        {% include "optik/scoring/_export_menu.html" %}
+        <a href="{% url 'optik:scoring' test_id %}?rescore=1" class="btn btn-secondary"><i class="bi bi-arrow-repeat me-1"></i>Yeniden Puanla</a>
+    </div>
+
+    <div class="optik-scroll-box optik-scroll-box--both">
+        <table class="table table-sm table-hover align-middle mb-0 optik-scores-table optik-grid">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th class="optik-sticky-col">No</th>
+                    <th>Kit.</th>
+                    <th>Toplam</th>
+                    {% for iid in item_ids %}<th class="text-center">{{ iid }}</th>{% endfor %}
+                    <th class="text-center">Form</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr{% if r.is_dup %} class="optik-row-warn"{% endif %}>
+                    <td>{{ r.idx }}</td>
+                    <td class="optik-sticky-col"><strong>{{ r.student_no }}</strong>{% if r.is_dup %} <span class="text-danger small" title="Mükerrer">(M)</span>{% endif %}</td>
+                    <td>{{ r.booklet }}</td>
+                    <td class="fw-bold {% if r.passed %}text-success{% else %}text-danger{% endif %}">{{ r.total }}</td>
+                    {% for c in r.cells %}<td class="text-center {{ c.css }}">{{ c.points|floatformat:"-2" }}</td>{% endfor %}
+                    <td class="text-center">
+                        {% if r.record_id %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary" title="Formu Gör"
+                                data-zoom-src="{% url 'optik:record_overlay' batch_id r.record_id %}" data-zoom-title="{{ r.student_no }}">
+                            <i class="bi bi-image"></i>
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="small text-muted mt-2 d-flex flex-wrap gap-3">
+        <span><span class="optik-legend optik-cell-correct"></span> Doğru</span>
+        <span><span class="optik-legend optik-cell-wrong"></span> Yanlış / çoklu</span>
+        <span><span class="optik-legend optik-cell-blank"></span> Boş</span>
+    </div>
+</div>
+</div>
+{% include "optik/records/_zoom.html" %}
+{% endblock %}
+
+{% block optik_js %}
+<script src="{% static 'js/optik/records_scoring.js' %}"></script>
+{% endblock %}

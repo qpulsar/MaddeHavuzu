@@ -1,0 +1,84 @@
+{% extends "kopya/_layout.html" %}
+{% block kopya_title %}{{ copier }} → {{ source }} — Kopya Analizi{% endblock %}
+{% block kopya_crumbs %}
+<li class="breadcrumb-item"><a href="{{ back_url }}" class="text-decoration-none">{{ course_code|default:source_id }}</a></li>
+<li class="breadcrumb-item active">{{ copier }} → {{ source }}</li>
+{% endblock %}
+{% block kopya_content %}
+<div class="mb-3"><a href="{{ back_url }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Panele Dön</a></div>
+
+<div class="ch-note">
+    Bu göstergeler <b>istatistiksel şüphe işaretidir, kopya kanıtı değildir.</b>
+    α = {{ alpha_disp }}. Düzeltme: Benjamini-Hochberg (FDR). Modül sürümü: {{ module_version }}.
+</div>
+
+<div class="ch-panel" id="match-strip">
+    <h2>Madde Eşleşme Haritası</h2>
+    <p class="ch-muted small mb-2">
+        Kırmızı çerçeveli hücreler ardışık ortak-yanlış bloğunu gösterir
+        (bu çift için en uzun blok uzunluğu: <b>{{ strip.max_run }}</b>).
+        <span class="ch-strip ch-strip--legend">
+            <span class="cell correct">A</span> doğru,
+            <span class="cell cwrong">B</span> ortak yanlış,
+            <span class="cell lonely">C</span> yalnız,
+            <span class="cell cblank">·</span> boş,
+            <span class="cell">×</span> çoklu
+        </span>
+    </p>
+    <div class="ch-strip">
+        <div class="ch-strip-row"><span class="ch-strip-lbl"></span>{% for c in strip.columns %}<span class="cell header">{{ c.num }}</span>{% endfor %}</div>
+        <div class="ch-strip-row"><span class="ch-strip-lbl">Anahtar</span>{% for c in strip.columns %}<span class="cell key">{{ c.key }}</span>{% endfor %}</div>
+        <div class="ch-strip-row"><span class="ch-strip-lbl" title="{{ copier }}">{{ copier }}</span>{% for c in strip.columns %}<span class="cell {{ c.c_cls }}">{{ c.c_lbl }}</span>{% endfor %}</div>
+        <div class="ch-strip-row"><span class="ch-strip-lbl" title="{{ source }}">{{ source }}</span>{% for c in strip.columns %}<span class="cell {{ c.s_cls }}">{{ c.s_lbl }}</span>{% endfor %}</div>
+    </div>
+</div>
+
+<div class="ch-panel" id="index-table">
+    <h2>İndeks Değerleri</h2>
+    <div class="table-responsive">
+    <table class="ch-pairs">
+        <thead><tr><th>İndeks</th><th class="text-end">Değer</th><th class="text-end">Ham p</th><th class="text-end">Düzeltilmiş p (BH)</th></tr></thead>
+        <tbody>
+        {% for r in index_rows %}
+        {% if r.computable %}
+        <tr><td>{{ r.label }}</td><td class="text-end">{{ r.value }}</td><td class="text-end">{{ r.p_raw }}</td>
+            <td class="text-end">{{ r.p_adj }}{% if r.hit %} <span class="ch-flags">•</span>{% endif %}</td></tr>
+        {% else %}
+        <tr><td>{{ r.label }}</td><td colspan="3" class="ch-p na">Hesaplanamadı: {{ r.reason }}</td></tr>
+        {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <p class="ch-muted small mt-2 mb-0">
+        <span class="ch-flags">•</span> düzeltilmiş p ≤ α ({{ alpha_disp }}).
+        Öneri: α tek başına karar olmaz — bağlam paneline bakın.
+    </p>
+</div>
+
+<div class="ch-panel" id="context-panel">
+    <h2>Bağlam</h2>
+    <div class="ch-stats">
+        {% for t in tiles %}
+        <div class="ch-stat"><div class="ch-stat-val">{{ t.value }}</div><div class="ch-stat-lbl">{{ t.label }}</div></div>
+        {% endfor %}
+    </div>
+    <div class="table-responsive">
+    <table class="ch-pairs ch-context">
+        <tbody>
+            <tr><td><b>Kitapçık</b></td><td>{{ same_booklet }}</td></tr>
+            <tr><td><b>Oturma (şüpheli / kaynak)</b></td>
+                <td>{{ seat_c }} / {{ seat_s }}
+                    {% if neighbor.kind == 'missing' %}<span class="ch-muted ms-2">{{ neighbor.text }}</span>
+                    {% else %}<span class="ch-pill ch-pill--{{ neighbor.kind }} ms-2">{{ neighbor.text }}</span>{% endif %}</td></tr>
+            <tr><td><b>U3 (anti-Guttman)</b>
+                    <span class="ch-pill ch-pill--desc ms-1" title="Bağımsız olarak doğrulanamadı (PerFit erişilemedi); karar dışı, yalnız betimsel">descriptive-only</span></td>
+                <td>Şüpheli: {{ u3_c }} · Kaynak: {{ u3_s }}</td></tr>
+            <tr><td><b>H<sup>T</sup> (kişi uyumu)</b>
+                    <span class="ch-pill ch-pill--desc ms-1" title="Bağımsız olarak doğrulanamadı (mokken H^T sunmuyor); karar dışı, yalnız betimsel">descriptive-only</span></td>
+                <td>Şüpheli: {{ ht_c }} · Kaynak: {{ ht_s }}</td></tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+
+{% block optik_title %}Puan Detay - {{ student_no }}{% endblock %}
+
+{% block optik_css %}
+<link rel="stylesheet" href="{% static 'css/optik/records_scoring.css' %}">
+{% endblock %}
+
+{% block optik_crumbs %}
+{% include "optik/scoring/_batch_crumbs.html" %}
+<li class="breadcrumb-item"><a href="{% url 'optik:batch_scores' batch_id %}" class="text-decoration-none">Puanlama Sonuçları</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ student_no }}</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm">
+<div class="card-body p-4">
+    <h1 class="h3 mb-1"><i class="bi bi-person-lines-fill me-2"></i>Puan Detay</h1>
+    <p class="mb-0"><strong>Öğrenci:</strong> {{ student_no }} &nbsp;|&nbsp; <strong>Kitapçık:</strong> {{ booklet }}</p>
+    <p class="text-muted">{{ test_label }}</p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md"><div class="optik-stat text-center optik-cell-correct"><div class="optik-stat__value">{{ summary.correct|default:0 }}</div><div class="optik-stat__label">Doğru</div></div></div>
+        <div class="col-6 col-md"><div class="optik-stat text-center optik-cell-wrong"><div class="optik-stat__value">{{ summary.wrong|default:0 }}</div><div class="optik-stat__label">Yanlış</div></div></div>
+        <div class="col-6 col-md"><div class="optik-stat text-center optik-cell-blank"><div class="optik-stat__value">{{ summary.blank|default:0 }}</div><div class="optik-stat__label">Boş</div></div></div>
+        <div class="col-6 col-md"><div class="optik-stat text-center"><div class="optik-stat__value {% if passed %}text-success{% else %}text-danger{% endif %}">{{ summary.total_points|default:0 }}</div><div class="optik-stat__label">Puan / {{ summary.max_points|default:0 }}</div></div></div>
+        <div class="col-12 col-md"><div class="optik-stat text-center"><div class="optik-stat__value">%{{ summary.percentage|default:0 }}</div><div class="optik-stat__label">Başarı</div></div></div>
+    </div>
+
+    <h2 class="h5 mb-3">Madde Bazında Sonuç</h2>
+    <div class="table-responsive">
+        <table class="table align-middle optik-grid">
+            <thead><tr><th>Madde</th><th>Cevap</th><th>Doğru Cevap</th><th>Sonuç</th><th>Puan</th><th>Max</th></tr></thead>
+            <tbody>
+                {% for it in item_rows %}
+                <tr class="{{ it.row_cls }}">
+                    <td class="fw-bold">{{ it.item_id }}</td>
+                    <td class="fs-6 fw-semibold">{{ it.student_answer }}</td>
+                    <td class="text-success fw-semibold">{{ it.correct_answer }}</td>
+                    <td><span class="{{ it.text_cls }}">{% if it.icon %}<i class="bi {{ it.icon }}"></i> {% endif %}{{ it.label }}</span></td>
+                    <td class="fw-semibold">{{ it.points }}</td>
+                    <td class="text-muted">{{ it.max_points }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <a href="{% url 'optik:batch_scores' batch_id %}" class="btn btn-outline-secondary mt-3"><i class="bi bi-arrow-left me-1"></i>Puanlama Sonuçları</a>
+</div>
+</div>
+{% endblock %}

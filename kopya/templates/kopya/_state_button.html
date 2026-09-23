@@ -1,0 +1,11 @@
+{# Parametreler: state ('done'|'running'|'none'|'unscored'), url, open_label #}
+{% if state == 'done' %}
+<a href="{{ url }}" class="btn btn-sm btn-success" title="Sonuç kayıtlı — anında açılır"><i class="bi bi-check-lg me-1"></i>Hesaplandı</a>
+{% elif state == 'running' %}
+<a href="{{ url }}" class="btn btn-sm btn-warning" title="Arka planda hesap devam ediyor"><i class="bi bi-hourglass-split me-1"></i>Hesaplanıyor</a>
+{% elif state == 'unscored' %}
+<span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true" title="Bu batch henüz puanlanmadı; önce Optik Okuma modülünde puanlayın">
+    <i class="bi bi-slash-circle me-1"></i>Puanlanmamış</span>
+{% else %}
+<a href="{{ url }}" class="btn btn-sm btn-primary" title="İlk kez analiz yapılacak"><i class="bi bi-gear me-1"></i>{{ open_label|default:"Hesapla" }}</a>
+{% endif %}

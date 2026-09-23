@@ -1,0 +1,35 @@
+{% extends "optik/_layout.html" %}
+
+{% block optik_title %}Batch Onayla{% endblock %}
+
+{% block optik_crumbs %}
+{% include "optik/scoring/_batch_crumbs.html" %}
+<li class="breadcrumb-item active" aria-current="page">Onayla</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm" style="max-width: 680px;">
+<div class="card-body p-4">
+    <h1 class="h3 mb-1"><i class="bi bi-check2-circle me-2"></i>Batch Onayla</h1>
+    <p><strong>{{ batch.batch_name }}</strong></p>
+
+    <div class="alert alert-warning" role="alert">
+        <p class="mb-1"><strong><i class="bi bi-exclamation-triangle me-1"></i>Dikkat:</strong></p>
+        <p class="mb-1">Batch onaylandığında otomatik olarak bir snapshot oluşturulacak.</p>
+        <p class="mb-0">Bu snapshot, mevcut tüm kayıtların bir kopyasını içerecek.</p>
+    </div>
+
+    <form method="post" action="{% url 'optik:approve' batch_id %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_reason" class="form-label fw-semibold">Onay Notu (İsteğe Bağlı)</label>
+            <textarea class="form-control" id="id_reason" name="reason" rows="4" placeholder="Örn: İlk onay, düzeltmeler yapıldı, vb."></textarea>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Onayla ve Snapshot Al</button>
+            <a href="{% url 'optik:batch_detail' batch_id %}" class="btn btn-outline-secondary">İptal</a>
+        </div>
+    </form>
+</div>
+</div>
+{% endblock %}

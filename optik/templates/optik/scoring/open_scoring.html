@@ -1,0 +1,38 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+
+{% block optik_title %}Açık Uçlu Puan Girişi{% endblock %}
+
+{% block optik_css %}
+<link rel="stylesheet" href="{% static 'css/optik/records_scoring.css' %}">
+{% endblock %}
+
+{% block optik_crumbs %}
+{% include "optik/scoring/_batch_crumbs.html" %}
+<li class="breadcrumb-item active" aria-current="page">Açık Uçlu Puan Girişi</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm">
+<div class="card-body p-4">
+    <h1 class="h3 mb-1"><i class="bi bi-pencil me-2"></i>Açık Uçlu Puan Girişi</h1>
+    <p class="text-muted"><strong>Batch:</strong> {{ batch.batch_name }} | <strong>Toplam:</strong> {{ records_count }} öğrenci</p>
+
+    <div class="alert alert-warning" role="alert">
+        <i class="bi bi-info-circle me-1"></i>Her öğrenci için açık uçlu soruların puanlarını girin.
+        Maksimum puanlar başlıkta parantez içinde gösterilmektedir.
+    </div>
+
+    <form action="{% url 'optik:save_open_scores' batch_id %}" method="post">
+        {% csrf_token %}
+        {% include "optik/scoring/_open_table.html" %}
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <button type="submit" class="btn btn-success"><i class="bi bi-save me-1"></i>Kaydet ve Puanları Hesapla</button>
+            <a href="{% url 'optik:batch_scores' batch_id %}" class="btn btn-outline-secondary">Atla <i class="bi bi-arrow-right"></i></a>
+        </div>
+    </form>
+
+    <a href="{% url 'optik:batch_detail' batch_id %}" class="d-inline-block mt-4 text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Batch Detay</a>
+</div>
+</div>
+{% endblock %}

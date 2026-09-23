@@ -1,0 +1,22 @@
+{# Açık uçlu puan giriş tablosu (input adı: <record_id>_<Qn>) #}
+{% load l10n %}
+<div class="table-responsive optik-scroll-box">
+    <table class="table table-bordered table-sm align-middle text-center mb-0 optik-open-table">
+        <thead>
+            <tr>
+                <th class="text-start">Öğrenci No</th>
+                {% for it in open_items %}<th>{{ it.item_id }}<br><small class="text-muted">({{ it.points|floatformat:1 }}p)</small></th>{% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in open_rows %}
+            <tr>
+                <td class="text-start fw-semibold">{{ row.student_no }}</td>
+                {% for c in row.cells %}
+                <td><input type="number" class="form-control form-control-sm text-center mx-auto optik-open-input" name="{{ c.name }}" value="{{ c.value|unlocalize }}" min="0" max="{{ c.max|unlocalize }}" step="0.5" aria-label="{{ row.student_no }} {{ c.name }}"></td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

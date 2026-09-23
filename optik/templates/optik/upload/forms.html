@@ -1,0 +1,53 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+{% block optik_title %}Form Yükle - {{ test.course_code }}{% endblock %}
+{% block optik_css %}<link rel="stylesheet" href="{% static 'css/optik/wizard_pages.css' %}">{% endblock %}
+{% block optik_crumbs %}<li class="breadcrumb-item active" aria-current="page">{{ test.course_code }} - {{ test.exam_type }}</li>{% endblock %}
+
+{% block optik_content %}
+<h1 class="h3 fw-bold mb-1">Form Yükle</h1>
+<p class="text-muted mb-4">{{ test.course_code }} - {{ test.course_name }} ({{ test.exam_type }})</p>
+
+{% if is_approved %}
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="alert">
+    <div><i class="bi bi-lock-fill me-1"></i>Onaylı teste form eklenemez. Önce onayı kaldırın.</div>
+    <a href="{% url 'optik:test_edit' test_id %}" class="btn btn-sm btn-outline-secondary">Test Bilgileri</a>
+</div>
+{% else %}
+
+{% if existing_batch %}
+<div class="alert alert-info"><i class="bi bi-files me-1"></i><strong>Mevcut Formlar:</strong> {{ record_count }} adet form yüklenmiş.</div>
+{% endif %}
+
+<div class="alert alert-primary small">
+    <strong>Bilgi:</strong> Öğrenci numarası alanına <code>{{ answer_key_student_no }}</code> yazılmış form, cevap anahtarı olarak tanınır.
+    Bu şekilde cevap anahtarını ayrıca girmenize gerek kalmaz; Madde Bilgileri sayfasında otomatik olarak yüklenecektir.
+    Birden fazla kitapçık varsa her kitapçık için ayrı bir cevap anahtarı formu hazırlayın. Öğrenci numarası aynı
+    (<code>{{ answer_key_student_no }}</code>) kalacak, sadece kitapçık türünü değiştirmeniz yeterlidir.
+</div>
+<form method="post" action="{% url 'optik:upload_forms' test_id %}" enctype="multipart/form-data" id="uploadForm">
+    {% csrf_token %}
+    <input type="hidden" name="batch_name" value="{{ batch_name }}">
+    <div class="optik-dropzone mb-3" id="dropZone" tabindex="0" role="button" aria-label="Form dosyalarını seçin">
+        <i class="bi bi-cloud-arrow-up display-5 text-primary"></i>
+        <p class="fw-semibold mt-2 mb-1">Form dosyalarını sürükleyip bırakın</p>
+        <p class="text-muted mb-1">veya tıklayarak seçin</p>
+        <p class="small text-muted mb-0">Desteklenen formatlar: JPG, JPEG, PNG</p>
+        <input type="file" id="files" name="files" multiple class="d-none"
+               accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+    </div>
+    <ul class="list-group optik-file-list mb-3 d-none" id="fileList"></ul>
+    <div class="progress mb-3 d-none js-upload-progress" role="progressbar" aria-label="Yükleniyor">
+        <div class="progress-bar progress-bar-striped progress-bar-animated w-100">Yükleniyor...</div>
+    </div>
+    <button type="submit" class="btn btn-primary" id="submitBtn" disabled><i class="bi bi-upload me-1"></i>Formları Yükle</button>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block optik_js %}
+<script src="{% static 'js/optik/wizard_pages.js' %}"></script>
+<script>
+OptikWizard.initDropzone({zone: 'dropZone', input: 'files', list: 'fileList', submit: 'submitBtn'});
+</script>
+{% endblock %}

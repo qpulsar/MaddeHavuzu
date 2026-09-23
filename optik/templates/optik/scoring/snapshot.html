@@ -1,0 +1,45 @@
+{% extends "optik/_layout.html" %}
+
+{% block optik_title %}Snapshot {{ version }}{% endblock %}
+
+{% block optik_crumbs %}
+{% include "optik/scoring/_batch_crumbs.html" %}
+<li class="breadcrumb-item active" aria-current="page">Snapshot {{ version }}</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm" style="max-width: 1000px;">
+<div class="card-body p-4">
+    <h1 class="h3 mb-3"><i class="bi bi-camera me-2"></i>Snapshot {{ version }}</h1>
+
+    <dl class="row mb-4">
+        <dt class="col-sm-3">Oluşturulma</dt><dd class="col-sm-9">{{ created_at }}</dd>
+        <dt class="col-sm-3">Oluşturan</dt><dd class="col-sm-9">{{ created_by|default:"-" }}</dd>
+        <dt class="col-sm-3">Sebep</dt><dd class="col-sm-9">{{ reason|default:"-" }}</dd>
+        <dt class="col-sm-3">Kayıt Sayısı</dt><dd class="col-sm-9">{{ record_count }}</dd>
+    </dl>
+
+    <h2 class="h5"><i class="bi bi-list-ul me-2"></i>Kayıtlar (İlk 20)</h2>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Öğrenci No</th><th>Kitapçık</th><th>Oturma</th><th>Override</th></tr></thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td>{{ r.student_no }}</td>
+                    <td>{{ r.booklet }}</td>
+                    <td>{{ r.seating }}</td>
+                    <td>{% if r.has_overrides %}<i class="bi bi-pencil-square text-warning" title="Elle düzeltilmiş"></i>{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted">Kayıt yok.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if remaining %}<p class="text-muted">... ve {{ remaining }} kayıt daha</p>{% endif %}
+
+    <a href="{% url 'optik:batch_detail' batch_id %}" class="btn btn-outline-secondary mt-2"><i class="bi bi-arrow-left me-1"></i>Batch Detay</a>
+</div>
+</div>
+{% endblock %}

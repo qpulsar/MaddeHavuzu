@@ -46,7 +46,7 @@ python manage.py compilemessages
 
 ## Architecture
 
-### Two Django Apps
+### Django Apps
 
 **`grading/`** — Inherited from NefOptik, preserved mostly intact:
 - Parses TXT-format optical answer sheet files (`parsers/configurable.py`)
@@ -60,6 +60,19 @@ python manage.py compilemessages
 - AI-powered learning outcome suggestions via Google Gemini
 - Test form creation wizard (Blueprint and SpecificationTable-based)
 - Item analysis metrics linked to grading upload sessions
+
+**`optik/`** — Image-based optical form reading, all URLs under `/optik/` (ported from the FastAPI `omr_analysis` module):
+- 5-step wizard: test info → form image upload (JPG/PNG, background thread pool, progress bar) → answer key / item points → record review & correction (overrides + history) → scoring, approve (snapshot)
+- Also: open-ended scoring, TSV/CSV/XLSX score export (item statistics live in the site's Analiz & Raporlar; cheating indicators in `kopya/`)
+- Models: `OptikTest`, `OptikBatch` (`scores` JSON), `OptikRecord`, `OptikSnapshot`; nested data lives in `data` JSONFields
+- `optik/store.py` is the only data-access layer (dict in/out); business logic in `optik/services/`; image reading in `optik/omr_core.py` (OpenCV) with form geometry `optik/data/bubble_map_v1.json` (`OPTIK_BUBBLE_MAP_PATH`)
+- Ownership: users see only their own tests; admin = superuser/staff/profile role ADMIN (`optik/permissions.py`)
+
+**`kopya/`** — Statistical cheating-detection indicators, all URLs under `/kopya/` (ported from the FastAPI `cheating` module; decision support only):
+- Indices K, K*, K1, K2, S1, S2 (calibrated against R CopyDetect 1.3), person-fit U3/Hᵀ, BH-FDR per student pair, seating-neighbour filter, top-N review list
+- Sources: scored `optik` batches or an Excel upload (`Yanitlar` / `Anahtar` / `Kitapcik_Eslestirme` sheets; template at `/kopya/template.xlsx`)
+- Engine in `kopya/engine/` (numpy/scipy, do not change the statistics); analyses run in a thread pool (`KOPYA_WORKERS`) and results are stored in `KopyaAnalysis`
+- The older heuristic `grading` cheating page is kept unchanged
 
 ### Key itempool Models
 

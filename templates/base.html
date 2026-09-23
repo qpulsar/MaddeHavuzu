@@ -86,6 +86,16 @@
                         <i class="bi bi-bar-chart-line"></i> Analiz &amp; Raporlar
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="{% url 'optik:index' %}" class="nav-link {% if request.resolver_match.app_name == 'optik' %}active{% endif %}">
+                        <i class="bi bi-camera"></i> Optik Okuma
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'kopya:index' %}" class="nav-link {% if request.resolver_match.app_name == 'kopya' %}active{% endif %}">
+                        <i class="bi bi-shield-exclamation"></i> Kopya Analizi
+                    </a>
+                </li>
             </ul>
 
         {% else %}

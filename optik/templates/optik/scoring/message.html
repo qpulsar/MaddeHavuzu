@@ -1,0 +1,33 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+
+{% block optik_title %}{{ page_title }}{% endblock %}
+
+{% block optik_css %}
+<link rel="stylesheet" href="{% static 'css/optik/records_scoring.css' %}">
+{% endblock %}
+
+{% block optik_crumbs %}
+{% if batch_id %}{% include "optik/scoring/_batch_crumbs.html" %}{% elif test_id %}{% include "optik/records/_crumbs.html" %}{% endif %}
+<li class="breadcrumb-item active" aria-current="page">{{ page_title }}</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm">
+<div class="card-body p-4">
+    <div class="alert alert-{{ level }} mb-3" role="alert">
+        <h2 class="h5 mb-1">
+            {% if level == 'danger' %}<i class="bi bi-x-octagon me-1"></i>{% else %}<i class="bi bi-exclamation-triangle me-1"></i>{% endif %}{{ heading }}
+        </h2>
+        {% if text %}<p class="mb-0">{{ text }}</p>{% endif %}
+    </div>
+    {% if links %}
+    <div class="d-flex flex-wrap gap-2">
+        {% for label, url in links %}
+        <a href="{{ url }}" class="btn {% if forloop.first %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ label }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

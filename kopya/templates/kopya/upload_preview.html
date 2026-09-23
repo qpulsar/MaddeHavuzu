@@ -1,0 +1,68 @@
+{% extends "kopya/_layout.html" %}
+{% block kopya_title %}Yükleme Önizleme{% endblock %}
+{% block kopya_crumbs %}<li class="breadcrumb-item"><a href="{% url 'kopya:excel_upload' %}" class="text-decoration-none">Excel Yükleme</a></li><li class="breadcrumb-item active">Önizleme</li>{% endblock %}
+{% block kopya_content %}
+{% if not v.ok %}
+<div class="ch-header">
+    <h1><i class="bi bi-x-circle me-2 text-danger"></i>Yükleme Başarısız</h1>
+    <p class="sub">Dosya: <code>{{ filename }}</code></p>
+</div>
+<div class="ch-panel ch-panel--red">
+    <h2 class="ch-text-danger">Engelleyici Hatalar</h2>
+    <ul class="ch-list">{% for e in v.blocking_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+<a href="{% url 'kopya:excel_upload' %}" class="btn btn-primary"><i class="bi bi-arrow-left me-1"></i>Tekrar Dene</a>
+{% else %}
+<div class="ch-header">
+    <h1><i class="bi bi-check-circle me-2 text-success"></i>Yükleme Doğrulandı</h1>
+    <p class="sub">Dosya: <code>{{ filename }}</code></p>
+</div>
+
+<div class="ch-stats">
+    <div class="ch-stat"><div class="ch-stat-val">{{ v.n_students }}</div><div class="ch-stat-lbl">Öğrenci</div></div>
+    <div class="ch-stat"><div class="ch-stat-val">{{ v.n_items }}</div><div class="ch-stat-lbl">Madde</div></div>
+    <div class="ch-stat"><div class="ch-stat-val">{{ v.n_options }}</div><div class="ch-stat-lbl">Seçenek</div></div>
+    <div class="ch-stat"><div class="ch-stat-val">{{ v.n_booklets }}</div><div class="ch-stat-lbl">Kitapçık</div></div>
+    <div class="ch-stat"><div class="ch-stat-val">{{ v.n_halls|default:"—" }}</div><div class="ch-stat-lbl">Salon</div></div>
+    <div class="ch-stat"><div class="ch-stat-val">%{{ seat_coverage_pct }}</div><div class="ch-stat-lbl">Oturma Kapsamı</div></div>
+</div>
+
+<div class="ch-note {% if v.seat_filter_active %}ch-note--green{% else %}ch-note--gray{% endif %}">
+    <i class="bi bi-geo-alt me-1"></i>Oturma filtresi:
+    <b>{% if v.seat_filter_active %}aktif{% else %}devre dışı (kapsam düşük){% endif %}</b>
+</div>
+
+{% if v.warnings %}
+<div class="ch-panel ch-panel--amber">
+    <h2 class="ch-text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Uyarılar (analiz devam eder)</h2>
+    <ul class="ch-list">{% for w in v.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="ch-panel">
+    <h2>Önizleme (ilk 10 satır)</h2>
+    <div class="table-responsive">
+    <table class="ch-pairs">
+        <thead><tr><th>Öğrenci No</th><th>Ad Soyad</th><th>Salon</th><th>Oturma</th><th>Kitapçık</th></tr></thead>
+        <tbody>
+        {% for row in v.preview_rows %}
+        <tr><td>{{ row.ogrenci_no }}</td><td>{{ row.ad_soyad }}</td><td>{{ row.salon }}</td><td>{{ row.oturma_kodu }}</td><td>{{ row.kitapcik }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="ch-panel">
+    <h2>Analize Devam</h2>
+    <p class="ch-muted mb-3">Doğrulama başarılı. Analize başlamak için onaylayın —
+        {{ v.n_students }}×{{ n_minus_1 }} = {{ n_directed }} yönlü çift üzerinde hesaplama yapılacak.</p>
+    <form action="{% url 'kopya:excel_analyze' %}" method="post" class="d-flex flex-wrap gap-2">
+        {% csrf_token %}
+        <input type="hidden" name="uid" value="{{ uid }}">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Onayla ve Analiz Et</button>
+        <a href="{% url 'kopya:excel_upload' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Farklı Dosya Yükle</a>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

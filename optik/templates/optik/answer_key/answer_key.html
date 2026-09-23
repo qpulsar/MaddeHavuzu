@@ -1,0 +1,344 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+{% block optik_title %}Madde Bilgileri - {{ test.course_code }}{% endblock %}
+{% block optik_css %}<link rel="stylesheet" href="{% static 'css/optik/wizard_pages.css' %}">{% endblock %}
+{% block optik_crumbs %}<li class="breadcrumb-item active" aria-current="page">{{ test.course_code }} - {{ test.exam_type }}</li>{% endblock %}
+
+{% block optik_content %}
+<div class="mb-4">
+    <h1 class="h3 fw-bold mb-1">Madde Bilgileri</h1>
+    <p class="text-muted mb-0">
+        {{ test.course_code }} - {{ test.course_name }} | {{ num_items }} soru ({{ mcq_count }} MCQ{% if open_count > 0 %}, {{ open_count }} OPEN{% endif %})
+        | Kitapçıklar: {{ booklets|join:", " }}
+    </p>
+</div>
+
+{% if success %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle me-1"></i>{{ success }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+</div>
+{% endif %}
+
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold{% if active_tab == 'items' %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-items"
+                type="button" role="tab" data-tab="items"><i class="bi bi-card-list me-1"></i>Madde Bilgileri</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold{% if active_tab == 'answers' %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-answers"
+                type="button" role="tab" data-tab="answers"><i class="bi bi-key me-1"></i>Cevap Anahtarı</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold{% if active_tab == 'points' %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-points"
+                type="button" role="tab" data-tab="points"><i class="bi bi-percent me-1"></i>Puanlama</button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    {# Sekme 1: Madde Bilgileri (kaynakta yer tutucu) #}
+    <div class="tab-pane fade{% if active_tab == 'items' %} show active{% endif %}" id="tab-items" role="tabpanel">
+        <div class="card"><div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-diagram-3 display-6"></i>
+            <h2 class="h5 fw-bold mt-3">Madde Bilgileri ve Öğrenme Çıktıları</h2>
+            <p class="mb-1">Bu bölümde her madde için öğrenme çıktıları eşleştirmesi yapılabilecektir.</p>
+            <p class="small mb-0"><i class="bi bi-cone-striped me-1"></i>Bu özellik yakında eklenecektir.</p>
+        </div></div>
+    </div>
+
+    {# Sekme 2: Cevap Anahtarı #}
+    <div class="tab-pane fade{% if active_tab == 'answers' %} show active{% endif %}" id="tab-answers" role="tabpanel">
+        {% if show_mapping %}
+        <h2 class="optik-section-title h6 fw-bold"><i class="bi bi-link-45deg me-1"></i>Kitapçık Madde Eşleştirmesi</h2>
+        <div class="alert alert-warning small">
+            <strong>Dikkat:</strong> A kitapçığındaki her maddenin diğer kitapçıklarda hangi sıraya karşılık geldiğini belirleyin.
+            Örneğin A kitapçığının 1. maddesi, B kitapçığında 5. madde olabilir.
+        </div>
+        <form method="post" action="{% url 'optik:save_booklet_mapping' test_id %}" id="mappingForm">
+            {% csrf_token %}
+            <div class="table-responsive optik-scroll-table optik-scroll-table--sm mb-3">
+                <table class="table table-sm table-hover align-middle text-center mb-0">
+                    <thead><tr>
+                        <th class="optik-item-col">A Kitapçığı</th>
+                        {% for b in other_booklets %}<th>{{ b }} Kitapçığı</th>{% endfor %}
+                    </tr></thead>
+                    <tbody>
+                    {% for row in mapping_rows %}
+                    <tr>
+                        <td class="optik-item-number">{{ row.number }}</td>
+                        {% for cell in row.cells %}
+                        <td>
+                            <select name="{{ cell.name }}" class="form-select form-select-sm mapping-select mx-auto"
+                                    data-default="{{ row.number }}" aria-label="{{ cell.booklet }} kitapçığı, A {{ row.number }}. madde">
+                                {% for j in item_numbers %}<option value="{{ j }}"{% if j == cell.value %} selected{% endif %}>{{ j }}</option>{% endfor %}
+                            </select>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <button type="submit" class="btn btn-secondary"><i class="bi bi-save me-1"></i>Eşleştirmeyi Kaydet</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="resetMappingBtn">Sıfırla (1-1)</button>
+            </div>
+        </form>
+        {% endif %}
+
+        <h2 class="optik-section-title h6 fw-bold"><i class="bi bi-pencil-square me-1"></i>Doğru Cevaplar</h2>
+        <div class="alert alert-info small">
+            <strong>İpucu:</strong> Her madde için doğru cevabı listeden seçin.
+            {% if open_count > 0 %}OPEN maddeler için cevap girilmez, puanlar elle değerlendirilir.{% endif %}
+        </div>
+        <form method="post" action="{% url 'optik:save_all_answer_keys' test_id %}" id="answerKeyForm"
+              data-autosave-url="{% url 'optik:auto_save_answer_keys' test_id %}">
+            {% csrf_token %}
+            <div class="table-responsive optik-scroll-table mb-3">
+                <table class="table table-sm table-hover align-middle text-center mb-0">
+                    <thead><tr>
+                        <th class="optik-item-col">Madde</th>
+                        {% for b in booklets %}<th>{{ b }}</th>{% endfor %}
+                    </tr></thead>
+                    <tbody>
+                    {% for row in answer_rows %}
+                    <tr{% if row.is_open %} class="optik-open-row"{% endif %}>
+                        <td class="optik-item-number">{{ row.number }}</td>
+                        {% for cell in row.cells %}
+                        {% if row.is_open %}
+                        <td class="optik-open-marker">OPEN</td>
+                        {% else %}
+                        <td>
+                            <select name="{{ cell.name }}" class="form-select form-select-sm answer-select mx-auto"
+                                    aria-label="{{ cell.booklet }} kitapçığı, {{ row.number }}. madde">
+                                {% for val, label in answer_choices %}<option value="{{ val }}"{% if val == cell.value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+                            </select>
+                        </td>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Tüm Cevapları Kaydet</button>
+                <a href="{% url 'optik:answer_key_upload' test_id %}" class="btn btn-success"><i class="bi bi-file-earmark-excel me-1"></i>Excel'den Yükle</a>
+                <span id="autoSaveBadge" class="fw-semibold text-success ms-2" role="status" aria-live="polite"></span>
+            </div>
+        </form>
+    </div>
+
+    {# Sekme 3: Puanlama #}
+    <div class="tab-pane fade{% if active_tab == 'points' %} show active{% endif %}" id="tab-points" role="tabpanel">
+        <div class="alert alert-info small">
+            <strong>Puanlama:</strong> Her maddenin puanı otomatik hesaplanır ancak elle düzeltebilirsiniz.<br>
+            MCQ Toplam: {{ mcq_points_total }} puan{% if open_count > 0 %} | OPEN Toplam: {{ open_points_total }} puan{% endif %}
+        </div>
+        <form method="post" action="{% url 'optik:save_detailed_points' test_id %}" id="pointsForm"
+              data-expected-mcq="{{ mcq_points_total }}" data-expected-open="{{ open_points_total }}"
+              data-mcq-count="{{ mcq_count }}" data-open-count="{{ open_count }}">
+            {% csrf_token %}
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card optik-points-card optik-points-card--mcq h-100">
+                        <div class="card-header">
+                            <h3 class="h6 fw-bold mb-1">Çoktan Seçmeli Maddeler ({{ mcq_count }} madde)</h3>
+                            <div class="small text-muted d-flex gap-4">
+                                <span>Beklenen: <strong>{{ mcq_points_total }} puan</strong></span>
+                                <span>Mevcut: <strong id="mcq_current_total">0</strong> puan</span>
+                            </div>
+                        </div>
+                        <div class="optik-quick-set d-flex flex-wrap align-items-center gap-2">
+                            <label for="mcq_equal" class="small fw-semibold mb-0">Hepsine eşit puan:</label>
+                            <input type="number" id="mcq_equal" value="{{ default_mcq_points }}" step="0.1" min="0" class="form-control form-control-sm optik-points-input">
+                            <button type="button" class="btn btn-sm btn-outline-primary js-set-all" data-source="mcq_equal" data-start="1" data-end="{{ mcq_count }}">Uygula</button>
+                        </div>
+                        <div class="table-responsive optik-scroll-table optik-scroll-table--sm">
+                            <table class="table table-sm align-middle text-center mb-0">
+                                <thead><tr><th>Madde</th><th>Puan</th></tr></thead>
+                                <tbody>
+                                {% for r in mcq_points_rows %}
+                                <tr><td class="optik-item-number">{{ r.number }}</td>
+                                    <td><input type="number" name="{{ r.name }}" value="{{ r.value }}" step="0.1" min="0"
+                                               class="form-control form-control-sm optik-points-input points-input mx-auto" aria-label="Madde {{ r.number }} puanı"></td></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% if open_count > 0 %}
+                <div class="col-lg-6">
+                    <div class="card optik-points-card optik-points-card--open h-100">
+                        <div class="card-header">
+                            <h3 class="h6 fw-bold mb-1">Açık Uçlu Maddeler ({{ open_count }} madde)</h3>
+                            <div class="small text-muted d-flex gap-4">
+                                <span>Beklenen: <strong>{{ open_points_total }} puan</strong></span>
+                                <span>Mevcut: <strong id="open_current_total">0</strong> puan</span>
+                            </div>
+                        </div>
+                        <div class="optik-quick-set d-flex flex-wrap align-items-center gap-2">
+                            <label for="open_equal" class="small fw-semibold mb-0">Hepsine eşit puan:</label>
+                            <input type="number" id="open_equal" value="{{ default_open_points }}" step="0.1" min="0" class="form-control form-control-sm optik-points-input">
+                            <button type="button" class="btn btn-sm btn-outline-primary js-set-all" data-source="open_equal" data-start="{{ open_start }}" data-end="{{ num_items }}">Uygula</button>
+                        </div>
+                        <div class="table-responsive optik-scroll-table optik-scroll-table--sm">
+                            <table class="table table-sm align-middle text-center mb-0">
+                                <thead><tr><th>Madde</th><th>Puan</th></tr></thead>
+                                <tbody>
+                                {% for r in open_points_rows %}
+                                <tr><td class="optik-item-number">{{ r.number }}</td>
+                                    <td><input type="number" name="{{ r.name }}" value="{{ r.value }}" step="0.1" min="0"
+                                               class="form-control form-control-sm optik-points-input points-input mx-auto" aria-label="Madde {{ r.number }} puanı"></td></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="optik-calc mt-4" id="pointsSummary">
+                <div class="d-flex justify-content-between py-1"><span>MCQ Toplamı:</span><span><span id="summary_mcq">0</span> / {{ mcq_points_total }} puan</span></div>
+                {% if open_count > 0 %}
+                <div class="d-flex justify-content-between py-1"><span>OPEN Toplamı:</span><span><span id="summary_open">0</span> / {{ open_points_total }} puan</span></div>
+                {% endif %}
+                <div class="d-flex justify-content-between optik-calc__total"><span>Genel Toplam:</span><span><span id="summary_total">0</span> / 100 puan</span></div>
+            </div>
+            <div id="validationAlert" class="alert mt-3 d-none" role="status"></div>
+            <button type="submit" class="btn btn-primary mt-2" id="savePointsBtn"><i class="bi bi-save me-1"></i>Puanları Kaydet</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block optik_js %}
+<script src="{% static 'js/optik/wizard_pages.js' %}"></script>
+<script>
+(function () {
+    'use strict';
+    /* Sekme değişince ?tab= adres çubuğunda güncellensin (yenilemede aynı sekme açılır). */
+    document.querySelectorAll('[data-tab]').forEach(function (btn) {
+        btn.addEventListener('shown.bs.tab', function () {
+            var url = new URL(window.location.href);
+            url.searchParams.set('tab', btn.dataset.tab);
+            url.searchParams.delete('success');
+            history.replaceState(null, '', url);
+        });
+    });
+
+    /* Kitapçık eşleştirmesini 1-1'e sıfırla */
+    var resetBtn = document.getElementById('resetMappingBtn');
+    if (resetBtn) resetBtn.addEventListener('click', function () {
+        document.querySelectorAll('.mapping-select').forEach(function (s) { s.value = s.dataset.default; });
+    });
+
+    /* Puan toplamları + doğrulama */
+    var pointsForm = document.getElementById('pointsForm');
+    var expectedMcq = parseFloat(pointsForm.dataset.expectedMcq) || 0;
+    var expectedOpen = parseFloat(pointsForm.dataset.expectedOpen) || 0;
+    var mcqCount = parseInt(pointsForm.dataset.mcqCount, 10) || 0;
+    var openCount = parseInt(pointsForm.dataset.openCount, 10) || 0;
+
+    function sumRange(start, end) {
+        var total = 0;
+        for (var i = start; i <= end; i++) {
+            var input = pointsForm.querySelector('input[name="points_Q' + i + '"]');
+            if (input) total += parseFloat(input.value) || 0;
+        }
+        return total;
+    }
+    function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+    function pointErrors(mcqTotal, openTotal, style) {
+        var errors = [];
+        if (Math.abs(mcqTotal - expectedMcq) > 0.1) {
+            errors.push(style === 'submit'
+                ? 'MCQ toplamı ' + expectedMcq + ' puan olmalı (şu an: ' + mcqTotal.toFixed(1) + ')'
+                : 'MCQ toplamı ' + mcqTotal.toFixed(1) + ' puan, beklenen: ' + expectedMcq + ' puan');
+        }
+        if (openCount > 0 && Math.abs(openTotal - expectedOpen) > 0.1) {
+            errors.push(style === 'submit'
+                ? 'OPEN toplamı ' + expectedOpen + ' puan olmalı (şu an: ' + openTotal.toFixed(1) + ')'
+                : 'OPEN toplamı ' + openTotal.toFixed(1) + ' puan, beklenen: ' + expectedOpen + ' puan');
+        }
+        return errors;
+    }
+    function calculateTotalPoints() {
+        var mcqTotal = sumRange(1, mcqCount), openTotal = sumRange(mcqCount + 1, mcqCount + openCount);
+        setText('mcq_current_total', mcqTotal.toFixed(1));
+        setText('open_current_total', openTotal.toFixed(1));
+        setText('summary_mcq', mcqTotal.toFixed(1));
+        setText('summary_open', openTotal.toFixed(1));
+        setText('summary_total', (mcqTotal + openTotal).toFixed(1));
+        var alertEl = document.getElementById('validationAlert');
+        var errors = pointErrors(mcqTotal, openTotal, 'live');
+        alertEl.classList.remove('d-none', 'alert-warning', 'alert-success');
+        alertEl.innerHTML = '';
+        if (errors.length) {
+            alertEl.classList.add('alert-warning');
+            errors.forEach(function (msg, i) {
+                if (i) alertEl.appendChild(document.createElement('br'));
+                alertEl.appendChild(document.createTextNode('⚠ ' + msg));
+            });
+        } else {
+            alertEl.classList.add('alert-success');
+            alertEl.textContent = '✓ Puanlar doğru! Toplam 100 puan.';
+        }
+    }
+    document.querySelectorAll('.js-set-all').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var v = document.getElementById(btn.dataset.source).value;
+            for (var i = parseInt(btn.dataset.start, 10); i <= parseInt(btn.dataset.end, 10); i++) {
+                var input = pointsForm.querySelector('input[name="points_Q' + i + '"]');
+                if (input) input.value = v;
+            }
+            calculateTotalPoints();
+        });
+    });
+    pointsForm.querySelectorAll('.points-input').forEach(function (input) {
+        input.addEventListener('input', calculateTotalPoints);
+        input.addEventListener('change', calculateTotalPoints);
+    });
+    pointsForm.addEventListener('submit', function (e) {
+        var errors = pointErrors(sumRange(1, mcqCount), sumRange(mcqCount + 1, mcqCount + openCount), 'submit');
+        if (errors.length && !confirm('Puanlar beklenen değerlerle uyuşmuyor:\n\n' + errors.join('\n') +
+                                      '\n\nYine de kaydetmek istiyor musunuz?')) {
+            e.preventDefault();
+        }
+    });
+    calculateTotalPoints();
+
+    /* Cevap anahtarı: seçim rengi + otomatik kaydetme */
+    var akForm = document.getElementById('answerKeyForm');
+    var autoSaveTimer = null;
+    function markFilled(sel) { sel.classList.toggle('is-filled', !!sel.value); }
+    function autoSave() {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(function () {
+            var data = {};
+            akForm.querySelectorAll('.answer-select').forEach(function (s) {
+                if (s.name && s.value) data[s.name] = s.value;
+            });
+            fetch(akForm.dataset.autosaveUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': OptikWizard.csrfToken()},
+                body: JSON.stringify(data)
+            }).then(function (r) { return r.json(); }).then(function (res) {
+                var badge = document.getElementById('autoSaveBadge');
+                if (res.ok && badge) {
+                    badge.textContent = 'Kaydedildi';
+                    setTimeout(function () { badge.textContent = ''; }, 2000);
+                }
+            }).catch(function () {});
+        }, 800);
+    }
+    akForm.querySelectorAll('.answer-select').forEach(function (s) {
+        markFilled(s);
+        s.addEventListener('change', function () { markFilled(s); autoSave(); });
+    });
+})();
+</script>
+{% endblock %}

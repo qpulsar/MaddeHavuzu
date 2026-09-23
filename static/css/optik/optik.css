@@ -1,0 +1,46 @@
+/* Optik Okuma — sayfa stilleri. Renkler base.css değişkenlerinden gelir (aydınlık/karanlık). */
+
+.optik-stepper {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; padding: 0.75rem 0 1.5rem; overflow-x: auto;
+}
+.optik-step {
+    display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+    text-decoration: none; color: var(--mh-text-muted); min-width: 92px;
+}
+.optik-step__num {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.9rem;
+    border: 2px solid var(--mh-border); background: var(--mh-card-bg);
+}
+.optik-step__label { font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+.optik-step--active .optik-step__num { background: var(--mh-primary); border-color: var(--mh-primary); color: #fff; }
+.optik-step--active { color: var(--mh-text-main); }
+.optik-step--done .optik-step__num { background: var(--mh-primary-light); border-color: var(--mh-primary); color: var(--mh-primary); }
+.optik-step:hover { color: var(--mh-primary); }
+.optik-step__line { flex: 1 1 40px; max-width: 80px; height: 2px; background: var(--mh-border); margin-bottom: 1.4rem; }
+.optik-step__line--done { background: var(--mh-primary); }
+
+/* Cevap / kayıt ızgaraları */
+.optik-grid { font-variant-numeric: tabular-nums; }
+.optik-cell-correct { background: rgba(34,197,94,.15) !important; }
+.optik-cell-wrong   { background: rgba(239,68,68,.15) !important; }
+.optik-cell-blank   { background: var(--mh-table-stripe) !important; color: var(--mh-text-muted); }
+.optik-cell-multi   { background: rgba(234,179,8,.2) !important; }
+
+.optik-stat {
+    background: var(--mh-card-bg); border: 1px solid var(--mh-border);
+    border-radius: 0.75rem; padding: 0.9rem 1rem;
+}
+.optik-stat__value { font-size: 1.5rem; font-weight: 700; color: var(--mh-text-main); }
+.optik-stat__label { font-size: 0.78rem; color: var(--mh-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+
+.optik-dropzone {
+    border: 2px dashed var(--mh-border); border-radius: 0.75rem;
+    padding: 2.5rem 1rem; text-align: center; cursor: pointer;
+    background: var(--mh-card-bg); transition: border-color .2s, background .2s;
+}
+.optik-dropzone.is-dragover { border-color: var(--mh-primary); background: var(--mh-primary-light); }
+
+.optik-form-image { max-width: 100%; border: 1px solid var(--mh-border); border-radius: 0.5rem; }

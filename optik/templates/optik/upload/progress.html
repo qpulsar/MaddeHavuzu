@@ -1,0 +1,94 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+{% block optik_title %}İşleniyor...{% endblock %}
+{% block optik_css %}<link rel="stylesheet" href="{% static 'css/optik/wizard_pages.css' %}">{% endblock %}
+{% block optik_crumbs %}<li class="breadcrumb-item active" aria-current="page">{{ test.course_code }} - {{ test.exam_type }}</li>{% endblock %}
+
+{% block optik_content %}
+<div class="card mx-auto optik-progress-card" id="progressRoot"
+     data-api-url="{{ api_url }}" data-next-url="{{ next_url }}">
+    <div class="card-body p-4">
+        <div class="text-center mb-4">
+            <h1 class="h4 fw-bold"><i class="bi bi-hourglass-split me-2"></i>Formlar İşleniyor</h1>
+            <p class="text-muted mb-0">{{ test.course_code }} - {{ test.exam_type }}</p>
+        </div>
+
+        <div class="text-center mb-3" id="spinnerDiv">
+            <div class="spinner-border text-primary" style="width:3.5rem;height:3.5rem" role="status">
+                <span class="visually-hidden">İşleniyor...</span>
+            </div>
+        </div>
+
+        <div class="progress mb-4" style="height:2rem" role="progressbar" aria-label="İşleme ilerlemesi"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
+            <div class="progress-bar progress-bar-striped progress-bar-animated fw-semibold" id="progressFill" style="width:0%">
+                <span id="progressText">0%</span>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-2 text-center">
+            <div class="col-4"><div class="optik-stat"><div class="optik-stat__value" id="totalFiles">-</div><div class="optik-stat__label">Toplam Dosya</div></div></div>
+            <div class="col-4"><div class="optik-stat"><div class="optik-stat__value text-success" id="successCount">-</div><div class="optik-stat__label">Başarılı</div></div></div>
+            <div class="col-4"><div class="optik-stat"><div class="optik-stat__value text-danger" id="failedCount">-</div><div class="optik-stat__label">Hatalı</div></div></div>
+        </div>
+
+        <div class="alert alert-warning mt-4 d-none" id="partialCard">
+            <h2 class="h5 fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>İşlem Tamamlandı (Hatalarla)</h2>
+            <p class="mb-3" id="partialText"></p>
+            <a href="{{ next_url }}" class="btn btn-primary">Cevap Anahtarına Geç</a>
+            <a href="{{ retry_url }}" class="btn btn-outline-secondary">Daha Fazla Yükle</a>
+        </div>
+
+        <div class="alert alert-danger mt-4 d-none" id="errorCard">
+            <h2 class="h5 fw-bold"><i class="bi bi-x-circle me-1"></i>İşlem Başarısız!</h2>
+            <p class="mb-3" id="errorMessage"></p>
+            <a href="{{ retry_url }}" class="btn btn-danger"><i class="bi bi-arrow-repeat me-1"></i>Tekrar Dene</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block optik_js %}
+<script>
+(function () {
+    var root = document.getElementById('progressRoot');
+    var apiUrl = root.dataset.apiUrl, nextUrl = root.dataset.nextUrl;
+    var timer = null;
+    function $(id) { return document.getElementById(id); }
+
+    function update() {
+        fetch(apiUrl, {credentials: 'same-origin', headers: {'Accept': 'application/json'}})
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var pct = data.progress_percentage || 0;
+                $('progressFill').style.width = pct + '%';
+                $('progressText').textContent = pct + '%';
+                $('progressBar').setAttribute('aria-valuenow', pct);
+                $('totalFiles').textContent = data.total_files || 0;
+                $('successCount').textContent = data.success || 0;
+                $('failedCount').textContent = data.failed || 0;
+
+                if (data.status === 'FAILED') {
+                    clearInterval(timer);
+                    $('spinnerDiv').classList.add('d-none');
+                    $('errorMessage').textContent = data.error || 'Bilinmeyen hata';
+                    $('errorCard').classList.remove('d-none');
+                    return;
+                }
+                if (data.is_complete) {
+                    clearInterval(timer);
+                    // Hatasız bittiyse sihirbazın sonraki adımına geç; hatalıysa sayıları göster
+                    if (!data.failed) { window.location.href = nextUrl; return; }
+                    $('spinnerDiv').classList.add('d-none');
+                    $('progressFill').classList.remove('progress-bar-animated');
+                    $('partialText').textContent = (data.success || 0) + ' form başarılı, ' + (data.failed || 0) + ' form okunamadı. Okunamayan formları kontrol edip yeniden yükleyebilirsiniz.';
+                    $('partialCard').classList.remove('d-none');
+                }
+            })
+            .catch(function (err) { console.error('İlerleme güncelleme hatası:', err); });
+    }
+    update();
+    timer = setInterval(update, 2000);
+})();
+</script>
+{% endblock %}

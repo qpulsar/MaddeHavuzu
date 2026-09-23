@@ -1,0 +1,44 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+
+{% block optik_title %}Puanlama{% endblock %}
+
+{% block optik_css %}
+<link rel="stylesheet" href="{% static 'css/optik/records_scoring.css' %}">
+{% endblock %}
+
+{% block optik_crumbs %}
+{% include "optik/scoring/_batch_crumbs.html" %}
+<li class="breadcrumb-item active" aria-current="page">Puanlama</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm">
+<div class="card-body p-4">
+    <h1 class="h3 mb-1"><i class="bi bi-bullseye me-2"></i>{{ title }}</h1>
+    <p class="text-muted"><strong>Batch:</strong> {{ batch.batch_name }} | <strong>Test:</strong> {{ batch.test_name|default:test_label }}</p>
+
+    <div class="alert alert-primary" role="alert">
+        <strong><i class="bi bi-info-circle me-1"></i>Puanlama Bilgisi:</strong>
+        <ul class="mb-0 mt-2">{% for li in info_items %}<li>{{ li }}</li>{% endfor %}</ul>
+    </div>
+
+    <form action="{% url 'optik:do_scoring' batch_id %}" method="post">
+        {% csrf_token %}
+        {% if open_items %}
+        <div class="mt-4 pt-3 border-top">
+            <h2 class="h5 mb-3"><i class="bi bi-pencil me-2"></i>Açık Uçlu Puan Girişi</h2>
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-info-circle me-1"></i>Bu testte <strong>{{ open_count }}</strong> açık uçlu soru bulunmaktadır.
+                Her öğrenci için açık uçlu soruların puanlarını girin. Maksimum puanlar başlıkta parantez içinde gösterilmektedir.
+            </div>
+            {% include "optik/scoring/_open_table.html" %}
+        </div>
+        {% endif %}
+        <button type="submit" class="btn btn-primary btn-lg w-100 mt-4"><i class="bi bi-check2-circle me-1"></i>{{ submit_text }}</button>
+    </form>
+
+    <a href="{% url 'optik:batch_detail' batch_id %}" class="d-inline-block mt-4 text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Batch Detay</a>
+</div>
+</div>
+{% endblock %}

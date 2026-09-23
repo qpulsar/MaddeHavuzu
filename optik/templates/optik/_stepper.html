@@ -1,0 +1,9 @@
+<nav class="optik-stepper" aria-label="Sihirbaz adımları">
+    {% for s in wizard_steps %}
+    <a href="{{ s.url }}" class="optik-step optik-step--{{ s.state }}"{% if s.state == 'active' %} aria-current="step"{% endif %}>
+        <span class="optik-step__num">{% if s.state == 'done' %}<i class="bi bi-check-lg"></i>{% else %}{{ s.number }}{% endif %}</span>
+        <span class="optik-step__label">{{ s.label }}</span>
+    </a>
+    {% if not forloop.last %}<span class="optik-step__line optik-step__line--{{ s.state }}"></span>{% endif %}
+    {% endfor %}
+</nav>

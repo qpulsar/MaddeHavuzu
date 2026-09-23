@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+{# Kopya Analizi sayfalarının ortak iskeleti. Alt şablonlar: kopya_title, kopya_crumbs, kopya_content, kopya_head #}
+
+{% block title %}{% block kopya_title %}Kopya Analizi{% endblock %} - Madde Havuzu{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/kopya/kopya.css' %}">
+{% block kopya_head %}{% endblock %}
+{% endblock %}
+
+{% block breadcrumb %}
+<div class="container-fluid px-4 px-lg-5 pt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0 small">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Ana Sayfa</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'kopya:index' %}" class="text-decoration-none">Kopya Analizi</a></li>
+            {% block kopya_crumbs %}{% endblock %}
+        </ol>
+    </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="kopya-page pt-3">
+    {% block kopya_content %}{% endblock %}
+</div>
+{% endblock %}

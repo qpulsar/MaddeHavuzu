@@ -13,6 +13,8 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
     # itempool URLs
     path('havuz/', include('itempool.urls')),
+    path('optik/', include('optik.urls')),
+    path('kopya/', include('kopya.urls')),
 ]
 
 # Serve media files in development

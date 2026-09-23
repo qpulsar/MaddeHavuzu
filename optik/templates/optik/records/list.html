@@ -1,0 +1,105 @@
+{% extends "optik/_layout.html" %}
+{% load static %}
+
+{% block optik_title %}Kayıt Listesi - {{ course_code }}{% endblock %}
+
+{% block optik_css %}
+<link rel="stylesheet" href="{% static 'css/optik/records_scoring.css' %}">
+{% endblock %}
+
+{% block optik_crumbs %}
+{% include "optik/records/_crumbs.html" %}
+<li class="breadcrumb-item active" aria-current="page">Kayıt Listesi</li>
+{% endblock %}
+
+{% block optik_content %}
+<div class="card border-0 shadow-sm">
+<div class="card-body p-4">
+    <h1 class="h3 mb-3"><i class="bi bi-list-check me-2"></i>Kayıt Listesi</h1>
+
+    {% if no_batch %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox display-5 d-block mb-3"></i>
+        <h2 class="h5">Henüz form yüklenmemiş</h2>
+        <p class="mb-3">Önce form yükleme adımına dönün.</p>
+        <a href="{% url 'optik:upload_forms' test_id %}" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Form Yükleme</a>
+    </div>
+    {% else %}
+
+    {% if duplicates %}
+    <div class="alert alert-danger" role="alert">
+        <strong><i class="bi bi-exclamation-octagon me-1"></i>Mükerrer Kayıt Tespit Edildi!</strong>
+        <p class="mb-1 mt-1 small">Aşağıdaki öğrenci numaralarına ait birden fazla kayıt bulundu. Puanlama öncesi fazla kayıtları silmeniz önerilir.</p>
+        <ul class="mb-0 small">
+            {% for d in duplicates %}<li><strong>{{ d.student_no }}</strong> - {{ d.count }} kayıt</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <span class="optik-pill optik-pill--info">Toplam: {{ total }}</span>
+        <span class="optik-pill optik-pill--ok">OK: {{ ok_count }}</span>
+        {% if warning_count %}<span class="optik-pill optik-pill--warn">Uyarı: {{ warning_count }}</span>{% endif %}
+        {% if dup_count %}<span class="optik-pill optik-pill--danger">Mükerrer: {{ dup_count }}</span>{% endif %}
+        {% if temp_warning_count %}<span class="optik-pill optik-pill--temp">Cevap Uyarısı: {{ temp_warning_count }}</span>{% endif %}
+    </div>
+
+    <div id="optikRecordList"
+         data-delete-url="{% url 'optik:record_delete' batch_id '__RID__' %}"
+         data-delete-selected-url="{% url 'optik:records_delete_selected' batch_id %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <button type="button" id="deleteSelectedBtn" class="btn btn-danger btn-sm" disabled>
+                <i class="bi bi-trash me-1"></i>Seçilenleri Sil (<span id="selectedCount">0</span>)
+            </button>
+        </div>
+
+        <div class="optik-scroll-box">
+            <table class="table table-hover align-middle mb-0 optik-records-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;"><input type="checkbox" class="form-check-input" id="selectAll" aria-label="Tümünü seç"></th>
+                        <th style="width:50px;">#</th>
+                        <th>Öğrenci No</th>
+                        <th>Kitapçık</th>
+                        <th>Durum</th>
+                        <th style="width:1%;">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr class="{{ row.row_class }}">
+                        <td><input type="checkbox" class="form-check-input row-check" value="{{ row.record_id }}" aria-label="Seç"></td>
+                        <td>{{ row.idx }}</td>
+                        <td class="fw-semibold">{% if row.student_no %}{{ row.student_no }}{% else %}<em class="text-muted">-</em>{% endif %}</td>
+                        <td>{% if row.booklet %}{{ row.booklet }}{% else %}<em class="text-muted">-</em>{% endif %}</td>
+                        <td>
+                            {% for w in row.warnings %}
+                                {% if w.type == 'err' %}<span class="badge optik-badge-err">{{ w.text }}</span>
+                                {% elif w.type == 'dup' %}<span class="badge text-bg-danger">{{ w.text }}</span>
+                                {% else %}<span class="badge optik-badge-temp">{{ w.text }}</span>{% endif %}
+                            {% empty %}
+                                <span class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>OK</span>
+                            {% endfor %}
+                        </td>
+                        <td class="text-nowrap">
+                            <a href="{% url 'optik:record_detail' batch_id row.record_id %}" class="btn btn-sm btn-outline-secondary" title="Detay Görüntüle"><i class="bi bi-eye"></i> Detay Gör</a>
+                            <a href="{% url 'optik:record_edit' batch_id row.record_id %}" class="btn btn-sm btn-outline-primary" title="Düzenle"><i class="bi bi-pencil"></i> Düzenle</a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-delete-record="{{ row.record_id }}" title="Sil"><i class="bi bi-trash"></i> Sil</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Henüz kayıt yok.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}
+
+{% block optik_js %}
+<script src="{% static 'js/optik/records_scoring.js' %}"></script>
+{% endblock %}

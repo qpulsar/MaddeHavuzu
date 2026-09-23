@@ -1,0 +1,15 @@
+{# İndir menüsü: özet / detaylı × TSV / CSV / Excel #}
+<div class="dropdown d-inline-block">
+    <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-download me-1"></i>İndir
+    </button>
+    <ul class="dropdown-menu">
+        {% for g in export_groups %}
+        {% if not forloop.first %}<li><hr class="dropdown-divider"></li>{% endif %}
+        <li><h6 class="dropdown-header">{{ g.title }}</h6></li>
+        {% for l in g.links %}
+        <li><a class="dropdown-item" href="{{ l.url }}"><i class="bi {{ l.icon }} me-2"></i>{{ l.label }}</a></li>
+        {% endfor %}
+        {% endfor %}
+    </ul>
+</div>

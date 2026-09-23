@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     # Project apps
     'grading',
     'itempool',  # Yeni app — Faz 1
+    'optik',     # Optik form okuma (görüntüden)
+    'kopya',     # İstatistiksel kopya analizi
 ]
 
 MIDDLEWARE = [
@@ -156,6 +158,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20 MB
+# Optik okuma: tek istekte çok sayıda form görüntüsü yüklenebilir
+DATA_UPLOAD_MAX_NUMBER_FILES = int(os.getenv('DATA_UPLOAD_MAX_NUMBER_FILES', '1000'))
+
+# Optik okuma form geometrisi (bubble map)
+OPTIK_BUBBLE_MAP_PATH = os.getenv('OPTIK_BUBBLE_MAP_PATH', str(BASE_DIR / 'optik' / 'data' / 'bubble_map_v1.json'))
+# Arka plan iş parçacığı sayıları (optik okuma / kopya analizi)
+OPTIK_WORKERS = int(os.getenv('OPTIK_WORKERS', '2'))
+KOPYA_WORKERS = int(os.getenv('KOPYA_WORKERS', '2'))
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

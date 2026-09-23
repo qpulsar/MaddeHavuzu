@@ -1,0 +1,11 @@
+{# Sınıf istatistikleri kutucukları (stats: [{value, label}]) #}
+<div class="row g-3 mb-4">
+    {% for s in stats %}
+    <div class="col-6 col-md-3">
+        <div class="optik-stat text-center">
+            <div class="optik-stat__value">{{ s.value }}</div>
+            <div class="optik-stat__label">{{ s.label }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
